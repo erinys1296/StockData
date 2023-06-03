@@ -1,8 +1,6 @@
 streamlit
-sqlite3
 pandas
 numpy
 plotly
 matplotlib
-
 datetime
