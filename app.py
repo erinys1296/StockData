@@ -26,6 +26,8 @@ dealer_limit.columns = ["自營商上極限","自營商下極限"]
 
 kbars = taiex.join(taiex_vol).join(cost_df).join(dealer_limit).join(inves_limit)
 
+enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後結算日'])
+
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection, parse_dates=['日期'], index_col=['日期'])
 putcallsum = pd.read_sql("select distinct * from putcallsum", connection, parse_dates=['日期'], index_col=['日期'])
 kbars = kbars.join(ordervolumn).join(putcallsum)
@@ -47,6 +49,18 @@ rsv = (kbars['收盤指數'] - low_list) / (high_list - low_list) * 100
 kbars['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
 kbars['D'] = kbars['K'].ewm(com=2).mean()
 
+enddatemonth = enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
+kbars['end_low'] = 0
+kbars['end_high'] = 0
+for datei in kbars.index:
+    
+    low = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]["最低指數"].min()
+    high = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]['最高指數'].max()
+    kbars.loc[datei,'end_low'] = kbars.loc[datei,'收盤指數'] - low
+    kbars.loc[datei,'end_high'] = high - kbars.loc[datei,'收盤指數']
+    
+kbars["MAX_MA"] = kbars["最高指數"] - kbars["MA"]
+kbars["MIN_MA"] = kbars["最低指數"] - kbars["MA"]
 
 kbars = kbars.dropna()
 
@@ -68,7 +82,9 @@ option_2a = st.sidebar.checkbox('成交量', value = True)
 option_2b = st.sidebar.checkbox('KD指標', value = True)
 option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
 option_2d = st.sidebar.checkbox('價平和', value = True)
-options_vice = [option_2a , option_2b , option_2c , option_2d]
+option_2e = st.sidebar.checkbox('20MA_GAP', value = True)
+option_2f = st.sidebar.checkbox('月結算日差', value = True)
+options_vice = [option_2a , option_2b , option_2c , option_2d, option_2e , option_2f]
 #options_vice[options_vice == True]
 #options_vice[0] == True
 optvn = 0
@@ -79,17 +95,18 @@ for opv in options_vice:
         optvrank.append(optvn+1)
     else:
         optvrank.append(0)
-subtitle_all = ['OHLC', 'Volumn', 'KD', 'OrderVolumn','價平和']
+subtitle_all = ['OHLC', 'Volumn', 'KD', 'OrderVolumn','價平和','20MA_GAP','月結算日差']
 subtitle =['OHLC']
-for i in range(1,5):
+for i in range(1,7):
     if optvrank[i-1] != 0:
         subtitle.append(subtitle_all[i])    
 
 
 #subtitle
+enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後結算日'])
 
 st.title('選擇權')
-rowh = [0.6, 0.1,0.1, 0.1, 0.1]
+rowh = [0.5, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6]
 fig = make_subplots(
     rows=optvn + 1, cols=1,
     shared_xaxes=True, 
@@ -149,6 +166,20 @@ fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+[kbars['IC'].index[-1] + 
                          line=dict(color='orange'),
                          name='IC操盤線'))
 
+for i in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
+    if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[5]:
+        fig.add_vline(x=i, line_width=1,  line_color="green")
+
+#enddate['最後結算日'].values
+for i in enddate['最後結算日'].values:
+    if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[5]:
+#        fig.add_vline(x=i, line_width=1,  line_color="green")
+        fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue")#, line_dash="dash"
+#fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
+
+
+
+
 ### K線圖製作 ###
 fig.add_trace(
     go.Candlestick(
@@ -189,6 +220,16 @@ if optvrank[2] != 0:
 if optvrank[3] != 0:
     fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum'), row=optvrank[3], col=1)
 
+## MA差
+if optvrank[4] != 0:
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['MAX_MA'], name='MAX_MA'), row=optvrank[4], col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['MIN_MA'], name='MIN_MA'), row=optvrank[4], col=1)
+
+## 結算差
+if optvrank[5] != 0:
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END'), row=optvrank[5], col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END'), row=optvrank[5], col=1)
+
 ### 圖表設定 ###
 fig.update(layout_xaxis_rangeslider_visible=False)
 fig.update_annotations(font_size=12)
@@ -196,11 +237,13 @@ fig.update_annotations(font_size=12)
 fig.update_layout(
     title=u'大盤指數技術分析圖',
     title_x=0.5,
-    title_y=0.93,
+    #title_y=0.93,
     hovermode='x unified', 
     showlegend=True,
-    height=600,
-    hoverlabel_namelength=-1
+    height=1000,
+    hoverlabel_namelength=-1,
+    xaxis=dict(showgrid=False),
+    yaxis=dict(showgrid=False)
 )
 
 # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
