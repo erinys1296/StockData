@@ -62,6 +62,44 @@ for datei in kbars.index:
 kbars["MAX_MA"] = kbars["最高指數"] - kbars["MA"]
 kbars["MIN_MA"] = kbars["最低指數"] - kbars["MA"]
 
+#詢問
+ds = 2
+kbars['uline'] = kbars['最低指數'].rolling(ds, min_periods=1).max()
+kbars['dline'] = kbars['最低指數'].rolling(ds, min_periods=1).min()
+
+kbars["all_kk"] = 0
+barssince5 = 0
+barssince6 = 0
+
+for i in range(2,len(kbars.index)):
+    condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
+    condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i-1],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
+    condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"uline"])
+
+    condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
+    condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i-1],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
+    condition63 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"dline"])
+
+    condition54 = condition51 or condition53
+    condition64 = condition61 or condition62 or condition63
+
+    if condition54 == True:
+        barssince5 = 1
+    else:
+        barssince5 += 1
+
+    if condition64 == True:
+        barssince6 = 1
+    else:
+        barssince6 += 1
+
+
+    if barssince5 < barssince6:
+        kbars.loc[kbars.index[i],"all_kk"] = 1
+    else:
+        kbars.loc[kbars.index[i],"all_kk"] = -1
+
+
 kbars = kbars.dropna()
 
 holidf = pd.read_sql("select * from holiday", connection)
@@ -122,20 +160,7 @@ decreasing_color = 'rgb(38, 166, 154)'
 red_color = 'rgb(239, 83, 80)'
 green_color = 'rgb(38, 166, 154)'
 
-no_color = 'rgb(256, 256, 256)'
-
-def fill_increasing_color(label):
-    if label == True:
-        return red_color
-    else:
-        return no_color
-    
-def fill_decreasing_color(label):
-    if label == True:
-        return green_color
-    else:
-        return no_color
-
+no_color = 'rgba(256, 256, 256,0)'
 
 
 
@@ -172,7 +197,7 @@ fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concaten
 
 #上下極限
 fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['lower_band'], kbars['upper_band'][::-1]]), 
-                fill='toself',fillcolor= 'rgba(0,256,0,0.1)', line_width=0,name='上下極限',row=1, col=1)
+                fill='toself',fillcolor= 'rgba(0,256,0,0.1)', line_width=0,name='布林上下極限',row=1, col=1)
 
 
 #fig.add_trace(go.Scatter(x=kbars.index,
@@ -215,15 +240,69 @@ for i in list(enddate['最後結算日'].values):
 ### K線圖製作 ###
 fig.add_trace(
     go.Candlestick(
-        x=kbars.index,
-        open=kbars['開盤指數'],
-        high=kbars['最高指數'],
-        low=kbars['最低指數'],
-        close=kbars['收盤指數'],
+        x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
+        open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
+        high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
+        low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
+        close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
+        increasing_line_color=decreasing_color,
+        increasing_fillcolor=decreasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        decreasing_line_color=decreasing_color,
+        decreasing_fillcolor=decreasing_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC'
+    )#,
+    #row=1, col=1
+)
+
+
+fig.add_trace(
+    go.Candlestick(
+        x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
+        open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
+        high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
+        low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
+        close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
         increasing_line_color=increasing_color,
         increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        decreasing_line_color=increasing_color,
+        decreasing_fillcolor=no_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC'
+    )#,
+    #row=1, col=1
+)
+
+### K線圖製作 ###
+fig.add_trace(
+    go.Candlestick(
+        x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
+        open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
+        high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
+        low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
+        close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
+        increasing_line_color=decreasing_color,
+        increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
         decreasing_line_color=decreasing_color,
-        decreasing_fillcolor=decreasing_color,
+        decreasing_fillcolor=no_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC'
+    )#,
+    #row=1, col=1
+)
+
+
+fig.add_trace(
+    go.Candlestick(
+        x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
+        open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
+        high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
+        low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
+        close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
+        increasing_line_color=increasing_color,
+        increasing_fillcolor=increasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        decreasing_line_color=increasing_color,
+        decreasing_fillcolor=increasing_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC'
     )#,
