@@ -28,8 +28,12 @@ kbars = taiex.join(taiex_vol).join(cost_df).join(dealer_limit).join(inves_limit)
 
 enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後結算日'])
 
+holidf = pd.read_sql("select * from holiday", connection)
+
+holilist = [str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]
+
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection, parse_dates=['日期'], index_col=['日期'])
-putcallsum = pd.read_sql("select distinct * from putcallsum", connection, parse_dates=['日期'], index_col=['日期'])
+putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 kbars = kbars.join(ordervolumn).join(putcallsum)
 
 # 計算布林帶指標
@@ -52,6 +56,7 @@ kbars['D'] = kbars['K'].ewm(com=2).mean()
 enddatemonth = enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
 kbars['end_low'] = 0
 kbars['end_high'] = 0
+#kbars
 for datei in kbars.index:
     
     low = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]["最低指數"].min()
@@ -72,6 +77,7 @@ barssince5 = 0
 barssince6 = 0
 
 for i in range(2,len(kbars.index)):
+    #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
     condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
     condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i-1],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
     condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"uline"])
@@ -102,16 +108,27 @@ for i in range(2,len(kbars.index)):
 
 kbars = kbars.dropna()
 
-holidf = pd.read_sql("select * from holiday", connection)
+ICdate = []
+datechecki = 1
+#(kbars['IC'].index[-1] + timedelta(days = 1)).weekday() == 5
+while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in holilist:
+    datechecki +=1
+ICdate.append((kbars['IC'].index[-1] + timedelta(days = datechecki)))
+datechecki +=1
+while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in holilist:
+    datechecki +=1
+ICdate.append((kbars['IC'].index[-1] + timedelta(days = datechecki)))
+
+#[kbars['IC'].index[-1] + timedelta(days = 1),kbars['IC'].index[-1] + timedelta(days = 2)]
 
 
 st.sidebar.header('Setting')
 
-st.sidebar.write('主圖選擇')
-option_1b = st.sidebar.checkbox('自營商上下極限', value = True)
-option_1c = st.sidebar.checkbox('外資上下極限', value = True)
-option_1d = st.sidebar.checkbox('上下極限', value = True)
-options_main = [option_1b , option_1c , option_1d]
+#st.sidebar.write('主圖選擇')
+#option_1b = st.sidebar.checkbox('自營商上下極限', value = True)
+#option_1c = st.sidebar.checkbox('外資上下極限', value = True)
+#option_1d = st.sidebar.checkbox('上下極限', value = True)
+#options_main = [option_1b , option_1c , option_1d]
 
 st.sidebar.write('附圖選擇')
 
@@ -167,8 +184,8 @@ no_color = 'rgba(256, 256, 256,0)'
 
 
 ### 成本價及上下極限 ###
-fig.add_trace(go.Scatter(x=kbars.index,
-                 y=kbars['外資成本'],
+fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[1:]+[ICdate[0]],
+                 y=kbars['外資成本'].shift(1).values,
                  mode='lines',
                  line=dict(color='yellow'),
                  name='外資成本'),row=1, col=1)
@@ -218,7 +235,7 @@ fig.add_trace(go.Scatter(x=kbars.index,
                          line=dict(color='green'),
                          name='MA'),row=1, col=1)
 
-fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+[kbars['IC'].index[-1] + timedelta(days = 1),kbars['IC'].index[-1] + timedelta(days = 2)],
+fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
                          y=kbars['IC'].shift(2).values,
                          mode='lines',
                          line=dict(color='orange'),
@@ -250,8 +267,9 @@ fig.add_trace(
         decreasing_line_color=decreasing_color,
         decreasing_fillcolor=decreasing_color,#decreasing_color,
         line=dict(width=1),
-        name='OHLC'
+        name='OHLC',showlegend=False
     )#,
+    
     #row=1, col=1
 )
 
@@ -268,8 +286,9 @@ fig.add_trace(
         decreasing_line_color=increasing_color,
         decreasing_fillcolor=no_color,#decreasing_color,
         line=dict(width=1),
-        name='OHLC'
+        name='OHLC',showlegend=False
     )#,
+    
     #row=1, col=1
 )
 
@@ -286,8 +305,9 @@ fig.add_trace(
         decreasing_line_color=decreasing_color,
         decreasing_fillcolor=no_color,#decreasing_color,
         line=dict(width=1),
-        name='OHLC'
+        name='OHLC',showlegend=False
     )#,
+    
     #row=1, col=1
 )
 
@@ -304,8 +324,9 @@ fig.add_trace(
         decreasing_line_color=increasing_color,
         decreasing_fillcolor=increasing_color,#decreasing_color,
         line=dict(width=1),
-        name='OHLC'
+        name='OHLC',showlegend=False
     )#,
+    
     #row=1, col=1
 )
 
