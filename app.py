@@ -26,7 +26,7 @@ dealer_limit.columns = ["自營商上極限","自營商下極限"]
 
 kbars = taiex.join(taiex_vol).join(cost_df).join(dealer_limit).join(inves_limit)
 
-enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後結算日'])
+enddate = pd.read_sql("select * from end_date order by 最後結算日 desc", connection, parse_dates=['最後結算日'])
 
 holidf = pd.read_sql("select * from holiday", connection)
 
@@ -129,6 +129,12 @@ st.sidebar.header('Setting')
 #option_1c = st.sidebar.checkbox('外資上下極限', value = True)
 #option_1d = st.sidebar.checkbox('上下極限', value = True)
 #options_main = [option_1b , option_1c , option_1d]
+
+st.sidebar.write('結算日顯示')
+option_month = st.sidebar.checkbox('月結算日', value = True)
+option_week = st.sidebar.checkbox('週結算日', value = False)
+#option_1d = st.sidebar.checkbox('上下極限', value = True)
+#options_enddate = [option_1b , option_1c ]
 
 st.sidebar.write('附圖選擇')
 
@@ -241,16 +247,20 @@ fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
                          line=dict(color='orange'),
                          name='IC操盤線'),row=1, col=1)
 
-for i in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-    if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[5]:
-        fig.add_vline(x=i, line_width=1,  line_color="green")
+if option_month == True:
+    for i in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
+        if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6]:
+            fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日')
 
 #enddate['最後結算日'].values
-for i in list(enddate['最後結算日'].values):
-    if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[5]:
-#        fig.add_vline(x=i, line_width=1,  line_color="green")
-        fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue")#, line_dash="dash"
-#fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
+#enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
+#list(enddate['最後結算日'].values)[:3]
+if option_week == True:
+    for i in enddate['最後結算日']:
+        if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
+    #        fig.add_vline(x=i, line_width=1,  line_color="green")
+            fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
+    #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
 
 
