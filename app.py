@@ -12,6 +12,25 @@ from plotly.subplots import make_subplots
 
 
 connection = sqlite3.connect('主圖資料.db')
+
+updatecheck = pd.read_sql("select distinct * from updatecheck", connection)
+
+if datetime.strftime(datetime.today(),'%Y/%m/%d') not in updatecheck.date.values:
+    
+    "False"
+    data2 = {
+    "date": [datetime.strftime(datetime.today(),'%Y/%m/%d')],
+    "check": [1]
+    } 
+
+    updatecheck = updatecheck.append(pd.DataFrame(data2))
+    updatecheck.to_sql('updatecheck', connection, if_exists='replace', index=False) 
+
+else:
+    
+    "True"
+
+
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'], index_col=['日期'])
 taiex_vol = pd.read_sql("select distinct * from taiex_vol", connection, parse_dates=['日期'], index_col=['日期'])
 cost_df = pd.read_sql("select distinct Date as [日期], Cost as [外資成本] from cost", connection, parse_dates=['日期'], index_col=['日期'])
@@ -386,7 +405,7 @@ fig.update_layout(
     height=1000,
     hoverlabel_namelength=-1,
     xaxis=dict(showgrid=False),
-    yaxis=dict(showgrid=False)
+    yaxis=dict(showgrid=False,tickformat = ",.0f")
 )
 
 # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
