@@ -79,17 +79,17 @@ kbars['end_high'] = 0
 #kbars
 for datei in kbars.index:
     
-    low = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]["最低指數"].min()
-    high = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]['最高指數'].max()
-    kbars.loc[datei,'end_low'] = kbars.loc[datei,'收盤指數'] - low
-    kbars.loc[datei,'end_high'] = high - kbars.loc[datei,'收盤指數']
+    month_low = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]["最低指數"].min()
+    month_high = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]['最高指數'].max()
+    kbars.loc[datei,'end_low'] =  kbars.loc[datei,'最高指數'] - month_low
+    kbars.loc[datei,'end_high'] = kbars.loc[datei,'最低指數'] - month_high
     
 kbars["MAX_MA"] = kbars["最高指數"] - kbars["MA"]
 kbars["MIN_MA"] = kbars["最低指數"] - kbars["MA"]
 
 #詢問
 ds = 2
-kbars['uline'] = kbars['最低指數'].rolling(ds, min_periods=1).max()
+kbars['uline'] = kbars['最高指數'].rolling(ds, min_periods=1).max()
 kbars['dline'] = kbars['最低指數'].rolling(ds, min_periods=1).min()
 
 kbars["all_kk"] = 0
@@ -99,15 +99,15 @@ barssince6 = 0
 for i in range(2,len(kbars.index)):
     #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
     condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i-1],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"uline"])
+    condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
+    condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
 
     condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i-1],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition63 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"dline"])
+    condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
+    condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
 
-    condition54 = condition51 or condition53
-    condition64 = condition61 or condition62 or condition63
+    condition54 = condition51 or condition53 #or condition52
+    condition64 = condition61 or condition63 #or condition62 
 
     if condition54 == True:
         barssince5 = 1
@@ -175,7 +175,7 @@ for opv in options_vice:
         optvrank.append(optvn+1)
     else:
         optvrank.append(0)
-subtitle_all = ['OHLC', 'Volumn', 'KD', 'OrderVolumn','價平和','20MA_GAP','月結算日差']
+subtitle_all = ['OHLC', 'Volumn', 'KD', '開盤賣張','價平和','20MA_GAP','月結趨勢']
 subtitle =['OHLC']
 for i in range(1,7):
     if optvrank[i-1] != 0:
@@ -197,8 +197,8 @@ fig = make_subplots(
     subplot_titles=subtitle
 )
 
-increasing_color = 'rgb(239, 83, 80)'
-decreasing_color = 'rgb(38, 166, 154)'
+increasing_color = 'rgb(255, 0, 0)'
+decreasing_color = 'rgb(0, 0, 255)'
 
 red_color = 'rgb(239, 83, 80)'
 green_color = 'rgb(38, 166, 154)'
@@ -293,9 +293,9 @@ fig.add_trace(
         low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
         close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
         increasing_line_color=decreasing_color,
-        increasing_fillcolor=decreasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
         decreasing_line_color=decreasing_color,
-        decreasing_fillcolor=decreasing_color,#decreasing_color,
+        decreasing_fillcolor=no_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC',showlegend=False
     )#,
@@ -331,9 +331,9 @@ fig.add_trace(
         low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
         close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
         increasing_line_color=decreasing_color,
-        increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=decreasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
         decreasing_line_color=decreasing_color,
-        decreasing_fillcolor=no_color,#decreasing_color,
+        decreasing_fillcolor=decreasing_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC',showlegend=False
     )#,
@@ -377,7 +377,7 @@ if optvrank[1] != 0:
 ## 委賣數量 ##
 if optvrank[2] != 0:
     #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[2], col=1)
+    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[2], col=1)
 
 ## 價平和
 if optvrank[3] != 0:
