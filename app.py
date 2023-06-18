@@ -188,6 +188,7 @@ for i in range(1,6):
 #subtitle
 enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後結算日'])
 
+
 st.title('選擇權')
 rowh = [0.5, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6]
 fig = make_subplots(
@@ -260,8 +261,8 @@ fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
                          name='IC操盤線'),row=1, col=1)
 
 if option_month == True:
-    for i in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-        if i > kbars.index[0] and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6]:
+    for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
+        if i > kbars.index[0] and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
             fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日')
 
 #enddate['最後結算日'].values
