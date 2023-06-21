@@ -51,6 +51,7 @@ enddate = pd.read_sql("select * from end_date order by 最後結算日 desc", co
 holidf = pd.read_sql("select * from holiday", connection)
 
 holilist = [str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]
+#holilist["日期"] = pd.to_datetime(holilist["日期"])
 
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection, parse_dates=['日期'], index_col=['日期'])
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
@@ -133,18 +134,17 @@ kbars = kbars[kbars.index > kbars.index[60]]
 ICdate = []
 datechecki = 1
 #(kbars['IC'].index[-1] + timedelta(days = 1)).weekday() == 5
-while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in holilist:
+while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)) in pd.to_datetime(holidf["日期"]).values:
     datechecki +=1
 ICdate.append((kbars['IC'].index[-1] + timedelta(days = datechecki)))
 datechecki +=1
-while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in holilist:
+while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] or (kbars['IC'].index[-1] + timedelta(days = datechecki)) in pd.to_datetime(holidf["日期"]).values:
     datechecki +=1
 ICdate.append((kbars['IC'].index[-1] + timedelta(days = datechecki)))
 
 #[kbars['IC'].index[-1] + timedelta(days = 1),kbars['IC'].index[-1] + timedelta(days = 2)]
 
 
-st.sidebar.header('Setting')
 
 #st.sidebar.write('主圖選擇')
 #option_1b = st.sidebar.checkbox('自營商上下極限', value = True)
@@ -255,7 +255,7 @@ fig.add_trace(go.Scatter(x=kbars.index,
                          name='MA'),row=1, col=1)
 
 fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
-                         y=kbars['IC'].shift(2).values,
+                         y=kbars['IC'].values,
                          mode='lines',
                          line=dict(color='orange'),
                          name='IC操盤線'),row=1, col=1)
@@ -398,11 +398,12 @@ fig.update_layout(
     #title_y=0.93,
     hovermode='x unified', 
     showlegend=True,
-    height=1000,
+    height=800,
     hoverlabel_namelength=-1,
     xaxis=dict(showgrid=False),
-    yaxis=dict(showgrid=False,tickformat = ",.0f"),
+    yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 2500, kbars['最高指數'].max() + 2000]),
     yaxis2 = dict(range=[0, 90*10**10]),
+    #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
     dragmode = 'drawline'
 )
 
