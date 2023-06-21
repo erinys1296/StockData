@@ -402,7 +402,8 @@ fig.update_layout(
     hoverlabel_namelength=-1,
     xaxis=dict(showgrid=False),
     yaxis=dict(showgrid=False,tickformat = ",.0f"),
-    yaxis2 = dict(range=[0, 90*10**10])
+    yaxis2 = dict(range=[0, 90*10**10]),
+    dragmode = 'drawline'
 )
 
 # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
