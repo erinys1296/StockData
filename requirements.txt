@@ -5,5 +5,5 @@ plotly
 matplotlib
 datetime
 bs4
-time
+
 requests
