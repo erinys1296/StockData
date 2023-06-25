@@ -161,12 +161,12 @@ option_week = st.sidebar.checkbox('週結算日', value = False)
 st.sidebar.write('附圖選擇')
 
 #option_2a = st.sidebar.checkbox('成交量', value = True)
-option_2b = st.sidebar.checkbox('KD指標', value = True)
+#option_2b = st.sidebar.checkbox('KD指標', value = True)
 option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
 option_2d = st.sidebar.checkbox('價平和', value = True)
 option_2e = st.sidebar.checkbox('20MA_GAP', value = True)
 option_2f = st.sidebar.checkbox('月結算日差', value = True)
-options_vice = [ option_2b , option_2c , option_2d, option_2e , option_2f]
+options_vice = [ option_2c , option_2d, option_2e , option_2f]
 #options_vice[options_vice == True]
 #options_vice[0] == True
 optvn = 0
@@ -177,9 +177,9 @@ for opv in options_vice:
         optvrank.append(optvn+1)
     else:
         optvrank.append(0)
-subtitle_all = ['OHLC',  'KD', '開盤賣張','價平和','20MA_GAP','月結趨勢']
+subtitle_all = ['OHLC',   '開盤賣張','價平和','月線乖離','月結趨勢']
 subtitle =['OHLC']
-for i in range(1,6):
+for i in range(1,5):
     if optvrank[i-1] != 0:
         subtitle.append(subtitle_all[i])    
 
@@ -190,7 +190,7 @@ enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後
 
 
 st.title('選擇權')
-rowh = [0.5, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6, 0.5/6]
+rowh = [0.5, 0.5/4, 0.5/4, 0.5/4, 0.5/4]
 fig = make_subplots(
     rows=optvn + 1, cols=1,
     shared_xaxes=True, 
@@ -204,13 +204,13 @@ fig = make_subplots(
 increasing_color = 'rgb(255, 0, 0)'
 decreasing_color = 'rgb(30, 144, 255)'
 
-red_color = 'rgba(255, 0, 0, 0.6)'
-green_color = 'rgba(30, 144, 255,0.6)'
+red_color = 'rgba(255, 0, 0, 0.3)'
+green_color = 'rgba(30, 144, 255,0.3)'
 
 no_color = 'rgba(256, 256, 256,0)'
 
-
-
+orange_color = 'rgb(255,128,51)'
+green_color1 = 'rgb(50, 205, 50)'
 
 
 ### 成本價及上下極限 ###
@@ -289,7 +289,7 @@ fig.add_trace(
         increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
         decreasing_line_color=decreasing_color,
         decreasing_fillcolor=no_color,#decreasing_color,
-        line=dict(width=1),
+        line=dict(width=2),
         name='OHLC',showlegend=False
     )#,
     
@@ -363,30 +363,35 @@ volume_colors[0] = green_color
 fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
 
 ### KD線 ###
-if optvrank[0] != 0:
-    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['K'], name='K', line=dict(width=1, color='rgb(41, 98, 255)'),showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['D'], name='D', line=dict(width=1, color='rgb(255, 109, 0)'),showlegend=False), row=optvrank[0], col=1)
+#if optvrank[0] != 0:
+#    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['K'], name='K', line=dict(width=1, color='rgb(41, 98, 255)'),showlegend=False), row=optvrank[0], col=1)
+#    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['D'], name='D', line=dict(width=1, color='rgb(255, 109, 0)'),showlegend=False), row=optvrank[0], col=1)
 
 ## 委賣數量 ##
-if optvrank[1] != 0:
+if optvrank[0] != 0:
+    days20 = kbars[(kbars.index> (kbars.index[-1] + timedelta(days = -20)))]
+    max_days20 = days20["九點累積委託賣出數量"].values.max()
+    min_days20 = days20["九點累積委託賣出數量"].values.min()
     #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
-    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[1], col=1)
-
+    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[0], col=1)
+    fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == max_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == max_days20)]['九點累積委託賣出數量'],marker=dict(color = decreasing_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
+    fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == min_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == min_days20)]['九點累積委託賣出數量'],marker=dict(color = orange_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
 ## 價平和
-if optvrank[2] != 0:
+if optvrank[1] != 0:
     PCsum_colors = [red_color if kbars['價平和'][i] > kbars['價平和'][i-1] else green_color for i in range(len(kbars['價平和']))]
     PCsum_colors[0] = green_color
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=optvrank[2], col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=optvrank[1], col=1)
 
 ## MA差
-if optvrank[3] != 0:
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['MAX_MA'], name='MAX_MA',showlegend=False), row=optvrank[3], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['MIN_MA'], name='MIN_MA',showlegend=False), row=optvrank[3], col=1)
+
+if optvrank[2] != 0:
+    fig.add_trace(go.Bar(x=kbars[kbars['MAX_MA']>0].index, y=kbars[kbars['MAX_MA']>0]['MAX_MA'], name='MAX_MA',marker=dict(color = green_color1),showlegend=False), row=optvrank[2], col=1)
+    fig.add_trace(go.Bar(x=kbars[kbars['MIN_MA']<0].index, y=kbars[kbars['MIN_MA']<0]['MIN_MA'], name='MIN_MA',marker=dict(color = orange_color),showlegend=False), row=optvrank[2], col=1)
 
 ## 結算差
-if optvrank[4] != 0:
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',showlegend=False), row=optvrank[4], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',showlegend=False), row=optvrank[4], col=1)
+if optvrank[3] != 0:
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = orange_color),showlegend=False), row=optvrank[3], col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = green_color1),showlegend=False), row=optvrank[3], col=1)
 
 ### 圖表設定 ###
 fig.update(layout_xaxis_rangeslider_visible=False)
@@ -401,7 +406,7 @@ fig.update_layout(
     height=800,
     hoverlabel_namelength=-1,
     xaxis=dict(showgrid=False),
-    yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 2500, kbars['最高指數'].max() + 2000]),
+    yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
     yaxis2 = dict(range=[0, 90*10**10]),
     #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
     dragmode = 'drawline'
