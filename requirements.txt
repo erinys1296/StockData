@@ -4,3 +4,7 @@ numpy
 plotly
 matplotlib
 datetime
+bs4
+json
+time
+requests
