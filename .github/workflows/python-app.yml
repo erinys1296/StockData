@@ -7,9 +7,9 @@ on:
   #schedule:
   #  - cron: '55 10 * * *'
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
