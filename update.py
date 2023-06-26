@@ -18,7 +18,7 @@ from time import sleep
 import sqlite3
 
 
-connection = sqlite3.connect('主圖資料.db')
+connection = sqlite3.connect('主圖資料.sqlite3')
 
 
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'])
@@ -198,3 +198,5 @@ datedf.columns = newcol
 
 datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
 datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
+
+connection.close()
