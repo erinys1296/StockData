@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-connection = sqlite3.connect('主圖資料.db')
+connection = sqlite3.connect('主圖資料.sqlite3')
 
 
 #updatecheck = pd.read_sql("select distinct * from updatecheck", connection)
