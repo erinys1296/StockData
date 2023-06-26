@@ -199,4 +199,4 @@ datedf.columns = newcol
 datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
 datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
 
-connection.close()
+
