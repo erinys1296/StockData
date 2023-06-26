@@ -105,7 +105,7 @@ for i in range((datetime.today() - maxtime).days):
         except:
             print(querydate,"query error")
 print(limit_df.tail(5))
-#connection = sqlite3.connect('主圖資料.db')
+connection = sqlite3.connect('主圖資料.sqlite3')
 limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
 
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
