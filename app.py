@@ -194,10 +194,11 @@ rowh = [0.5, 0.5/4, 0.5/4, 0.5/4, 0.5/4]
 fig = make_subplots(
     rows=optvn + 1, cols=1,
     shared_xaxes=True, 
-    vertical_spacing=0.06,
+    vertical_spacing=0.02,
     row_heights= rowh[:optvn+1],
     shared_yaxes=False,
-    subplot_titles=subtitle,
+    #subplot_titles=subtitle,
+    #y_title = "test"# subtitle,
     specs = [[{"secondary_y":True}]]*(optvn + 1)
 )
 
@@ -376,30 +377,31 @@ if optvrank[0] != 0:
     fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[0], col=1)
     fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == max_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == max_days20)]['九點累積委託賣出數量'],marker=dict(color = decreasing_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
     fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == min_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == min_days20)]['九點累積委託賣出數量'],marker=dict(color = orange_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
+    fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
 ## 價平和
 if optvrank[1] != 0:
-    PCsum_colors = [red_color if kbars['價平和'][i] > kbars['價平和'][i-1] else green_color for i in range(len(kbars['價平和']))]
-    PCsum_colors[0] = green_color
+    PCsum_colors = [increasing_color if kbars['價平和'][i] > kbars['價平和'][i-1] else decreasing_color for i in range(len(kbars['價平和']))]
+    PCsum_colors[0] = decreasing_color
     fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=optvrank[1], col=1)
-
+    fig.update_yaxes(title_text="價平和", row=optvrank[1], col=1)
 ## MA差
 
 if optvrank[2] != 0:
     fig.add_trace(go.Bar(x=kbars[kbars['MAX_MA']>0].index, y=kbars[kbars['MAX_MA']>0]['MAX_MA'], name='MAX_MA',marker=dict(color = green_color1),showlegend=False), row=optvrank[2], col=1)
     fig.add_trace(go.Bar(x=kbars[kbars['MIN_MA']<0].index, y=kbars[kbars['MIN_MA']<0]['MIN_MA'], name='MIN_MA',marker=dict(color = orange_color),showlegend=False), row=optvrank[2], col=1)
-
+    fig.update_yaxes(title_text="月線乖離", row=optvrank[2], col=1)
 ## 結算差
 if optvrank[3] != 0:
     fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = orange_color),showlegend=False), row=optvrank[3], col=1)
     fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = green_color1),showlegend=False), row=optvrank[3], col=1)
-
+    fig.update_yaxes(title_text="月結趨勢", row=optvrank[3], col=1, tickfont=dict(size=8))
 ### 圖表設定 ###
 fig.update(layout_xaxis_rangeslider_visible=False)
 fig.update_annotations(font_size=12)
 
 fig.update_layout(
     title=u'大盤指數技術分析圖',
-    title_x=0.5,
+    #title_x=0.5,
     #title_y=0.93,
     hovermode='x unified', 
     showlegend=True,
@@ -409,7 +411,8 @@ fig.update_layout(
     yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
     yaxis2 = dict(range=[0, 90*10**10]),
     #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
-    dragmode = 'drawline'
+    dragmode = 'drawline',
+    
 )
 
 # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
