@@ -127,6 +127,33 @@ for i in range(2,len(kbars.index)):
         kbars.loc[kbars.index[i],"all_kk"] = -1
 
 
+max_days20_list =  []
+max_days20_x = []
+min_days20_list =  []
+min_days20_x = []
+
+for datei in kbars.index[-60:]:
+    days20 = kbars[(kbars.index> (datei + timedelta(days = -20))) & (kbars.index<datei )]
+    max_days20 = days20["九點累積委託賣出數量"].values.max()
+    min_days20 = days20["九點累積委託賣出數量"].values.min()
+    try :
+        if max_days20 not in max_days20_list:
+            max_days20_list.append(max_days20)
+            max_days20_x.append(days20[days20["九點累積委託賣出數量"]==max_days20].index.values[0])
+    except:
+        pass
+    try:
+        if min_days20 not in min_days20_list:
+            min_days20_list.append(min_days20)
+            min_days20_x.append(days20[days20["九點累積委託賣出數量"]==min_days20].index.values[0])
+    except:
+        continue
+
+#max_days20_list
+#max_days20
+
+#max_days20_x
+
 kbars = kbars.dropna()
 kbars = kbars[kbars.index > kbars.index[60]]
 
@@ -372,11 +399,12 @@ fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', mark
 if optvrank[0] != 0:
     days20 = kbars[(kbars.index> (kbars.index[-1] + timedelta(days = -20)))]
     max_days20 = days20["九點累積委託賣出數量"].values.max()
+    
     min_days20 = days20["九點累積委託賣出數量"].values.min()
     #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
     fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == max_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == max_days20)]['九點累積委託賣出數量'],marker=dict(color = decreasing_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Scatter(x=kbars[(kbars['九點累積委託賣出數量'] == min_days20)].index, y=kbars[(kbars['九點累積委託賣出數量'] == min_days20)]['九點累積委託賣出數量'],marker=dict(color = orange_color), marker_size=5,showlegend=False), row=optvrank[0], col=1)
+    fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = decreasing_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
+    fig.add_scatter(x=np.array(min_days20_x), y=np.array(min_days20_list),marker=dict(color = orange_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
     fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
 ## 價平和
 if optvrank[1] != 0:
