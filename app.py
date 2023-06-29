@@ -74,7 +74,7 @@ rsv = (kbars['收盤指數'] - low_list) / (high_list - low_list) * 100
 kbars['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
 kbars['D'] = kbars['K'].ewm(com=2).mean()
 
-enddatemonth = enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
+enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
 kbars['end_low'] = 0
 kbars['end_high'] = 0
 #kbars
