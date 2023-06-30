@@ -132,20 +132,29 @@ max_days20_x = []
 min_days20_list =  []
 min_days20_x = []
 
-for datei in kbars.index[-60:]:
-    days20 = kbars[(kbars.index> (datei + timedelta(days = -20))) & (kbars.index<datei )]
+for dateidx in range(len(kbars.index[-60:])):
+    datei = kbars.index[-60:][dateidx]
+    days20 = kbars[(kbars.index> kbars.index[-80:][dateidx]) & (kbars.index<datei )]
     max_days20 = days20["九點累積委託賣出數量"].values.max()
     min_days20 = days20["九點累積委託賣出數量"].values.min()
-    try :
-        if max_days20 not in max_days20_list:
-            max_days20_list.append(max_days20)
-            max_days20_x.append(days20[days20["九點累積委託賣出數量"]==max_days20].index.values[0])
-    except:
-        pass
+
+
     try:
-        if min_days20 not in min_days20_list:
-            min_days20_list.append(min_days20)
-            min_days20_x.append(days20[days20["九點累積委託賣出數量"]==min_days20].index.values[0])
+        max_days_didx = np.where(kbars["九點累積委託賣出數量"].values[-60:]==max_days20)[0][0]
+        min_days_didx = np.where(kbars["九點累積委託賣出數量"].values[-60:]==min_days20)[0][0]
+        #max_days_didx
+        try :
+            if max_days20 not in max_days20_list and max_days20 > kbars[(kbars.index == kbars.index[-60:][max_days_didx+1])]["九點累積委託賣出數量"].values[0] and max_days20 > kbars[(kbars.index == kbars.index[-60:][max_days_didx-1])]["九點累積委託賣出數量"].values[0]:
+                max_days20_list.append(max_days20)
+                max_days20_x.append(days20[days20["九點累積委託賣出數量"]==max_days20].index.values[0])
+        except:
+            pass
+        try:
+            if min_days20 not in min_days20_list and min_days20 < kbars[(kbars.index == kbars.index[-60:][min_days_didx+1])]["九點累積委託賣出數量"].values[0] and min_days20 < kbars[(kbars.index == kbars.index[-60:][min_days_didx-1])]["九點累積委託賣出數量"].values[0]:
+                min_days20_list.append(min_days20)
+                min_days20_x.append(days20[days20["九點累積委託賣出數量"]==min_days20].index.values[0])
+        except:
+            continue
     except:
         continue
 
@@ -440,8 +449,11 @@ fig.update_layout(
     yaxis2 = dict(range=[0, 90*10**10]),
     #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
     dragmode = 'drawline',
+    hoverlabel=dict(align='left'),
     
 )
+
+fig.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
 
 # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
 fig.update_xaxes(
@@ -450,6 +462,8 @@ fig.update_xaxes(
          dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values])
      ]
  )
+
+#fig.update_traces(hoverlabel=dict(align='left'))
 
 st.plotly_chart(fig)
 
