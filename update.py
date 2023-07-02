@@ -179,7 +179,7 @@ data = {'ityIds': '2',
 'end_month': '06',
        'button':'送出查詢'}
 
-response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
+#response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
 
 response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
 
@@ -200,3 +200,5 @@ datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）',
 datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
 
 
+
+connection.close()
