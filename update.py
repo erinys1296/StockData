@@ -111,15 +111,21 @@ limit_df.to_sql('limit', connection, if_exists='replace', index=False)
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
 taxidateend = datetime.strftime(datetime.today(),'%Y%m')+"01"
 for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%d'):
-    df = crawler.get_taiex(date)
-    df['日期']= df['日期'].apply(lambda date: pd.to_datetime('{}/{}'.format(int(date.split('/', 1)[0]) + 1911, date.split('/', 1)[1])))
-    taiex = pd.concat([taiex, df], sort=False)
+    try:
+        df = crawler.get_taiex(date)
+        df['日期']= df['日期'].apply(lambda date: pd.to_datetime('{}/{}'.format(int(date.split('/', 1)[0]) + 1911, date.split('/', 1)[1])))
+        taiex = pd.concat([taiex, df], sort=False)
 
-    sleep(5)
+        sleep(5)
+    except:
+        continue
 for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%d'):
-    df = crawler.get_taiex_vol(date)
-    df['日期']= df['日期'].apply(lambda date: pd.to_datetime('{}/{}'.format(int(date.split('/', 1)[0]) + 1911, date.split('/', 1)[1])))
-    taiex_vol = pd.concat([taiex_vol, df], sort=False)
+    try:
+        df = crawler.get_taiex_vol(date)
+        df['日期']= df['日期'].apply(lambda date: pd.to_datetime('{}/{}'.format(int(date.split('/', 1)[0]) + 1911, date.split('/', 1)[1])))
+        taiex_vol = pd.concat([taiex_vol, df], sort=False)
+    except:
+        continue
 
     sleep(5)
 
