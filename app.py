@@ -98,6 +98,7 @@ kbars['dline'] = kbars['最低指數'].rolling(ds, min_periods=1).min()
 kbars["all_kk"] = 0
 barssince5 = 0
 barssince6 = 0
+kbars['labelb'] = 1
 
 for i in range(2,len(kbars.index)):
     #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
@@ -111,6 +112,15 @@ for i in range(2,len(kbars.index)):
 
     condition54 = condition51 or condition53 #or condition52
     condition64 = condition61 or condition63 #or condition62 
+
+    #kbars['labelb'] = np.where((kbars['收盤指數']> kbars['upper_band1']) , 1, np.where((kbars['收盤指數']< kbars['lower_band1']),-1,1))
+
+    if kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i],'upper_band1']:
+        kbars.loc[kbars.index[i],'labelb'] = 1
+    elif kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i],'lower_band1']:
+        kbars.loc[kbars.index[i],'labelb'] = -1
+    else:
+        kbars.loc[kbars.index[i],'labelb'] = kbars.loc[kbars.index[i-1],'labelb']
 
     if condition54 == True:
         barssince5 = 1
@@ -167,8 +177,11 @@ for dateidx in range(len(kbars.index[-60:])):
 
 kbars = kbars.dropna()
 kbars = kbars[kbars.index > kbars.index[-60]]
-kbars['labelb'] = np.where((kbars['收盤指數']<= kbars['upper_band1']) & (kbars['收盤指數']< kbars['lower_band1']), -1, 1)
+
 #kbars['labelb'] = np.where(kbars['收盤指數']< kbars['lower_band1'], -1, 1)
+
+
+
 def fillcol(label):
     if label >= 1:
         return 'rgba(0,250,0,0.3)'
