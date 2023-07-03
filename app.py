@@ -308,7 +308,7 @@ with tab1:
             break
         while kbars["labelb"].values[checkidx] == kbars["labelb"].values[checkidx+1]:
             checkidx +=1
-            if checkidx >=len(kbars["labelb"].values)-2:
+            if checkidx >=len(kbars["labelb"].values)-1:
                 break
         bandend = checkidx+1
         print(bandstart,bandend)
