@@ -245,16 +245,17 @@ with tab1:
 
 
     st.title('選擇權')
-    rowh = [0.5, 0.5/4, 0.5/4, 0.5/4, 0.5/4]
+    rowcount = optvn + 1 +1
+    rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
     fig = make_subplots(
-        rows=optvn + 1, cols=1,
+        rows=rowcount, cols=1,
         shared_xaxes=True, 
         vertical_spacing=0.02,
-        row_heights= rowh[:optvn+1],
+        row_heights= rowh[:rowcount],
         shared_yaxes=False,
         #subplot_titles=subtitle,
         #y_title = "test"# subtitle,
-        specs = [[{"secondary_y":True}]]*(optvn + 1)
+        specs = [[{"secondary_y":True}]]*rowcount
     )
 
     increasing_color = 'rgb(255, 0, 0)'
@@ -499,6 +500,15 @@ with tab1:
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = orange_color),showlegend=False), row=optvrank[3], col=1)
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = green_color1),showlegend=False), row=optvrank[3], col=1)
         fig.update_yaxes(title_text="月結趨勢", row=optvrank[3], col=1, tickfont=dict(size=8))
+    
+    #put call ratio
+    #fig.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
+    #                mode='lines',
+    #                line=dict(color='black'),
+    #                name='收盤指數',showlegend=False),row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+1, col=1)
+    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+1, col=1)
+    
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
     fig.update_annotations(font_size=12)
@@ -509,7 +519,7 @@ with tab1:
         #title_y=0.93,
         hovermode='x unified', 
         showlegend=True,
-        height=700,
+        height=400 + 100* rowcount,
         width = 1000,
         hoverlabel_namelength=-1,
         xaxis=dict(showgrid=False),
@@ -532,49 +542,14 @@ with tab1:
         ]
     )
 
+
     #fig.update_traces(hoverlabel=dict(align='left'))
 
     st.plotly_chart(fig)
     
 
 
-with tab2:
-    fig1 = make_subplots(
-        rows=2, cols=1,
-        shared_xaxes=True, 
-        vertical_spacing=0.06,
-        row_width=[1,0],
-        shared_yaxes=False,
-        subplot_titles=('PutCallRatio'),
-        specs = [[{"secondary_y":True}]]*2
-    )
 
-    #Put Call Ratio
-    
-    fig1.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
-                    mode='lines',
-                    line=dict(color='black'),
-                    name='收盤指數',showlegend=False),row=1, col=1)
-    fig1.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=1, col=1, secondary_y= True)
-    fig1.update_yaxes(title_text="PutCallRatio", row=1, col=1)
-
-    
-    
-    # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
-    fig1.update_xaxes(
-        rangebreaks=[
-            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values])
-        ]
-    )
-
-
-    fig1.update_layout(
-        yaxis2_ticksuffix = "%",
-        hovermode='x unified', 
-        
-    )
-    st.plotly_chart(fig1)
 
 with tab3:
     kbars
