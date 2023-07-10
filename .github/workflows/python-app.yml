@@ -46,7 +46,7 @@ jobs:
         git config --local user.name "GitHub Action"
         git add -A
         git commit -m "update data" -a
-        git push origin HEAD:<erinys1296-patch-2>
+        git push origin main
         
   
     - name: push changes
@@ -54,6 +54,7 @@ jobs:
       with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: master    
+      
       
   
       
