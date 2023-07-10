@@ -43,8 +43,9 @@ datedf = pd.read_html(str(table))[0]
 newcol = [stri.replace(' ','') for stri in datedf.columns]
 datedf.columns = newcol
 datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
-datedf.to_sql('end_date', connection, if_exists='append', index=False) 
-
+#print(datedf)
+#datedf.to_sql('end_date', connection, if_exists='append', index=False) 
+connection.executemany('INSERT INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
 
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
@@ -87,7 +88,8 @@ for i in range((datetime.today() - maxtime).days):#
             print(querydate,"query error")
             
 print(cost_df)
-cost_df.to_sql('cost', connection, if_exists='replace', index=False) 
+#cost_df.to_sql('cost', connection, if_exists='replace', index=False) 
+connection.executemany('INSERT INTO cost VALUES (?, ?)', np.array(cost_df))
 
 maxtime = datetime.strptime(limit_df["日期"].max(), '%Y/%m/%d')
 
@@ -106,7 +108,9 @@ for i in range((datetime.today() - maxtime).days):
             print(querydate,"query error")
 print(limit_df.tail(5))
 connection = sqlite3.connect('主圖資料.sqlite3')
-limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
+#limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
+
+connection.executemany('replace INTO limit VALUES (?, ?, ?, ?, ?)', np.array(limit_df))
 
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
 taxidateend = datetime.strftime(datetime.today(),'%Y%m')+"01"
@@ -129,8 +133,11 @@ for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%
 
     sleep(5)
 
-taiex_vol.to_sql('taiex_vol', connection, if_exists='replace', index=False) 
-taiex.to_sql('taiex', connection, if_exists='replace', index=False) 
+#taiex_vol.to_sql('taiex_vol', connection, if_exists='replace', index=False) 
+#taiex.to_sql('taiex', connection, if_exists='replace', index=False) 
+
+connection.executemany('replace INTO taiex_vol VALUES (?, ?, ?, ?, ?, ?)', np.array(taiex_vol))
+connection.executemany('replace INTO taiex VALUES (?, ?, ?, ?, ?)', np.array(taiex))
 
 #累積委託量
 maxtime = datetime.strptime(ordervolumn["日期"].max(), '%Y%m%d')
@@ -149,13 +156,15 @@ for i in range((datetime.today() - maxtime).days):#
         except:
             print(querydate,"query error")
 
-ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False) 
+#ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False) 
+connection.executemany('replace INTO ordervolumn VALUES (?, ?)', np.array(ordervolumn))
 
 maxtime = datetime.strptime(putcallsum["日期"].max(), '%Y/%m/%d')
 
 #價平和
-for i in range((datetime.today() - maxtime).days):
+for i in range((datetime.today() - maxtime).days+10):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+    #print(querydate)
     try:
         CT,PT = crawler.callputtable(querydate)
     except:
@@ -167,8 +176,8 @@ for i in range((datetime.today() - maxtime).days):
     result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
     putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
 
-putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
-
+#putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
+connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
 data = {'ityIds': '2',
@@ -204,7 +213,35 @@ datedf.columns = newcol
 
 datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
 datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
+connection.executemany('replace INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
 
+CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
+result=pd.DataFrame()
+for i in range(3):
+    
+    try:
+        start_date = datetime.strftime(datetime.today()- timedelta(days=(i+1)*30),'%Y/%m/%d')
+        end_date = datetime.strftime(datetime.today()- timedelta(days=i*30),'%Y/%m/%d')
+        tempdf = crawler.query_put_call(start_date,end_date)
+        if result.empty and tempdf is not None:
+            result = tempdf
+        else:
+            result = pd.concat([result,tempdf])
+        print(start_date,end_date,"query success")
+    except:
+        print(start_date,end_date,"query fail 1")
+        continue
+result.to_sql('putcallratio', connection, if_exists='replace', index=False)
+connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
 
+df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
+df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
 
+bank8 = pd.concat([df1,df2]).reset_index().drop(columns=['index'])
+bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
+bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
+bank8["台指期"] = bank8["台指期"].astype(int)
+
+bank8.to_sql('bank', connection, if_exists='replace', index=False) 
+connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
