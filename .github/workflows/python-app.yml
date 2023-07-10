@@ -48,7 +48,8 @@ jobs:
         git add -A
         git commit -m "update data" -a
         git push -f
-        
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
   
     - name: push changes
       uses: ad-m/github-push-action@v0.6.0
