@@ -5,13 +5,13 @@ name: Python application
 
 on:
   schedule:
-    - cron: '5 6 * * *'
+    - cron: '55 5 * * *'
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
-permissions: read-all|write-all
+permissions: write-all
 
 jobs:
   build:
