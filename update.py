@@ -214,8 +214,7 @@ datedf.columns = newcol
 datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
 datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
 #connection.executemany('replace INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
-
-CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
+#CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
 result=pd.DataFrame()
 for i in range(3):
     
@@ -231,7 +230,10 @@ for i in range(3):
     except:
         print(start_date,end_date,"query fail 1")
         continue
-result.to_sql('putcallratio', connection, if_exists='replace', index=False)
+try:
+   result.to_sql('putcallratio', connection, if_exists='replace', index=False)
+except:
+   print("ratio fail")
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
 
 df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
