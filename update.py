@@ -47,7 +47,7 @@ datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）',
 datedf.to_sql('end_date', connection, if_exists='append', index=False) 
 #connection.executemany('INSERT INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
 
-ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection)
+ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
 
 #test = crawler.catch_cost('20230601')
@@ -245,5 +245,30 @@ bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].asty
 bank8["台指期"] = bank8["台指期"].astype(int)
 
 bank8.to_sql('bank', connection, if_exists='replace', index=False) 
+
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+
+for i in range((datetime.today() - maxtime).days):#
+   
+    try:
+        querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+        result = crawler.get_MTX_Ratio(querydate)
+        if result != None:
+            dfMTX = pd.concat([dfMTX,pd.DataFrame([[querydate,result]],columns = ["Date","MTXRatio"])])
+    except:
+        sleep(5)
+        try:
+            querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+            result = crawler.get_MTX_Ratio(querydate)
+            if result != None:
+                dfMTX = pd.concat([dfMTX,pd.DataFrame([[querydate,result]],columns = ["Date","MTXRatio"])])
+        except:
+            print(querydate,"query error")
+            
+dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
+
+
+
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
