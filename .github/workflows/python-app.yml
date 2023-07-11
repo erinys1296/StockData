@@ -8,9 +8,9 @@ on:
   schedule:
     - cron: '55 6 * * *'
   push:
-    branches: [ "main" ]
+    branches: [ "erinys1296-patch-4" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "erinys1296-patch-4" ]
 
 permissions: write-all
 
