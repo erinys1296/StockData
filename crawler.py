@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+import urllib3
 
 
-import json
 import pandas as pd
 from datetime import datetime, date
 
@@ -227,13 +227,17 @@ def callputtable(querydate):
     #處理欄位空格
     newcol = [stri.replace(' ','') for stri in datedf.columns]
     datedf.columns = newcol
-    
+
     try:
         enddate = datedf[datedf[datedf.columns[0]]>querydate][datedf.columns[0]].min()
         weekfilter = datedf[datedf[datedf.columns[0]] == enddate]["契約月份"].values[0]
         df = df[df["到期月份(週別)"] == weekfilter]
+
     except:
-        weekfilter = df["到期月份(週別)"].unique()[0]
+        if querydate in datedf[datedf.columns[0]].values:
+            weekfilter = df["到期月份(週別)"].unique()[1]
+        else:
+            weekfilter = df["到期月份(週別)"].unique()[0]
         df = df[df["到期月份(週別)"] == weekfilter]
     
     
@@ -366,3 +370,29 @@ def catch_volumn(date):
     except:
         return
     return int(df["累積委託賣出數量"].values[0].replace(',' , ''))
+
+
+
+def query_put_call(start_date,end_date):
+    http = urllib3.PoolManager()
+    url = "https://www.taifex.com.tw/cht/3/pcRatio"
+    res = http.request(
+         'GET',
+          url,
+          fields={
+             'queryStartDate': start_date,
+             'queryEndDate': end_date
+          }
+     )
+
+    html_doc = res.data
+    soup = BeautifulSoup(html_doc, 'html.parser')
+    table = soup.table
+    df = pd.read_html(str(table))
+    
+    pc_ratio = df[3]
+    for row in range(pc_ratio.shape[0]):
+        date2 = pc_ratio.iloc[row,0].split('/')
+        pc_ratio.iloc[row, 0] = datetime(int(date2[0]), int(date2[1]), int(date2[2]))
+
+    return pc_ratio
