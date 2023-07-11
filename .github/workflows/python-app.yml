@@ -8,9 +8,9 @@ on:
   schedule:
     - cron: '55 6 * * *'
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 permissions: write-all
 
