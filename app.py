@@ -207,6 +207,10 @@ CPratio = CPratio[CPratio.index>kbars.index[0]]
 
 bank8 = pd.read_sql("select distinct * from bank", connection, parse_dates=['日期'], index_col=['日期'])
 bank8 = bank8[bank8.index>kbars.index[0]]
+
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection, parse_dates=['Date'], index_col=['Date'])
+dfMTX = dfMTX[dfMTX.index>kbars.index[0]]
+
 tab1, tab2, tab3 = st.tabs(["主圖", "參考資訊","Raw Data"])
 
 with tab1:
@@ -246,12 +250,12 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 +2
+    rowcount = optvn + 1 + 3
     rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
         shared_xaxes=True, 
-        vertical_spacing=0.02,
+        vertical_spacing=0.05,
         row_heights= rowh[:rowcount],
         shared_yaxes=False,
         #subplot_titles=subtitle,
@@ -502,19 +506,26 @@ with tab1:
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = green_color1),showlegend=False), row=optvrank[3], col=1)
         fig.update_yaxes(title_text="月結趨勢", row=optvrank[3], col=1, tickfont=dict(size=8))
     
+    ## 小台散戶多空比
+    
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']>0].index, y=(dfMTX[dfMTX['MTXRatio']>0]['MTXRatio']).round(2), name='小台散戶多空比',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']<=0].index, y=(dfMTX[dfMTX['MTXRatio']<=0]['MTXRatio']).round(2), name='小台散戶多空比',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+1, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="小台散戶多空比", row=optvrank[3]+1, col=1)
+
     #put call ratio
     #fig.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
     #                mode='lines',
     #                line=dict(color='black'),
     #                name='收盤指數',showlegend=False),row=optvrank[3]+1, col=1)
-    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+1, col=1)
-    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+2, col=1)
     
     #八大行庫買賣超
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+2, col=1)
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+2, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+3, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+3, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
-    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+3, col=1)
     
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
