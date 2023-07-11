@@ -46,7 +46,7 @@ jobs:
         git config --local user.name "erinys1296"
         git commit -a -m "push to Github" 
     - name: Push to Github
-      uses: erinys1296/StockData@release/v1
+      uses: erinys1296/StockData@v1
       env:
         GITHUB_EMAIL: "erinys1296@gmail.com"
         GITHUB_USERNAME: "erinys1296"
