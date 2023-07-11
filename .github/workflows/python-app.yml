@@ -47,7 +47,7 @@ jobs:
         git config user.name "erinys1296"
         git add .
         git commit -m "generated"
-        git push
+        git push origin erinys1296-patch-1
         
        
   
