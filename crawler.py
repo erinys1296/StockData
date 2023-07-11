@@ -396,3 +396,66 @@ def query_put_call(start_date,end_date):
         pc_ratio.iloc[row, 0] = datetime(int(date2[0]), int(date2[1]), int(date2[2]))
 
     return pc_ratio
+
+
+
+def get_MTX_Ratio(date):
+    # 製作 POST 請求
+    url = "https://www.taifex.com.tw/cht/3/futDailyMarketReport"
+    data = {
+        "queryType": '2',
+        "commodity_id": "MTX",
+        "commodity_id2": "",
+        "dateaddcnt": "",
+        "MarketCode": "0",
+        "queryDate": date,
+        "commodity_idt": "MTX",
+        "commodity_id2t": "",
+        "commodity_id2t2": "",
+    }
+    res = requests.post(url, data=data)
+    # 使用 BeautifulSoup 解析 HTML 內容
+    soup = BeautifulSoup(res.text, "html.parser")
+
+
+
+    # 找出表格標籤 (table) 與表格行標籤 (tr)
+    table = soup.find("table", {"class": "table_f"})
+    #rows = table.find_all("tr")
+
+
+    # 將表格資料轉換為 pandas 的 dataframe 格式
+    df=pd.read_html(str(table))[0]
+    a = df["*未沖銷契約量"].values[7]
+    
+    # 製作 POST 請求
+    url = "https://www.taifex.com.tw/cht/3/futContractsDate"
+    data = {
+        "queryType": '1',
+        "commodityId": "MXF",
+        "goDay": "",
+        "doQuery": "1",
+        "dateaddcnt": "",
+        "queryDate": date,
+
+    }
+    res = requests.post(url, data=data)
+    # 使用 BeautifulSoup 解析 HTML 內容
+    soup = BeautifulSoup(res.text, "html.parser")
+
+
+
+    # 找出表格標籤 (table) 與表格行標籤 (tr)
+    table = soup.find("table", {"class": "table_f"})
+    #rows = table.find_all("tr")
+
+
+    # 將表格資料轉換為 pandas 的 dataframe 格式
+    df=pd.read_html(str(table))[0]    
+    
+    
+    b = int(df[9].values[9])
+    c = int(df[11].values[9])
+    
+    return ((a-b)-(a-c))/a
+
