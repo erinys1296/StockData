@@ -7,9 +7,9 @@ on:
   schedule:
     - cron: '55 6 * * *'
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 permissions: write-all
 
@@ -44,6 +44,7 @@ jobs:
       run: |
         git config --local user.email "erinys1296@gmail.com"
         git config --local user.name "erinys1296"
+        git commit -a -m "Add changes"
         git push origin master
         
        
