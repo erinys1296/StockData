@@ -44,16 +44,19 @@ jobs:
       run: |
         git config --local user.email "erinys1296@gmail.com"
         git config --local user.name "erinys1296"
-        git commit -a -m "push changes" 
-    
+        git commit -a -m "push to Github" 
+    - name: Push to Github
+      uses: erinys1296/StockData@release/v1
+      env:
+        GITHUB_EMAIL: "erinys1296@gmail.com"
+        GITHUB_USERNAME: "erinys1296"
+        PUBLISH_REPO: https://${{ secrets.GitHub_PAT }}@github.com/owner/repo.git
+        PUBLISH_BRANCH: erinys1296-patch-1
+        PUBLISH_DIR: ./public
+        # DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
         
   
-    - name: push changes
-      uses: ad-m/github-push-action@erinys1296-patch-1
-      with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{github.ref}} 
-      
+
         
         
         
