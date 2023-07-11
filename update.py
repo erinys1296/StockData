@@ -20,7 +20,7 @@ import sqlite3
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
-
+"""
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'])
 taiex_vol = pd.read_sql("select distinct * from taiex_vol", connection, parse_dates=['日期'])
 cost_df = pd.read_sql("select distinct * from cost", connection)
@@ -235,6 +235,7 @@ try:
 except:
    print("ratio fail")
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
+"""
 
 df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
 df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
