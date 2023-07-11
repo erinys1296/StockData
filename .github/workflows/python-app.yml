@@ -42,10 +42,11 @@ jobs:
         
     - name: commit files
       run: |
-        git config --local user.email "erinys1296@gmail.com"
-        git config --local user.name "erinys1296"
-        git commit -a -m "Add changes"
-        git push origin main
+        git config user.email "erinys1296@gmail.com"
+        git config user.name "erinys1296"
+        git add .
+        git commit -m "generated"
+        git push
         
        
   
