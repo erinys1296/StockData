@@ -20,7 +20,7 @@ import sqlite3
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
-"""
+
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'])
 taiex_vol = pd.read_sql("select distinct * from taiex_vol", connection, parse_dates=['日期'])
 cost_df = pd.read_sql("select distinct * from cost", connection)
@@ -46,7 +46,7 @@ datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）',
 #print(datedf)
 datedf.to_sql('end_date', connection, if_exists='append', index=False) 
 #connection.executemany('INSERT INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
-
+"""
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
 
@@ -235,7 +235,7 @@ try:
 except:
    print("ratio fail")
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
-"""
+
 
 df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
 df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
@@ -245,6 +245,8 @@ bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
 bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
 bank8["台指期"] = bank8["台指期"].astype(int)
 
-bank8.to_sql('bank', connection, if_exists='replace', index=False) 
+bank8.to_sql('bank', connection, if_exists='replace', index=False)
+
+"""
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
