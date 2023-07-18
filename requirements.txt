@@ -6,4 +6,3 @@ matplotlib
 datetime
 bs4
 requests
-csv
