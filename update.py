@@ -17,6 +17,7 @@ from time import sleep
 #資料庫處理
 import sqlite3
 
+import csv
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
@@ -268,7 +269,24 @@ for i in range((datetime.today() - maxtime).days):#
             
 dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
 
+check = 0
+while check == 0:
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
+        data = {
+            "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today(),'%Y/%m/%d'),
+            "commodityId": "TXF",
 
+        }
+        res = requests.post(url, data=data)
+        check = 1
+    except:
+        continue
+tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
+tempdf.columns = tempdf.loc[0,:]
+futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
+futdf.to_sql('dfMTX', connection, if_exists='replace', index=False)
 
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
