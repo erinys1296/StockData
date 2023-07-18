@@ -14,23 +14,6 @@ from plotly.subplots import make_subplots
 connection = sqlite3.connect('主圖資料.sqlite3')
 
 
-#updatecheck = pd.read_sql("select distinct * from updatecheck", connection)
-
-#if datetime.strftime(datetime.today(),'%Y/%m/%d') not in updatecheck.date.values:
-    
-#    "False"
-#    data2 = {
-#    "date": [datetime.strftime(datetime.today(),'%Y/%m/%d')],
-#    "check": [1]
-#    } 
-
-#    updatecheck = updatecheck.append(pd.DataFrame(data2))
-#    updatecheck.to_sql('updatecheck', connection, if_exists='replace', index=False) 
-
-#else:
-    
-#    "True"
-
 
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'], index_col=['日期'])
 taiex_vol = pd.read_sql("select distinct * from taiex_vol", connection, parse_dates=['日期'], index_col=['日期'])
