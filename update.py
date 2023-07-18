@@ -270,7 +270,8 @@ for i in range((datetime.today() - maxtime).days):#
 dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
 
 check = 0
-while check == 0:
+checki = 0
+while check == 0 and checki<5:
     try:
         url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
         data = {
@@ -281,12 +282,16 @@ while check == 0:
         }
         res = requests.post(url, data=data)
         check = 1
+        checki +=1
     except:
         continue
-tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
-tempdf.columns = tempdf.loc[0,:]
-futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
-futdf.to_sql('dfMTX', connection, if_exists='replace', index=False)
+try:
+    tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
+    tempdf.columns = tempdf.loc[0,:]
+    futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
+    futdf.to_sql('dfMTX', connection, if_exists='replace', index=False)
+except:
+    print("final error")
 
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
