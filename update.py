@@ -247,10 +247,10 @@ bank8["台指期"] = bank8["台指期"].astype(int)
 
 bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
-maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
-
-for i in range((datetime.today() - maxtime).days):#
+#dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+#maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+dfMTX=pd.DataFrame()
+for i in range(90):#
    
     try:
         querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
@@ -289,7 +289,7 @@ try:
     tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
     tempdf.columns = tempdf.loc[0,:]
     futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
-    futdf.to_sql('dfMTX', connection, if_exists='replace', index=False)
+    futdf.to_sql('futdf', connection, if_exists='replace', index=False)
 except:
     print("final error")
 
