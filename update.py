@@ -247,11 +247,10 @@ bank8["台指期"] = bank8["台指期"].astype(int)
 
 bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
-maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
-
-for i in range((datetime.today() - maxtime).days):#
-   
+#dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+#maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+dfMTX=pd.DataFrame()
+for i in range(80):#
     try:
         querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
         result = crawler.get_MTX_Ratio(querydate)
