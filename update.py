@@ -17,6 +17,7 @@ from time import sleep
 #資料庫處理
 import sqlite3
 
+import csv
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
@@ -46,8 +47,8 @@ datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）',
 #print(datedf)
 datedf.to_sql('end_date', connection, if_exists='append', index=False) 
 #connection.executemany('INSERT INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
-"""
-ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection)
+
+ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
 
 #test = crawler.catch_cost('20230601')
@@ -236,7 +237,6 @@ except:
    print("ratio fail")
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
 
-
 df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
 df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
 
@@ -245,8 +245,53 @@ bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
 bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
 bank8["台指期"] = bank8["台指期"].astype(int)
 
-bank8.to_sql('bank', connection, if_exists='replace', index=False)
+bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-"""
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+
+for i in range((datetime.today() - maxtime).days):#
+   
+    try:
+        querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+        result = crawler.get_MTX_Ratio(querydate)
+        if result != None:
+            dfMTX = pd.concat([dfMTX,pd.DataFrame([[querydate,result]],columns = ["Date","MTXRatio"])])
+    except:
+        sleep(5)
+        try:
+            querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+            result = crawler.get_MTX_Ratio(querydate)
+            if result != None:
+                dfMTX = pd.concat([dfMTX,pd.DataFrame([[querydate,result]],columns = ["Date","MTXRatio"])])
+        except:
+            print(querydate,"query error")
+            
+dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
+
+check = 0
+checki = 0
+while check == 0 and checki<5:
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
+        data = {
+            "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today(),'%Y/%m/%d'),
+            "commodityId": "TXF",
+
+        }
+        res = requests.post(url, data=data)
+        check = 1
+        checki +=1
+    except:
+        continue
+try:
+    tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
+    tempdf.columns = tempdf.loc[0,:]
+    futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
+    futdf.to_sql('futdf', connection, if_exists='replace', index=False)
+except:
+    print("final error")
+
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
