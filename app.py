@@ -100,22 +100,29 @@ kbars["all_kk"] = 0
 barssince5 = 0
 barssince6 = 0
 kbars['labelb'] = 1
-
+kbars = kbars[~kbars.index.duplicated(keep='first')]
 for i in range(2,len(kbars.index)):
-    #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
-    condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
+    try:
+        #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
+        condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
+        condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
+        condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
 
-    condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
-
+        condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
+        condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
+        condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
+    except:
+        condition51 = True
+        condition52 = True
+        condition53 = True
+        condition61 = True
+        condition63 = True
     condition54 = condition51 or condition53 #or condition52
     condition64 = condition61 or condition63 #or condition62 
 
     #kbars['labelb'] = np.where((kbars['收盤指數']> kbars['upper_band1']) , 1, np.where((kbars['收盤指數']< kbars['lower_band1']),-1,1))
 
+    print(i)
     if kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i],'upper_band1']:
         kbars.loc[kbars.index[i],'labelb'] = 1
     elif kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i],'lower_band1']:
@@ -211,6 +218,9 @@ bank8 = bank8[bank8.index>kbars.index[0]]
 dfMTX = pd.read_sql("select distinct * from dfMTX", connection, parse_dates=['Date'], index_col=['Date'])
 dfMTX = dfMTX[dfMTX.index>kbars.index[0]]
 
+futdf = pd.read_sql("select distinct * from futdf", connection, parse_dates=['日期'], index_col=['日期'])
+futdf = futdf[futdf.index>kbars.index[0]]
+
 tab1, tab2, tab3 = st.tabs(["主圖", "參考資訊","Raw Data"])
 
 with tab1:
@@ -250,7 +260,7 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 + 3
+    rowcount = optvn + 1 + 4
     rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
@@ -266,8 +276,8 @@ with tab1:
     increasing_color = 'rgb(255, 0, 0)'
     decreasing_color = 'rgb(30, 144, 255)'
 
-    red_color = 'rgba(255, 0, 0, 0.3)'
-    green_color = 'rgba(30, 144, 255,0.3)'
+    red_color = 'rgba(255, 0, 0, 0.1)'
+    green_color = 'rgba(30, 144, 255,0.1)'
 
     no_color = 'rgba(256, 256, 256,0)'
 
@@ -508,24 +518,30 @@ with tab1:
     
     ## 小台散戶多空比
     
-    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']>0].index, y=(dfMTX[dfMTX['MTXRatio']>0]['MTXRatio']).round(2), name='小台散戶多空比',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+1, col=1)
-    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']<=0].index, y=(dfMTX[dfMTX['MTXRatio']<=0]['MTXRatio']).round(2), name='小台散戶多空比',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']>0].index, y=(dfMTX[dfMTX['MTXRatio']>0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']<=0].index, y=(dfMTX[dfMTX['MTXRatio']<=0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+1, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
     fig.update_yaxes(title_text="小台散戶多空比", row=optvrank[3]+1, col=1)
+
+    ## 外資臺股期貨未平倉淨口數
+    
+    fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut',showlegend=False), row=optvrank[3]+2, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="外資未平倉淨口數", row=optvrank[3]+2, col=1)
 
     #put call ratio
     #fig.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
     #                mode='lines',
     #                line=dict(color='black'),
     #                name='收盤指數',showlegend=False),row=optvrank[3]+1, col=1)
-    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+2, col=1)
-    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+2, col=1)
+    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+3, col=1)
+    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+3, col=1)
     
     #八大行庫買賣超
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+3, col=1)
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+3, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+4, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+4, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
-    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+3, col=1)
+    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+4, col=1)
     
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
@@ -537,7 +553,7 @@ with tab1:
         #title_y=0.93,
         hovermode='x unified', 
         showlegend=True,
-        height=400 + 100* rowcount,
+        height=350 + 150* rowcount,
         width = 1000,
         hoverlabel_namelength=-1,
         xaxis=dict(showgrid=False),
