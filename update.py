@@ -270,6 +270,44 @@ for i in range((datetime.today() - maxtime).days):#
             
 dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
 
+
+dfbuysell = pd.read_sql("select distinct * from dfbuysell", connection)
+maxtime = datetime.strptime(dfbuysell["Date"].max(), '%Y/%m/%d')
+
+for i in range((datetime.today() - maxtime).days):#
+   
+    try:
+        querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y%m%d')
+        url = "https://www.twse.com.tw/fund/BFI82U?response=json&dayDate="+querydate+"&type=day"
+        res = requests.get(url)
+        response_data = res.json()
+        df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
+        df.replace(',', '', regex=True, inplace=True)
+        df = df.apply(pd.to_numeric, errors='ignore')
+        result = int(df[df['單位名稱'] == "外資及陸資(不含外資自營商)"]["買賣差額"].values[0])/100000000
+        
+        if result != None:
+            dfbuysell = pd.concat([dfbuysell,pd.DataFrame([[querydate,result]],columns = ["Date","ForeBuySell"])])
+    except:
+        sleep(5)
+        try:
+            querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y%m%d')
+            url = "https://www.twse.com.tw/fund/BFI82U?response=json&dayDate="+querydate+"&type=day"
+            res = requests.get(url)
+            response_data = res.json()
+            df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
+            df.replace(',', '', regex=True, inplace=True)
+            df = df.apply(pd.to_numeric, errors='ignore')
+            result = int(df[df['單位名稱'] == "外資及陸資(不含外資自營商)"]["買賣差額"].values[0])/100000000
+        
+            if result != None:
+                dfbuysell = pd.concat([dfbuysell,pd.DataFrame([[querydate,result]],columns = ["Date","ForeBuySell"])])
+        except:
+            print(querydate,"query error")
+            
+dfbuysell.to_sql('dfbuysell', connection, if_exists='replace', index=False) 
+
+
 check = 0
 checki = 0
 while check == 0 and checki<5:
@@ -299,6 +337,35 @@ try:
     futdf.to_sql('futdf', connection, if_exists='replace', index=False)
 except:
     print("final error")
+
+
+check = 0
+checki = 0
+while check == 0 and checki<5:
+    try:
+        url = "https://www.taifex.com.tw/cht/3/callsAndPutsDateDown"
+        data = {
+            "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
+            "commodityId": "TXO",
+
+        }
+        res = requests.post(url, data=data)
+        check = 1
+        checki +=1
+    except:
+        continue
+try:
+    tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
+    tempdf.columns = tempdf.loc[0,:]
+    tempdf = tempdf.drop([0]).apply(pd.to_numeric, errors='ignore')
+    TXOOIdf = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")][["日期"]]
+    TXOOIdf["買買賣賣"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["買方未平倉口數"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["賣方未平倉口數"].values
+    TXOOIdf["買賣賣買"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["賣方未平倉口數"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["買方未平倉口數"].values
+    TXOOIdf.to_sql('TXOOIdf', connection, if_exists='replace', index=False)
+except:
+    print("final error2")
+
 
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()

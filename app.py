@@ -221,6 +221,9 @@ dfMTX = dfMTX[dfMTX.index>kbars.index[0]]
 futdf = pd.read_sql("select distinct * from futdf", connection, parse_dates=['日期'], index_col=['日期'])
 futdf = futdf[futdf.index>kbars.index[0]]
 
+TXOOIdf = pd.read_sql("select distinct * from TXOOIdf", connection, parse_dates=['日期'], index_col=['日期'])
+TXOOIdf = TXOOIdf[TXOOIdf.index>kbars.index[0]]
+
 dfbuysell = pd.read_sql("select distinct * from dfbuysell", connection, parse_dates=['Date'], index_col=['Date'])
 dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
 
@@ -263,7 +266,7 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 + 5
+    rowcount = optvn + 1 + 6
     rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
@@ -547,11 +550,19 @@ with tab1:
     fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+4, col=1)
     fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+4, col=1)
     
-    #八大行庫買賣超
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+5, col=1)
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+5, col=1)
+
+    #選擇權外資OI
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買買賣賣"]), name='買買權+賣賣權',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+5, col=1)
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買賣賣買"]), name='買賣權+賣買權',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+5, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
-    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+5, col=1)
+    fig.update_yaxes(title_text="選擇權外資OI", row=optvrank[3]+5, col=1)
+
+
+    #八大行庫買賣超
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+6, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+6, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+6, col=1)
     
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
