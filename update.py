@@ -16,8 +16,8 @@ from time import sleep
 
 #資料庫處理
 import sqlite3
-
 import csv
+
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
@@ -133,7 +133,10 @@ for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%
         continue
 
     sleep(5)
-
+print(taiex_vol)
+print(taiex)
+taiex_vol.to_excel("taiex_vol.xlsx")
+taiex.to_excel("taiex.xlsx")
 taiex_vol.to_sql('taiex_vol', connection, if_exists='replace', index=False) 
 taiex.to_sql('taiex', connection, if_exists='replace', index=False) 
 
@@ -247,10 +250,11 @@ bank8["台指期"] = bank8["台指期"].astype(int)
 
 bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-#dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
-#maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
-dfMTX=pd.DataFrame()
-for i in range(80):#
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+
+for i in range((datetime.today() - maxtime).days):#
+   
     try:
         querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
         result = crawler.get_MTX_Ratio(querydate)
