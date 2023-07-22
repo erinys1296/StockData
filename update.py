@@ -286,8 +286,14 @@ while check == 0 and checki<5:
         res = requests.post(url, data=data)
         check = 1
         checki +=1
+    
+        
     except:
+        print("error")
         continue
+
+
+
 try:
     tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
     tempdf.columns = tempdf.loc[0,:]
