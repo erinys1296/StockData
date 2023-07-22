@@ -267,11 +267,11 @@ with tab1:
 
     st.title('選擇權')
     rowcount = optvn + 1 + 6
-    rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
+    rowh = [0.3] + [ 0.7/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
         shared_xaxes=True, 
-        vertical_spacing=0.05,
+        vertical_spacing=0.02,
         row_heights= rowh[:rowcount],
         shared_yaxes=False,
         #subplot_titles=subtitle,
@@ -509,7 +509,13 @@ with tab1:
         PCsum_colors = [increasing_color if kbars['價平和'][i] > kbars['價平和'][i-1] else decreasing_color for i in range(len(kbars['價平和']))]
         PCsum_colors[0] = decreasing_color
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=optvrank[1], col=1)
+        #fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=optvrank[1], col=1)
+        for i in range(1,int(max(kbars['價平和'].values)//50)+1):
+            fig.add_trace(go.Scatter(x=kbars.index,y=[i*50]*len(kbars.index),showlegend=False, line_width=0.5,line_dash="dash", line_color="black"), row=optvrank[1], col=1)
         fig.update_yaxes(title_text="價平和", row=optvrank[1], col=1)
+
+        
+
     ## MA差
 
     if optvrank[2] != 0:
