@@ -133,10 +133,8 @@ for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%
         continue
 
     sleep(5)
-print(taiex_vol)
-print(taiex)
-taiex_vol.to_excel("taiex_vol.xlsx")
-taiex.to_excel("taiex.xlsx")
+
+
 taiex_vol.to_sql('taiex_vol', connection, if_exists='replace', index=False) 
 taiex.to_sql('taiex', connection, if_exists='replace', index=False) 
 
