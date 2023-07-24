@@ -180,7 +180,7 @@ for i in range((datetime.today() - maxtime).days+10):
 
 putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
-
+print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
 data = {'ityIds': '2',
 'commodityIds': '8',
@@ -236,20 +236,23 @@ try:
    result.to_sql('putcallratio', connection, if_exists='replace', index=False)
 except:
    print("ratio fail")
+print('ratio complete')
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
+try:
+    df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
+    df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
 
-df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
-df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
+    bank8 = pd.concat([df1,df2]).reset_index().drop(columns=['index'])
+    bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
+    bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
+    bank8["台指期"] = bank8["台指期"].astype(int)
 
-bank8 = pd.concat([df1,df2]).reset_index().drop(columns=['index'])
-bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
-bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
-bank8["台指期"] = bank8["台指期"].astype(int)
+    bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-bank8.to_sql('bank', connection, if_exists='replace', index=False) 
-
-dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
-maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+    dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+    maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+except:
+    print("八大error")
 
 for i in range((datetime.today() - maxtime).days):#
    
@@ -272,7 +275,7 @@ dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False)
 
 
 dfbuysell = pd.read_sql("select distinct * from dfbuysell", connection)
-maxtime = datetime.strptime(dfbuysell["Date"].max(), '%Y/%m/%d')
+maxtime = datetime.strptime(dfbuysell["Date"].max(), '%Y%m%d')
 
 for i in range((datetime.today() - maxtime).days):#
    
