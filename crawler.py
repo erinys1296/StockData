@@ -426,7 +426,7 @@ def get_MTX_Ratio(date):
 
     # 將表格資料轉換為 pandas 的 dataframe 格式
     df=pd.read_html(str(table))[0]
-    a = df["*未沖銷契約量"].values[7]
+    a = df["*未沖銷契約量"].values[-1]
     
     # 製作 POST 請求
     url = "https://www.taifex.com.tw/cht/3/futContractsDate"
@@ -454,8 +454,8 @@ def get_MTX_Ratio(date):
     df=pd.read_html(str(table))[0]    
     
     
-    b = int(df[9].values[9])
-    c = int(df[11].values[9])
+    b = int(df[9].values[-1])
+    c = int(df[11].values[-1])
     
     return ((a-b)-(a-c))/a
 

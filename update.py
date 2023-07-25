@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -364,8 +363,8 @@ try:
     tempdf.columns = tempdf.loc[0,:]
     tempdf = tempdf.drop([0]).apply(pd.to_numeric, errors='ignore')
     TXOOIdf = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")][["日期"]]
-    TXOOIdf["買買賣賣"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["買方未平倉口數"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["賣方未平倉口數"].values
-    TXOOIdf["買賣賣買"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["賣方未平倉口數"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["買方未平倉口數"].values
+    TXOOIdf["買買賣賣"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["買方未平倉契約金額(千元)"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["賣方未平倉契約金額(千元)"].values
+    TXOOIdf["買賣賣買"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["買方未平倉契約金額(千元)"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["賣方未平倉契約金額(千元)"].values
     TXOOIdf.to_sql('TXOOIdf', connection, if_exists='replace', index=False)
 except:
     print("final error2")

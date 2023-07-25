@@ -287,8 +287,8 @@ with tab1:
 
     no_color = 'rgba(256, 256, 256,0)'
 
-    orange_color = 'rgb(255,128,51)'
-    green_color1 = 'rgb(50, 205, 50)'
+    orange_color = 'rgb(30, 144, 255)'
+    green_color1 = 'rgb(255, 0, 0)'
 
 
     ### 成本價及上下極限 ###
@@ -296,7 +296,7 @@ with tab1:
                     y=kbars['外資成本'].shift(1).values,
                     mode='lines',
                     line=dict(color='yellow'),
-                    name='外資成本'),row=1, col=1)
+                    name='外資成本'),row=1, col=1, secondary_y= True)
 
 
     #自營商外資上極限
@@ -337,24 +337,24 @@ with tab1:
         print(bandstart,bandend)
         if kbars["labelb"].values[bandstart+1] == 1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False))
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),secondary_ys= [True,True])
                 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
-                                        ))
+                                        ),secondary_ys= [True,True])
         else:
 
 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False))
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False), secondary_ys= [True,True])
                 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
-                                        ))
+                                        ),secondary_ys= [True,True])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
             break
@@ -378,13 +378,13 @@ with tab1:
                             y=kbars['MA'],
                             mode='lines',
                             line=dict(color='green'),
-                            name='MA'),row=1, col=1)
+                            name='MA'),row=1, col=1, secondary_y= True)
 
     fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
                             y=kbars['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=1)
+                            name='IC操盤線'),row=1, col=1, secondary_y= True)
 
     if option_month == True:
         for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
@@ -419,7 +419,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -438,7 +438,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
     ### K線圖製作 ###
@@ -457,7 +457,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -476,7 +476,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -486,7 +486,7 @@ with tab1:
     volume_colors[0] = green_color
 
     #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1)
 
     ### KD線 ###
     #if optvrank[0] != 0:
@@ -537,8 +537,10 @@ with tab1:
 
     
     ## 外資臺股期貨未平倉淨口數
-    
-    fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut',showlegend=False), row=optvrank[3]+2, col=1)
+    fut_colors = [green_color1 if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else orange_color for i in range(len(kbars['收盤指數']))]
+    fut_colors[0] = orange_color
+    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
+    fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=optvrank[3]+2, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
     fig.update_yaxes(title_text="外資未平倉淨口數", row=optvrank[3]+2, col=1)
 
@@ -552,8 +554,8 @@ with tab1:
     
 
     #選擇權外資OI
-    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買買賣賣"]), name='買買權+賣賣權',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+3, col=1)
-    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買賣賣買"]), name='買賣權+賣買權',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+3, col=1)
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買買賣賣"]), name='買買權+賣賣權',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+3, col=1)
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買賣賣買"]), name='買賣權+賣買權',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+3, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)3
     fig.update_yaxes(title_text="選擇權外資OI", row=optvrank[3]+3, col=1)
 
@@ -584,9 +586,9 @@ with tab1:
         height=350 + 150* rowcount,
         width = 1000,
         hoverlabel_namelength=-1,
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
-        yaxis2 = dict(range=[0, 90*10**10]),
+        xaxis2=dict(showgrid=False),
+        yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
+        yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
         #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
         hoverlabel=dict(align='left'),
