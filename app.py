@@ -537,8 +537,10 @@ with tab1:
 
     
     ## 外資臺股期貨未平倉淨口數
-    fut_colors = [green_color1 if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else orange_color for i in range(len(kbars['收盤指數']))]
-    fut_colors[0] = orange_color
+    #fut_colors = [green_color1 if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else orange_color for i in range(len(kbars['收盤指數']))]
+    #fut_colors[0] = orange_color
+    fut_colors = [increasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else decreasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
+    fut_colors[0] = decreasing_color
     #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
     fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=optvrank[3]+2, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
