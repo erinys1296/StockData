@@ -10,6 +10,8 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+import requests
+
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
@@ -100,22 +102,29 @@ kbars["all_kk"] = 0
 barssince5 = 0
 barssince6 = 0
 kbars['labelb'] = 1
-
+kbars = kbars[~kbars.index.duplicated(keep='first')]
 for i in range(2,len(kbars.index)):
-    #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
-    condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
-    condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
+    try:
+        #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
+        condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
+        condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
+        condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
 
-    condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
-    condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
-
+        condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
+        condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
+        condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
+    except:
+        condition51 = True
+        condition52 = True
+        condition53 = True
+        condition61 = True
+        condition63 = True
     condition54 = condition51 or condition53 #or condition52
     condition64 = condition61 or condition63 #or condition62 
 
     #kbars['labelb'] = np.where((kbars['收盤指數']> kbars['upper_band1']) , 1, np.where((kbars['收盤指數']< kbars['lower_band1']),-1,1))
 
+    print(i)
     if kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i],'upper_band1']:
         kbars.loc[kbars.index[i],'labelb'] = 1
     elif kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i],'lower_band1']:
@@ -207,6 +216,22 @@ CPratio = CPratio[CPratio.index>kbars.index[0]]
 
 bank8 = pd.read_sql("select distinct * from bank", connection, parse_dates=['日期'], index_col=['日期'])
 bank8 = bank8[bank8.index>kbars.index[0]]
+
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection, parse_dates=['Date'], index_col=['Date'])
+dfMTX = dfMTX[dfMTX.index>kbars.index[0]]
+
+futdf = pd.read_sql("select distinct * from futdf", connection, parse_dates=['日期'], index_col=['日期'])
+futdf = futdf[futdf.index>kbars.index[0]]
+
+TXOOIdf = pd.read_sql("select distinct * from TXOOIdf", connection, parse_dates=['日期'], index_col=['日期'])
+TXOOIdf = TXOOIdf[TXOOIdf.index>kbars.index[0]]
+
+dfbuysell = pd.read_sql("select distinct * from dfbuysell order by Date", connection, parse_dates=['Date'], index_col=['Date'])
+dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
+
+dfMargin = pd.read_sql("select distinct * from dfMargin order by Date", connection, parse_dates=['Date'], index_col=['Date'])
+dfMargin = dfMargin[dfMargin.index>kbars.index[0]]
+
 tab1, tab2, tab3 = st.tabs(["主圖", "參考資訊","Raw Data"])
 
 with tab1:
@@ -221,7 +246,7 @@ with tab1:
 
     option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
     option_2d = st.sidebar.checkbox('價平和', value = True)
-    option_2e = st.sidebar.checkbox('月線乖離', value = True)
+    option_2e = st.sidebar.checkbox('月線乖離', value = False)
     option_2f = st.sidebar.checkbox('月結趨勢', value = True)
     options_vice = [ option_2c , option_2d, option_2e , option_2f]
 
@@ -246,8 +271,8 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 +2
-    rowh = [0.5] + [ 0.5/(rowcount - 1)] * rowcount
+    rowcount = optvn + 1 + 8
+    rowh = [0.3] + [ 0.7/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
         shared_xaxes=True, 
@@ -262,13 +287,19 @@ with tab1:
     increasing_color = 'rgb(255, 0, 0)'
     decreasing_color = 'rgb(30, 144, 255)'
 
-    red_color = 'rgba(255, 0, 0, 0.3)'
-    green_color = 'rgba(30, 144, 255,0.3)'
+    red_color = 'rgba(255, 0, 0, 0.1)'
+    green_color = 'rgba(30, 144, 255,0.1)'
 
     no_color = 'rgba(256, 256, 256,0)'
 
-    orange_color = 'rgb(255,128,51)'
-    green_color1 = 'rgb(50, 205, 50)'
+    blue_color = 'rgb(30, 144, 255)'
+    red_color_full = 'rgb(255, 0, 0)'
+
+    orange_color = 'rgb(245, 152, 59)'
+    green_color_full = 'rgb(52, 186, 7)'
+
+    gray_color = 'rgb(188, 194, 192)'
+    black_color = 'rgb(0, 0, 0)'
 
 
     ### 成本價及上下極限 ###
@@ -276,7 +307,7 @@ with tab1:
                     y=kbars['外資成本'].shift(1).values,
                     mode='lines',
                     line=dict(color='yellow'),
-                    name='外資成本'),row=1, col=1)
+                    name='外資成本'),row=1, col=1, secondary_y= True)
 
 
     #自營商外資上極限
@@ -317,24 +348,24 @@ with tab1:
         print(bandstart,bandend)
         if kbars["labelb"].values[bandstart+1] == 1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False))
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),secondary_ys= [True,True])
                 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
-                                        ))
+                                        ),secondary_ys= [True,True])
         else:
 
 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False))
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False), secondary_ys= [True,True])
                 
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
-                                        ))
+                                        ),secondary_ys= [True,True])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
             break
@@ -358,13 +389,13 @@ with tab1:
                             y=kbars['MA'],
                             mode='lines',
                             line=dict(color='green'),
-                            name='MA'),row=1, col=1)
+                            name='MA'),row=1, col=1, secondary_y= True)
 
     fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
                             y=kbars['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=1)
+                            name='IC操盤線'),row=1, col=1, secondary_y= True)
 
     if option_month == True:
         for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
@@ -399,7 +430,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -418,7 +449,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
     ### K線圖製作 ###
@@ -437,7 +468,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -456,7 +487,7 @@ with tab1:
             name='OHLC',showlegend=False
         )#,
         
-        #row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -466,7 +497,7 @@ with tab1:
     volume_colors[0] = green_color
 
     #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1)
 
     ### KD線 ###
     #if optvrank[0] != 0:
@@ -481,7 +512,7 @@ with tab1:
         min_days20 = days20["九點累積委託賣出數量"].values.min()
         #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
         fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[0], col=1)
-        fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = decreasing_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
+        fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = blue_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
         fig.add_scatter(x=np.array(min_days20_x), y=np.array(min_days20_list),marker=dict(color = orange_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
         fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
     ## 價平和
@@ -489,33 +520,127 @@ with tab1:
         PCsum_colors = [increasing_color if kbars['價平和'][i] > kbars['價平和'][i-1] else decreasing_color for i in range(len(kbars['價平和']))]
         PCsum_colors[0] = decreasing_color
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=optvrank[1], col=1)
+        #fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=optvrank[1], col=1)
+        for i in range(1,int(max(kbars['價平和'].values)//50)+1):
+            fig.add_trace(go.Scatter(x=kbars.index,y=[i*50]*len(kbars.index),showlegend=False, line_width=0.5,line_dash="dash", line_color="black"), row=optvrank[1], col=1)
         fig.update_yaxes(title_text="價平和", row=optvrank[1], col=1)
+
+        
+
     ## MA差
 
     if optvrank[2] != 0:
-        fig.add_trace(go.Bar(x=kbars[kbars['MAX_MA']>0].index, y=kbars[kbars['MAX_MA']>0]['MAX_MA'], name='MAX_MA',marker=dict(color = green_color1),showlegend=False), row=optvrank[2], col=1)
-        fig.add_trace(go.Bar(x=kbars[kbars['MIN_MA']<0].index, y=kbars[kbars['MIN_MA']<0]['MIN_MA'], name='MIN_MA',marker=dict(color = orange_color),showlegend=False), row=optvrank[2], col=1)
+        fig.add_trace(go.Bar(x=kbars[kbars['MAX_MA']>0].index, y=kbars[kbars['MAX_MA']>0]['MAX_MA'], name='MAX_MA',marker=dict(color = red_color_full),showlegend=False), row=optvrank[2], col=1)
+        fig.add_trace(go.Bar(x=kbars[kbars['MIN_MA']<0].index, y=kbars[kbars['MIN_MA']<0]['MIN_MA'], name='MIN_MA',marker=dict(color = blue_color),showlegend=False), row=optvrank[2], col=1)
         fig.update_yaxes(title_text="月線乖離", row=optvrank[2], col=1)
-    ## 結算差
+    ## 月結趨勢
     if optvrank[3] != 0:
-        fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = orange_color),showlegend=False), row=optvrank[3], col=1)
-        fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = green_color1),showlegend=False), row=optvrank[3], col=1)
+        fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = black_color),showlegend=False), row=optvrank[3], col=1)
+        fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = gray_color),showlegend=False), row=optvrank[3], col=1)
         fig.update_yaxes(title_text="月結趨勢", row=optvrank[3], col=1, tickfont=dict(size=8))
     
+    
+    ##外資買賣超
+    fig.add_trace(go.Bar(x=dfbuysell[dfbuysell['ForeBuySell']>0].index, y=(dfbuysell[dfbuysell['ForeBuySell']>0]["ForeBuySell"]).round(2), name='外資買賣超',marker=dict(color = red_color_full),showlegend=False), row=optvrank[3]+1, col=1)
+    fig.add_trace(go.Bar(x=dfbuysell[dfbuysell['ForeBuySell']<=0].index, y=(dfbuysell[dfbuysell['ForeBuySell']<=0]["ForeBuySell"]).round(2), name='外資買賣超',marker=dict(color = blue_color),showlegend=False), row=optvrank[3]+1, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="外資買賣超(億元)", row=optvrank[3]+1, col=1)
+
+
+    
+    ## 外資臺股期貨未平倉淨口數
+    #fut_colors = [red_color_full if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else blue_color for i in range(len(kbars['收盤指數']))]
+    #fut_colors[0] = blue_color
+    fut_colors = [increasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else decreasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
+    fut_colors[0] = decreasing_color
+    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
+    fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=optvrank[3]+2, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="外資未平倉淨口數", row=optvrank[3]+2, col=1)
+
+    
+    
+
     #put call ratio
     #fig.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
     #                mode='lines',
     #                line=dict(color='black'),
     #                name='收盤指數',showlegend=False),row=optvrank[3]+1, col=1)
-    fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+1, col=1)
-    fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+1, col=1)
+    #fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=optvrank[3]+4, col=1)
+    #fig.update_yaxes(title_text="PutCallRatio", row=optvrank[3]+4, col=1)
     
-    #八大行庫買賣超
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color1),showlegend=False), row=optvrank[3]+2, col=1)
-    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+2, col=1)
+
+    #選擇權外資OI
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買買賣賣"]), name='買買權+賣賣權',marker=dict(color = red_color_full),showlegend=False), row=optvrank[3]+3, col=1)
+    fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買賣賣買"]), name='買賣權+賣買權',marker=dict(color = blue_color),showlegend=False), row=optvrank[3]+3, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)3
+    fig.update_yaxes(title_text="選擇權外資OI", row=optvrank[3]+3, col=1)
+
+    #心態
+    fin = []
+    find = []
+    for idx in range(1,len(dfbuysell.index)) :
+        try:
+            datei = dfbuysell.index[idx]
+            one = dfbuysell.loc[datei,'ForeBuySell']
+
+            
+            two = (int(futdf.loc[datei,'多空未平倉口數淨額']) - int(futdf.loc[dfbuysell.index[idx-1],'多空未平倉口數淨額']))*kbars.loc[datei,'收盤指數']*200
+            three = TXOOIdf.loc[datei,'買買賣賣'] - TXOOIdf.loc[datei,'買賣賣買']
+            find.append(datei)
+            fin.append(one+two/100000000+three/100000000)
+            print(datei,one,two/100000000,three/100000000)
+        except:
+            continue
+    fin = np.array(fin)
+    find = np.array(find)
+    fig.add_trace(go.Bar(x=find[fin>0], y=fin[fin>0], name='外資期現選心態',marker=dict(color = red_color_full),showlegend=False), row=optvrank[3]+4, col=1)
+    fig.add_trace(go.Bar(x=find[fin<=0], y=fin[fin<=0], name='外資期現選心態',marker=dict(color = blue_color),showlegend=False), row=optvrank[3]+4, col=1)
+    fig.update_yaxes(title_text="外資期現選心態", row=optvrank[3]+4, col=1)
+
+
+    ## 小台散戶多空比
+    
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']>0].index, y=(dfMTX[dfMTX['MTXRatio']>0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+5, col=1)
+    fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']<=0].index, y=(dfMTX[dfMTX['MTXRatio']<=0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = green_color_full),showlegend=False), row=optvrank[3]+5, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
-    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="小台散戶多空比", row=optvrank[3]+5, col=1)
+
     
+
+    #八大行庫買賣超
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=optvrank[3]+6, col=1)
+    fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color_full),showlegend=False), row=optvrank[3]+6, col=1)
+    #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
+    fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+6, col=1)
+
+
+    
+    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'], name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
+    fig.update_yaxes(title_text="大盤融資資維持率", row=optvrank[3]+7, col=1)    
+
+
+
+    #美元匯率
+    url = "https://api.finmindtrade.com/api/v4/data?"
+    parameter = {
+    "dataset": "TaiwanExchangeRate",
+    "data_id":'USD',
+    "start_date": '2023-01-02',
+    "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    TaiwanExchangeRate = pd.DataFrame(data['data'])
+    TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
+    TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
+
+    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'], name='ExchangeRate',showlegend=False), row=optvrank[3]+8, col=1)
+    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+8, col=1)    
+
+
+        
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
     fig.update_annotations(font_size=12)
@@ -526,12 +651,12 @@ with tab1:
         #title_y=0.93,
         hovermode='x unified', 
         showlegend=True,
-        height=400 + 100* rowcount,
+        height=350 + 150* rowcount,
         width = 1000,
         hoverlabel_namelength=-1,
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
-        yaxis2 = dict(range=[0, 90*10**10]),
+        xaxis2=dict(showgrid=False),
+        yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
+        yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
         #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
         hoverlabel=dict(align='left'),
