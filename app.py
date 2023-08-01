@@ -577,15 +577,18 @@ with tab1:
     fin = []
     find = []
     for idx in range(1,len(dfbuysell.index)) :
-        datei = dfbuysell.index[idx]
-        one = dfbuysell.loc[datei,'ForeBuySell']
+        try:
+            datei = dfbuysell.index[idx]
+            one = dfbuysell.loc[datei,'ForeBuySell']
 
-        
-        two = (int(futdf.loc[datei,'多空未平倉口數淨額']) - int(futdf.loc[dfbuysell.index[idx-1],'多空未平倉口數淨額']))*kbars.loc[datei,'收盤指數']*200
-        three = TXOOIdf.loc[datei,'買買賣賣'] - TXOOIdf.loc[datei,'買賣賣買']
-        find.append(datei)
-        fin.append(one+two/100000000+three/100000000)
-        print(datei,one,two/100000000,three/100000000)
+            
+            two = (int(futdf.loc[datei,'多空未平倉口數淨額']) - int(futdf.loc[dfbuysell.index[idx-1],'多空未平倉口數淨額']))*kbars.loc[datei,'收盤指數']*200
+            three = TXOOIdf.loc[datei,'買買賣賣'] - TXOOIdf.loc[datei,'買賣賣買']
+            find.append(datei)
+            fin.append(one+two/100000000+three/100000000)
+            print(datei,one,two/100000000,three/100000000)
+        except:
+            continue
     fin = np.array(fin)
     find = np.array(find)
     fig.add_trace(go.Bar(x=find[fin>0], y=fin[fin>0], name='外資期現選心態',marker=dict(color = red_color_full),showlegend=False), row=optvrank[3]+4, col=1)
