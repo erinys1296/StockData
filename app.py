@@ -10,6 +10,8 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+import requests
+
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 
@@ -266,7 +268,7 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 + 6
+    rowcount = optvn + 1 + 7
     rowh = [0.3] + [ 0.7/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
@@ -605,7 +607,29 @@ with tab1:
     fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color_full),showlegend=False), row=optvrank[3]+6, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
     fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+6, col=1)
-    
+
+
+
+    #美元匯率
+    url = "https://api.finmindtrade.com/api/v4/data?"
+    parameter = {
+    "dataset": "TaiwanExchangeRate",
+    "data_id":'USD',
+    "start_date": '2023-01-02',
+    "end_date": datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d'),
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    TaiwanExchangeRate = pd.DataFrame(data['data'])
+    TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
+    TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
+
+    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'], name='ExchangeRate',showlegend=False), row=optvrank[3]+7, col=1)
+    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+7, col=1)    
+
+
+        
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
     fig.update_annotations(font_size=12)
