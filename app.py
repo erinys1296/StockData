@@ -229,6 +229,9 @@ TXOOIdf = TXOOIdf[TXOOIdf.index>kbars.index[0]]
 dfbuysell = pd.read_sql("select distinct * from dfbuysell order by Date", connection, parse_dates=['Date'], index_col=['Date'])
 dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
 
+dfMargin = pd.read_sql("select distinct * from dfMargin order by Date", connection, parse_dates=['Date'], index_col=['Date'])
+dfMargin = dfMargin[dfMargin.index>kbars.index[0]]
+
 tab1, tab2, tab3 = st.tabs(["主圖", "參考資訊","Raw Data"])
 
 with tab1:
@@ -268,7 +271,7 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 + 7
+    rowcount = optvn + 1 + 8
     rowh = [0.3] + [ 0.7/(rowcount - 1)] * rowcount
     fig = make_subplots(
         rows=rowcount, cols=1,
@@ -612,6 +615,11 @@ with tab1:
     fig.update_yaxes(title_text="八大行庫", row=optvrank[3]+6, col=1)
 
 
+    
+    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'], name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
+    fig.update_yaxes(title_text="大盤融資資維持率", row=optvrank[3]+7, col=1)    
+
+
 
     #美元匯率
     url = "https://api.finmindtrade.com/api/v4/data?"
@@ -619,7 +627,7 @@ with tab1:
     "dataset": "TaiwanExchangeRate",
     "data_id":'USD',
     "start_date": '2023-01-02',
-    "end_date": datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d'),
+    "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
     }
     data = requests.get(url, params=parameter)
@@ -628,8 +636,8 @@ with tab1:
     TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
     TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
 
-    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'], name='ExchangeRate',showlegend=False), row=optvrank[3]+7, col=1)
-    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+7, col=1)    
+    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'], name='ExchangeRate',showlegend=False), row=optvrank[3]+8, col=1)
+    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+8, col=1)    
 
 
         
