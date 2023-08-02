@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -251,11 +249,13 @@ try:
 
     bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-    dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
-    maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
+    
 except:
     print("八大error")
 
+
+dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
+maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
 for i in range((datetime.today() - maxtime).days):#
    
     try:
@@ -274,6 +274,28 @@ for i in range((datetime.today() - maxtime).days):#
             print(querydate,"query error")
             
 dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False) 
+
+
+dfMargin = pd.read_sql("select distinct * from dfMargin", connection)
+maxtime = datetime.strptime(dfMargin["Date"].max(), '%Y-%m-%d')
+for i in range((datetime.today() - maxtime).days):#
+   
+    try:
+        querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
+        result = crawler.get_margin(querydate)
+        if result != None:
+            dfMargin = pd.concat([dfMargin,pd.DataFrame([[querydate,result]],columns = ["Date","MarginRate"])])
+    except:
+        sleep(5)
+        try:
+            querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
+            result = crawler.get_margin(querydate)
+            if result != None:
+                dfMargin = pd.concat([dfMargin,pd.DataFrame([[querydate,result]],columns = ["Date","MarginRate"])])
+        except:
+            print(querydate,"Margin query error")
+            
+dfMargin.to_sql('dfMargin', connection, if_exists='replace', index=False) 
 
 
 dfbuysell = pd.read_sql("select distinct * from dfbuysell", connection)
@@ -320,7 +342,7 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today(),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=1),'%Y/%m/%d'),
             "commodityId": "TXF",
 
         }
@@ -344,7 +366,6 @@ except:
     print("final error")
 
 
-
 check = 0
 checki = 0
 while check == 0 and checki<5:
@@ -352,7 +373,7 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/callsAndPutsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=1),'%Y/%m/%d'),
             "commodityId": "TXO",
 
         }

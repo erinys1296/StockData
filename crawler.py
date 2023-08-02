@@ -459,3 +459,75 @@ def get_MTX_Ratio(date):
     
     return ((a-b)-(a-c))/a
 
+
+def get_margin(querydate):
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
+
+    # filter stock_id
+    parameter = {
+        "dataset": "TaiwanStockInfo",
+        "token": token, # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    TaiwanStockInfo = data.json()
+    TaiwanStockInfo = pd.DataFrame(TaiwanStockInfo['data'])
+    TaiwanStockInfo['is_bt'] = TaiwanStockInfo['stock_name'].map(lambda x: True if '乙特' in x else False)
+    TaiwanStockInfo['is_at'] = TaiwanStockInfo['stock_name'].map(lambda x: True if '甲特' in x else False)
+
+    mask = (
+        TaiwanStockInfo['type'].isin(['twse']) & 
+        ~TaiwanStockInfo['industry_category'].isin(['ETF', '大盤']) &
+        ~TaiwanStockInfo['is_bt'] &
+        ~TaiwanStockInfo['is_at']
+    )
+    #print(TaiwanStockInfo[mask].tail())
+    stock_type_list = TaiwanStockInfo[mask]['stock_id'].unique()
+
+    # 獲得個股每日收盤價
+    parameter = {
+        "dataset": "TaiwanStockPrice",
+        "start_date": querydate,
+        "token": token, # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    TaiwanStockPrice = resp.json()
+    TaiwanStockPrice = pd.DataFrame(TaiwanStockPrice["data"])
+    #print(TaiwanStockPrice[["date", "stock_id", "close"]].head())
+
+    # 獲得個股每日融資張數
+    parameter = {
+        "dataset": "TaiwanStockMarginPurchaseShortSale",
+        "start_date": querydate,
+        "token": token, # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    TaiwanStockMarginPurchaseShortSale = resp.json()
+    TaiwanStockMarginPurchaseShortSale = pd.DataFrame(TaiwanStockMarginPurchaseShortSale["data"])
+    TaiwanStockMarginPurchaseShortSale = TaiwanStockMarginPurchaseShortSale[
+        ['date', 'stock_id', 'MarginPurchaseTodayBalance']
+    ]
+    #print(TaiwanStockMarginPurchaseShortSale.head())
+
+
+
+    # 獲得大盤融資餘額
+    parameter = {
+        "dataset": "TaiwanStockTotalMarginPurchaseShortSale",
+        "start_date": querydate,
+        "token": token, # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    TaiwanStockTotalMarginPurchaseShortSale = data.json()
+    TaiwanStockTotalMarginPurchaseShortSale = pd.DataFrame(TaiwanStockTotalMarginPurchaseShortSale['data'])
+    TaiwanStockTotalMarginPurchaseShortSale = TaiwanStockTotalMarginPurchaseShortSale[TaiwanStockTotalMarginPurchaseShortSale['name']=='MarginPurchaseMoney']
+    TaiwanStockTotalMarginPurchaseShortSale = TaiwanStockTotalMarginPurchaseShortSale[TaiwanStockTotalMarginPurchaseShortSale['date']==querydate]
+    #print(TaiwanStockTotalMarginPurchaseShortSale[["date", "TodayBalance"]].tail())
+
+    # 計算2022-06-29 大盤融資維持率
+    merge_data = pd.merge(TaiwanStockPrice, TaiwanStockMarginPurchaseShortSale, on=['date', 'stock_id'], how='left')
+    merge_data['MarginPurchaseTotalValue'] = merge_data['MarginPurchaseTodayBalance'] * merge_data['close'] * 1000
+    value = merge_data[merge_data['stock_id'].isin(stock_type_list)]['MarginPurchaseTotalValue'].sum()
+    #print(TaiwanStockTotalMarginPurchaseShortSale)
+    return value / TaiwanStockTotalMarginPurchaseShortSale['TodayBalance'].values[0]
+
