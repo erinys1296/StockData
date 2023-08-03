@@ -154,11 +154,15 @@ max_days20_x = []
 min_days20_list =  []
 min_days20_x = []
 
-for dateidx in range(len(kbars.index[-60:])):
-    datei = kbars.index[-60:][dateidx]
-    days20 = kbars[(kbars.index> kbars.index[-80:][dateidx]) & (kbars.index<datei )]
-    max_days20 = days20["九點累積委託賣出數量"].values.max()
-    min_days20 = days20["九點累積委託賣出數量"].values.min()
+for dateidx in range(0,len(kbars.index[-60:]),5):
+
+    try:
+        datei = kbars.index[-60:][dateidx+10]
+        days20 = kbars[(kbars.index> kbars.index[-80:][dateidx+10]) & (kbars.index<datei )]
+        max_days20 = days20["九點累積委託賣出數量"].values.max()
+        min_days20 = days20["九點累積委託賣出數量"].values.min()
+    except:
+        pass
 
 
     try:
@@ -271,8 +275,8 @@ with tab1:
 
 
     st.title('選擇權')
-    rowcount = optvn + 1 + 8
-    rowh = [0.3] + [ 0.7/(rowcount - 1)] * rowcount
+    rowcount = optvn + 1 + 8 + 2
+    rowh = [0.2] + [ 0.6/(rowcount - 3)] * (rowcount - 3)+[0.1,0.1]
     fig = make_subplots(
         rows=rowcount, cols=1,
         shared_xaxes=True, 
@@ -396,11 +400,12 @@ with tab1:
                             mode='lines',
                             line=dict(color='orange'),
                             name='IC操盤線'),row=1, col=1, secondary_y= True)
-
+    
+    fig.add_trace(go.Scatter(x=[kbars.index[0],kbars.index[0]],y=[15500,17500], line_width=0.1, line_color="green",name='月結算日',showlegend=False),row=1, col=1)
     if option_month == True:
         for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
-            if i > kbars.index[0] and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
-                fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日')
+            if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
+                fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
 
     #enddate['最後結算日'].values
     #enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
@@ -408,7 +413,6 @@ with tab1:
     if option_week == True:
         for i in enddate['最後結算日']:
             if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-        #        fig.add_vline(x=i, line_width=1,  line_color="green")
                 fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
         #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
@@ -616,7 +620,7 @@ with tab1:
 
 
     
-    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'], name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
+    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'],marker=dict(color = gray_color), name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
     fig.update_yaxes(title_text="大盤融資資維持率", row=optvrank[3]+7, col=1)    
 
 
@@ -636,8 +640,522 @@ with tab1:
     TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
     TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
 
-    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'], name='ExchangeRate',showlegend=False), row=optvrank[3]+8, col=1)
-    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+8, col=1)    
+    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'],marker=dict(color = gray_color), name='ExchangeRate',showlegend=False), row=optvrank[3]+8, col=1)
+    fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+8, col=1)  
+
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
+
+
+    #櫃買指數
+    fig.update_yaxes(title_text="櫃買指數", row=optvrank[3]+9, col=1)  
+    parameter = {
+    "dataset": "TaiwanStockPrice",
+    "data_id": "TPEx",
+    "start_date": "2022-04-02",
+    "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
+    "token": token, # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    dataTPEx = resp.json()
+    dataTPEx = pd.DataFrame(dataTPEx["data"])
+
+    dataTPEx.date = pd.to_datetime(dataTPEx.date)
+    dataTPEx.index = dataTPEx.date
+
+
+    # 計算布林帶指標
+    dataTPEx['20MA'] = dataTPEx['close'].rolling(20).mean()
+    dataTPEx['60MA'] = dataTPEx['close'].rolling(60).mean()
+    dataTPEx['200MA'] = dataTPEx['close'].rolling(200).mean()
+    dataTPEx['std'] = dataTPEx['close'].rolling(20).std()
+    dataTPEx['upper_band'] = dataTPEx['20MA'] + 2 * dataTPEx['std']
+    dataTPEx['lower_band'] = dataTPEx['20MA'] - 2 * dataTPEx['std']
+    dataTPEx['upper_band1'] = dataTPEx['20MA'] + 1 * dataTPEx['std']
+    dataTPEx['lower_band1'] = dataTPEx['20MA'] - 1 * dataTPEx['std']
+
+    dataTPEx['IC'] = dataTPEx['close'] + 2 * dataTPEx['close'].shift(1) - dataTPEx['close'].shift(3) -dataTPEx['close'].shift(4)
+
+    # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
+    low_list = dataTPEx['min'].rolling(9, min_periods=9).min()
+    low_list.fillna(value=dataTPEx['min'].expanding().min(), inplace=True)
+    high_list = dataTPEx['max'].rolling(9, min_periods=9).max()
+    high_list.fillna(value=dataTPEx['max'].expanding().max(), inplace=True)
+    rsv = (dataTPEx['close'] - low_list) / (high_list - low_list) * 100
+    dataTPEx['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
+    dataTPEx['D'] = dataTPEx['K'].ewm(com=2).mean()
+
+    enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
+    dataTPEx['end_low'] = 0
+    dataTPEx['end_high'] = 0
+    #dataTPEx
+    for datei in dataTPEx.index:
+        
+        month_low = dataTPEx[(dataTPEx.index >= enddatemonth[enddatemonth<datei].max())&(dataTPEx.index<=datei)]["min"].min()
+        month_high = dataTPEx[(dataTPEx.index >= enddatemonth[enddatemonth<datei].max())&(dataTPEx.index<=datei)]['max'].max()
+        dataTPEx.loc[datei,'end_low'] =  dataTPEx.loc[datei,'max'] - month_low
+        dataTPEx.loc[datei,'end_high'] = dataTPEx.loc[datei,'min'] - month_high
+        
+    dataTPEx["MAX_MA"] = dataTPEx["max"] - dataTPEx["20MA"]
+    dataTPEx["MIN_MA"] = dataTPEx["min"] - dataTPEx["20MA"]
+
+    #詢問
+    ds = 2
+    dataTPEx['uline'] = dataTPEx['max'].rolling(ds, min_periods=1).max()
+    dataTPEx['dline'] = dataTPEx['min'].rolling(ds, min_periods=1).min()
+
+    dataTPEx["all_kk"] = 0
+    barssince5 = 0
+    barssince6 = 0
+    dataTPEx['labelb'] = 1
+    dataTPEx = dataTPEx[~dataTPEx.index.duplicated(keep='first')]
+    for i in range(2,len(dataTPEx.index)):
+        try:
+            #(dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"])
+            condition51 = (dataTPEx.loc[dataTPEx.index[i-1],"max"] < dataTPEx.loc[dataTPEx.index[i-2],"min"] ) and (dataTPEx.loc[dataTPEx.index[i],"min"] > dataTPEx.loc[dataTPEx.index[i-1],"max"] )
+            condition52 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] < dataTPEx.loc[dataTPEx.index[i-2],"min"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']>dataTPEx.loc[dataTPEx.index[i-1],"max"] )
+            condition53 = (dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] <= dataTPEx.loc[dataTPEx.index[i-1],"uline"])
+
+            condition61 = (dataTPEx.loc[dataTPEx.index[i-1],"min"] > dataTPEx.loc[dataTPEx.index[i-2],"max"] ) and (dataTPEx.loc[dataTPEx.index[i],"max"] < dataTPEx.loc[dataTPEx.index[i-1],"min"] )
+            condition62 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] > dataTPEx.loc[dataTPEx.index[i-2],"max"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']<dataTPEx.loc[dataTPEx.index[i-1],"min"] )
+            condition63 = (dataTPEx.loc[dataTPEx.index[i],'close'] < dataTPEx.loc[dataTPEx.index[i-1],"dline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] >= dataTPEx.loc[dataTPEx.index[i-1],"dline"])
+        except:
+            condition51 = True
+            condition52 = True
+            condition53 = True
+            condition61 = True
+            condition63 = True
+        condition54 = condition51 or condition53 #or condition52
+        condition64 = condition61 or condition63 #or condition62 
+
+        #dataTPEx['labelb'] = np.where((dataTPEx['close']> dataTPEx['upper_band1']) , 1, np.where((dataTPEx['close']< dataTPEx['lower_band1']),-1,1))
+
+        print(i)
+        if dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i],'upper_band1']:
+            dataTPEx.loc[dataTPEx.index[i],'labelb'] = 1
+        elif dataTPEx.loc[dataTPEx.index[i],'close'] < dataTPEx.loc[dataTPEx.index[i],'lower_band1']:
+            dataTPEx.loc[dataTPEx.index[i],'labelb'] = -1
+        else:
+            dataTPEx.loc[dataTPEx.index[i],'labelb'] = dataTPEx.loc[dataTPEx.index[i-1],'labelb']
+
+        if condition54 == True:
+            barssince5 = 1
+        else:
+            barssince5 += 1
+
+        if condition64 == True:
+            barssince6 = 1
+        else:
+            barssince6 += 1
+
+
+        if barssince5 < barssince6:
+            dataTPEx.loc[dataTPEx.index[i],"all_kk"] = 1
+        else:
+            dataTPEx.loc[dataTPEx.index[i],"all_kk"] = -1
+
+    dataTPEx = dataTPEx[dataTPEx.index>kbars.index[0]]
+
+    ### 成本價及上下極限 ###
+
+    checkb = dataTPEx["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(dataTPEx["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(dataTPEx["labelb"].values)-1:
+            break
+        while dataTPEx["labelb"].values[checkidx] == dataTPEx["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(dataTPEx["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        print(bandstart,bandend)
+        if dataTPEx["labelb"].values[bandstart+1] == 1:
+            fig.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[optvrank[3]+9], cols=[1])
+                
+            fig.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        ),rows=[optvrank[3]+9], cols=[1])
+        else:
+
+
+            fig.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[optvrank[3]+9], cols=[1])
+                
+            fig.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        ),rows=[optvrank[3]+9], cols=[1])
+        bandidx =checkidx +1
+        if bandidx >=len(dataTPEx["labelb"].values):
+            break
+
+    
+
+    fig.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['20MA'],
+                            mode='lines',
+                            line=dict(color='green'),
+                            name='MA20'),row=optvrank[3]+9, col=1)
+    fig.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['200MA'],
+                            mode='lines',
+                            line=dict(color='blue'),
+                            name='MA60'),row=optvrank[3]+9, col=1)
+    fig.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['60MA'],
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='MA200'),row=optvrank[3]+9, col=1)
+
+    fig.add_trace(go.Scatter(x=list(dataTPEx['IC'].index)[2:]+ICdate,
+                            y=dataTPEx['IC'].values,
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=optvrank[3]+9, col=1)
+
+
+
+
+
+    ### K線圖製作 ###
+    fig.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=2),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+9, col=1
+    )
+
+
+    fig.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+9, col=1
+    )
+
+    ### K線圖製作 ###
+    fig.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=decreasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=decreasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+9, col=1
+    )
+
+
+    fig.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=increasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=increasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+9, col=1
+    )
+
+
+
+    # 50正2
+    fig.update_yaxes(title_text="富邦台灣50正2", row=optvrank[3]+10, col=1)  
+    parameter = {
+        "dataset": "TaiwanStockPrice",
+        "data_id": "00675L",
+        "start_date": "2022-04-02",
+        "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
+        "token": token, # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    data50 = resp.json()
+    data50 = pd.DataFrame(data50["data"]) 
+    data50.date = pd.to_datetime(data50.date)
+    data50.index = data50.date 
+
+    # 計算布林帶指標
+    data50['20MA'] = data50['close'].rolling(20).mean()
+    data50['60MA'] = data50['close'].rolling(60).mean()
+    data50['200MA'] = data50['close'].rolling(200).mean()
+    data50['std'] = data50['close'].rolling(20).std()
+    data50['upper_band'] = data50['20MA'] + 2 * data50['std']
+    data50['lower_band'] = data50['20MA'] - 2 * data50['std']
+    data50['upper_band1'] = data50['20MA'] + 1 * data50['std']
+    data50['lower_band1'] = data50['20MA'] - 1 * data50['std']
+
+    data50['IC'] = data50['close'] + 2 * data50['close'].shift(1) - data50['close'].shift(3) -data50['close'].shift(4)
+
+    # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
+    low_list = data50['min'].rolling(9, min_periods=9).min()
+    low_list.fillna(value=data50['min'].expanding().min(), inplace=True)
+    high_list = data50['max'].rolling(9, min_periods=9).max()
+    high_list.fillna(value=data50['max'].expanding().max(), inplace=True)
+    rsv = (data50['close'] - low_list) / (high_list - low_list) * 100
+    data50['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
+    data50['D'] = data50['K'].ewm(com=2).mean()
+
+    enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
+    data50['end_low'] = 0
+    data50['end_high'] = 0
+    #data50
+    for datei in data50.index:
+        
+        month_low = data50[(data50.index >= enddatemonth[enddatemonth<datei].max())&(data50.index<=datei)]["min"].min()
+        month_high = data50[(data50.index >= enddatemonth[enddatemonth<datei].max())&(data50.index<=datei)]['max'].max()
+        data50.loc[datei,'end_low'] =  data50.loc[datei,'max'] - month_low
+        data50.loc[datei,'end_high'] = data50.loc[datei,'min'] - month_high
+        
+    data50["MAX_MA"] = data50["max"] - data50["20MA"]
+    data50["MIN_MA"] = data50["min"] - data50["20MA"]
+
+    #詢問
+    ds = 2
+    data50['uline'] = data50['max'].rolling(ds, min_periods=1).max()
+    data50['dline'] = data50['min'].rolling(ds, min_periods=1).min()
+
+    data50["all_kk"] = 0
+    barssince5 = 0
+    barssince6 = 0
+    data50['labelb'] = 1
+    data50 = data50[~data50.index.duplicated(keep='first')]
+    for i in range(2,len(data50.index)):
+        try:
+            #(data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"])
+            condition51 = (data50.loc[data50.index[i-1],"max"] < data50.loc[data50.index[i-2],"min"] ) and (data50.loc[data50.index[i],"min"] > data50.loc[data50.index[i-1],"max"] )
+            condition52 = (data50.loc[data50.index[i-1],'close'] < data50.loc[data50.index[i-2],"min"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']>data50.loc[data50.index[i-1],"max"] )
+            condition53 = (data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"]) and (data50.loc[data50.index[i-1],'close'] <= data50.loc[data50.index[i-1],"uline"])
+
+            condition61 = (data50.loc[data50.index[i-1],"min"] > data50.loc[data50.index[i-2],"max"] ) and (data50.loc[data50.index[i],"max"] < data50.loc[data50.index[i-1],"min"] )
+            condition62 = (data50.loc[data50.index[i-1],'close'] > data50.loc[data50.index[i-2],"max"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']<data50.loc[data50.index[i-1],"min"] )
+            condition63 = (data50.loc[data50.index[i],'close'] < data50.loc[data50.index[i-1],"dline"]) and (data50.loc[data50.index[i-1],'close'] >= data50.loc[data50.index[i-1],"dline"])
+        except:
+            condition51 = True
+            condition52 = True
+            condition53 = True
+            condition61 = True
+            condition63 = True
+        condition54 = condition51 or condition53 #or condition52
+        condition64 = condition61 or condition63 #or condition62 
+
+        #data50['labelb'] = np.where((data50['close']> data50['upper_band1']) , 1, np.where((data50['close']< data50['lower_band1']),-1,1))
+
+        print(i)
+        if data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i],'upper_band1']:
+            data50.loc[data50.index[i],'labelb'] = 1
+        elif data50.loc[data50.index[i],'close'] < data50.loc[data50.index[i],'lower_band1']:
+            data50.loc[data50.index[i],'labelb'] = -1
+        else:
+            data50.loc[data50.index[i],'labelb'] = data50.loc[data50.index[i-1],'labelb']
+
+        if condition54 == True:
+            barssince5 = 1
+        else:
+            barssince5 += 1
+
+        if condition64 == True:
+            barssince6 = 1
+        else:
+            barssince6 += 1
+
+
+        if barssince5 < barssince6:
+            data50.loc[data50.index[i],"all_kk"] = 1
+        else:
+            data50.loc[data50.index[i],"all_kk"] = -1
+
+    data50 = data50[data50.index>kbars.index[0]]
+
+    ### 成本價及上下極限 ###
+
+    checkb = data50["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(data50["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(data50["labelb"].values)-1:
+            break
+        while data50["labelb"].values[checkidx] == data50["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(data50["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        print(bandstart,bandend)
+        if data50["labelb"].values[bandstart+1] == 1:
+            fig.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[optvrank[3]+10], cols=[1])
+                
+            fig.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        ),rows=[optvrank[3]+10], cols=[1])
+        else:
+
+
+            fig.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[optvrank[3]+10], cols=[1])
+                
+            fig.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        ),rows=[optvrank[3]+10], cols=[1])
+        bandidx =checkidx +1
+        if bandidx >=len(data50["labelb"].values):
+            break
+
+    
+
+    fig.add_trace(go.Scatter(x=data50.index,
+                            y=data50['20MA'],
+                            mode='lines',
+                            line=dict(color='green'),
+                            name='MA20'),row=optvrank[3]+10, col=1)
+    fig.add_trace(go.Scatter(x=data50.index,
+                            y=data50['200MA'],
+                            mode='lines',
+                            line=dict(color='blue'),
+                            name='MA60'),row=optvrank[3]+10, col=1)
+    fig.add_trace(go.Scatter(x=data50.index,
+                            y=data50['60MA'],
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='MA200'),row=optvrank[3]+10, col=1)
+
+    fig.add_trace(go.Scatter(x=list(data50['IC'].index)[2:]+ICdate,
+                            y=data50['IC'].values,
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=optvrank[3]+10, col=1)
+
+
+
+
+
+    ### K線圖製作 ###
+    fig.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )].index,
+            open=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=2),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+10, col=1
+    )
+
+
+    fig.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )].index,
+            open=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+10, col=1
+    )
+
+    ### K線圖製作 ###
+    fig.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )].index,
+            open=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=decreasing_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=decreasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+10, col=1
+    )
+
+
+    fig.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )].index,
+            open=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=increasing_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=increasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=optvrank[3]+10, col=1
+    )
 
 
         
@@ -657,7 +1175,7 @@ with tab1:
         xaxis2=dict(showgrid=False),
         yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
         yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
-        #yaxis = dict(range=[kbars['最低指數'].min() - 2000, kbars['最高指數'].max() + 500]),
+        #yaxis = dict(range=[kbars['min'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
         hoverlabel=dict(align='left'),
         legend_traceorder="reversed",

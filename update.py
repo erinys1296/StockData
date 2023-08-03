@@ -342,7 +342,7 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=1),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
             "commodityId": "TXF",
 
         }
@@ -373,7 +373,7 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/callsAndPutsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=1),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
             "commodityId": "TXO",
 
         }
