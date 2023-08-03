@@ -236,7 +236,7 @@ dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
 dfMargin = pd.read_sql("select distinct * from dfMargin order by Date", connection, parse_dates=['Date'], index_col=['Date'])
 dfMargin = dfMargin[dfMargin.index>kbars.index[0]]
 
-tab1, tab2, tab3 = st.tabs(["主圖", "參考資訊","Raw Data"])
+tab1, tab2, tab3 = st.tabs(["主圖", "支撐壓力","Raw Data"])
 
 with tab1:
 
@@ -620,7 +620,7 @@ with tab1:
 
 
     
-    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'],marker=dict(color = gray_color), name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
+    fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'],marker=dict(color = gray_color),line_width=3, name='MarginRate',showlegend=False), row=optvrank[3]+7, col=1)
     fig.update_yaxes(title_text="大盤融資資維持率", row=optvrank[3]+7, col=1)    
 
 
@@ -640,7 +640,7 @@ with tab1:
     TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
     TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
 
-    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'],marker=dict(color = gray_color), name='ExchangeRate',showlegend=False), row=optvrank[3]+8, col=1)
+    fig.add_trace(go.Scatter(x=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]].date, y=TaiwanExchangeRate[TaiwanExchangeRate.date>kbars.index[0]]['spot_buy'],marker=dict(color = gray_color), name='ExchangeRate',line_width=3,showlegend=False), row=optvrank[3]+8, col=1)
     fig.update_yaxes(title_text="美元匯率", row=optvrank[3]+8, col=1)  
 
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
@@ -1198,7 +1198,303 @@ with tab1:
     st.plotly_chart(fig)
     
 
+with tab2:
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
 
+    parameter = {
+        "dataset": "TaiwanOptionDaily",
+        "data_id":"TXO",
+        "start_date": datetime.strftime(datetime.today()- timedelta(days=7),'%Y-%m-%d'),
+        "token": token, # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    data = pd.DataFrame(data['data'])
+    data = data[data["trading_session"] == 'position']
+    data.date = pd.to_datetime(data.date)
+    
+    contract1 = enddate['契約月份'].values[0]
+    try:
+        contract2 = data[(data.date == enddate['最後結算日'].values[0]+1000000000*60*60*24)].contract_date.unique()[0]
+    except:
+        contract2 = ""
+
+    data1 = data[(data.date <= enddate['最後結算日'].values[0]) & (data.contract_date == contract1)]
+    data2 = data[(data.date > enddate['最後結算日'].values[0]) & (data.contract_date == contract2)]
+    df = pd.concat([data1,data2])
+
+    call_df = df.loc[(df['call_put'] == 'call')]
+    index = call_df['strike_price'].unique()
+    idx = np.sort(index)
+    dates = call_df['date'].unique()
+    call_t_df = pd.DataFrame(index = idx, columns = list(dates))
+    # 取出各日期的未沖銷契約數 依序放入 dataframe 中
+    for col in call_t_df.columns:
+        call_t_df[col] = call_df.loc[call_df['date'] == col].set_index('strike_price')['open_interest']
+        
+    #空值填入 0
+    call_t_df = call_t_df.fillna(0)
+
+
+    put_df = df.loc[(df['call_put'] == 'put')]
+    index = put_df['strike_price'].unique()
+    idx = np.sort(index)
+    dates = put_df['date'].unique()
+    put_t_df = pd.DataFrame(index = idx, columns = list(dates))
+    for col in put_t_df.columns:
+        put_t_df[col] = put_df.loc[put_df['date'] == col].set_index('strike_price')['open_interest']
+
+    #空值填入 0
+    put_t_df = put_t_df.fillna(0)
+
+    datecol = []
+    titlelist = []
+    for di in call_t_df.columns:
+        datecol.append(str(di)[:10])
+        titlelist.append(str(di)[:10] + " Call")
+        titlelist.append(str(di)[:10] + " Put")
+        
+    # 設定左右子圖
+    fig1 = make_subplots(
+        rows = 1, 
+        cols = 10, 
+        horizontal_spacing = 0.02, 
+        subplot_titles = titlelist
+    )
+
+    ## 圖一
+    # 畫買權長條圖
+    fig1.add_trace(go.Bar(y = call_t_df.index,
+                        x = -call_t_df[datecol[0]],
+                        orientation = 'h',
+                        name = datecol[0] + ' Call',
+                        #text = ("(" + (call_t_df[datecol[0]] - call_t_df['2021-11-3']).astype('int').astype('str') + ") " + call_t_df['2021-11-4'].astype('int').astype('str')),
+                         marker = dict(color = 'red'),showlegend=False), 
+                row = 1, 
+                col = 1 )
+
+    # 畫賣權長條圖
+    fig1.add_trace(go.Bar(y = put_t_df.index,
+                        x = put_t_df[datecol[0]],
+                        orientation = 'h',
+                        name = datecol[0] + ' Put',
+                        #text = (put_t_df['2021-11-4'].astype('int').astype('str') + " (" + (put_t_df['2021-11-4'] - put_t_df['2021-11-3']).astype('int').astype('str') + ")"),
+                         marker = dict(color = 'green'),showlegend=False), 
+                row = 1, 
+                col = 2 )
+
+
+    # 設定圖的x跟y軸標題
+    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                    ticktext = ['15k',  '10k',  '5k',  '0'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 1)
+
+    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                    ticktext = ['0',  '5k',  '10k',  '15k'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 2)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    showticklabels = False, 
+                    title_text = "履約價",
+                    row = 1, 
+                    col = 1)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    row = 1, 
+                    col = 2)
+
+
+    ## 圖二
+    # 畫買權長條圖
+    fig1.add_trace(go.Bar(y = call_t_df.index,
+                        x = -call_t_df[datecol[1]],
+                        orientation = 'h',
+                        name = datecol[1] + ' Call',
+                        #text = ("(" + (call_t_df['2021-11-5'] - call_t_df['2021-11-4']).astype('int').astype('str') + ") " + call_t_df['2021-11-5'].astype('int').astype('str')),
+                         marker = dict(color = 'red'),showlegend=False), 
+                row = 1, 
+                col = 3 )
+
+    # 畫賣權長條圖
+    fig1.add_trace(go.Bar(y = put_t_df.index,
+                        x = put_t_df[datecol[1]],
+                        orientation = 'h',
+                        name = datecol[1]+' Put',
+                        #text = (put_t_df['2021-11-5'].astype('int').astype('str') + " (" + (put_t_df['2021-11-5'] - put_t_df['2021-11-4']).astype('int').astype('str') + ")"),
+                         marker = dict(color = 'green'),showlegend=False), 
+                row = 1, 
+                col = 4 )
+
+
+    # 設定圖的x跟y軸標題
+    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                    ticktext = ['15k',  '10k',  '5k',  '0'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 3)
+
+    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                    ticktext = ['0',  '5k',  '10k',  '15k'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 4)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    showticklabels = False, 
+                    row = 1, 
+                    col = 3)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    row = 1, 
+                    col = 4)
+
+
+    ## 圖三
+    # 畫買權長條圖
+    fig1.add_trace(go.Bar(y = call_t_df.index,
+                        x = -call_t_df[datecol[2]],
+                        orientation = 'h',
+                        name = datecol[2] + ' Call',
+                        #text = ("(" + (call_t_df['2021-11-8'] - call_t_df['2021-11-5']).astype('int').astype('str') + ") " + call_t_df['2021-11-8'].astype('int').astype('str')),
+                         marker = dict(color = 'red'),showlegend=False), 
+                row = 1, 
+                col = 5 )
+
+    # 畫賣權長條圖
+    fig1.add_trace(go.Bar(y = put_t_df.index,
+                        x = put_t_df[datecol[2]],
+                        orientation = 'h',
+                        name = datecol[2] + ' Put',
+                        #text = (put_t_df['2021-11-8'].astype('int').astype('str') + " (" + (put_t_df['2021-11-8'] - put_t_df['2021-11-5']).astype('int').astype('str') + ")"),
+                         marker = dict(color = 'green'),showlegend=False), 
+                row = 1, 
+                col = 6 )
+
+
+    # 設定圖的x跟y軸標題
+    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                    ticktext = ['15k',  '10k',  '5k',  '0'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 5)
+
+    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                    ticktext = ['0',  '5k',  '10k',  '15k'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 6)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    showticklabels = False, 
+                    row = 1, 
+                    col = 5)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    row = 1, 
+                    col = 6)
+
+    ## 圖四
+    # 畫買權長條圖
+    fig1.add_trace(go.Bar(y = call_t_df.index,
+                        x = -call_t_df[datecol[3]],
+                        orientation = 'h',
+                        name = datecol[3]+' Call',
+                        #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
+                         marker = dict(color = 'red'),showlegend=False), 
+                row = 1, 
+                col = 7 )
+
+    # 畫賣權長條圖
+    fig1.add_trace(go.Bar(y = put_t_df.index,
+                        x = put_t_df[datecol[3]],
+                        orientation = 'h',
+                        name = datecol[3]+' Put',
+                        #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
+                         marker = dict(color = 'green'),showlegend=False), 
+                row = 1, 
+                col = 8 )
+
+
+    # 設定圖的x跟y軸標題
+    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                    ticktext = ['15k',  '10k',  '5k',  '0'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 7)
+
+    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                    ticktext = ['0',  '5k',  '10k',  '15k'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 8)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    showticklabels = False, 
+                    row = 1, 
+                    col = 7)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    row = 1, 
+                    col = 8)
+
+    ## 圖五
+    # 畫買權長條圖
+    fig1.add_trace(go.Bar(y = call_t_df.index,
+                        x = -call_t_df[datecol[4]],
+                        orientation = 'h',
+                        name = datecol[4]+' Call',
+                        #text = ("(" + (call_t_df['2021-11-10'] - call_t_df['2021-11-9']).astype('int').astype('str') + ") " + call_t_df['2021-11-10'].astype('int').astype('str')),
+                         marker = dict(color = 'red'),showlegend=False), 
+                row = 1, 
+                col = 9 )
+
+    # 畫賣權長條圖
+    fig1.add_trace(go.Bar(y = put_t_df.index,
+                        x = put_t_df[datecol[4]],
+                        orientation = 'h',
+                        name = datecol[4]+' Put',
+                        #text = (put_t_df['2021-11-10'].astype('int').astype('str') + " (" + (put_t_df['2021-11-10'] - put_t_df['2021-11-9']).astype('int').astype('str') + ")"),
+                         marker = dict(color = 'green'),showlegend=False), 
+                row = 1, 
+                col = 10 )
+
+
+    # 設定圖的x跟y軸標題
+    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                    ticktext = ['15k',  '10k',  '5k',  '0'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 9)
+
+    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                    ticktext = ['0',  '5k',  '10k',  '15k'], 
+                    title_text = "未沖銷契約數",
+                    row = 1, 
+                    col = 10)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                    showticklabels = False, 
+                    row = 1, 
+                    col = 9)
+
+    fig1.update_yaxes(autorange = "reversed", 
+                      
+                    row = 1, 
+                    col = 10)
+
+    # 設定圖的標題跟長寬
+    fig1.update_annotations(font_size=12)
+    fig1.update_layout(title_text = "臺指選擇權 未沖銷契約數 支撐壓力圖", 
+                    width = 1200, 
+                    height = 650)
+
+    #fig.show()
+    st.plotly_chart(fig1)
 
 
 with tab3:
