@@ -1188,7 +1188,8 @@ with tab1:
     fig.update_xaxes(
         rangebreaks=[
             dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values])
+            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03']),
+            #dict(value='2023-08-03')
         ]
     )
 
@@ -1196,6 +1197,7 @@ with tab1:
     #fig.update_traces(hoverlabel=dict(align='left'))
 
     st.plotly_chart(fig)
+    #[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]
     
 
 with tab2:
@@ -1404,47 +1406,52 @@ with tab2:
 
     ## 圖四
     # 畫買權長條圖
-    fig1.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Call',
-                        #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 7 )
-
-    # 畫賣權長條圖
-    fig1.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Put',
-                        #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 8 )
-
-
-    # 設定圖的x跟y軸標題
-    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
+    try:
+        fig1.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Call',
+                            #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 7)
+                    col = 7 )
 
-    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
+        # 畫賣權長條圖
+        fig1.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Put',
+                            #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 8)
+                    col = 8 )
 
-    fig1.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 7)
 
-    fig1.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 8)
+        # 設定圖的x跟y軸標題
+        fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 7)
+
+        fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 8)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 7)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 8)
+    
+    except:
+        pass
+
 
     ## 圖五
     try:
