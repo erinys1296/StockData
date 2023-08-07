@@ -1222,8 +1222,13 @@ with tab2:
     contract1 = enddate['契約月份'].values[0]
     try:
         contract2 = data[(data.date == enddate['最後結算日'].values[0]+1000000000*60*60*24)].contract_date.unique()[0]
+        
     except:
-        contract2 = ""
+        try:
+            contract2 = data[(data.date == enddate['最後結算日'].values[0]+2000000000*60*60*24)].contract_date.unique()[0]
+        except:
+            contract2 = ""
+
 
     data1 = data[(data.date <= enddate['最後結算日'].values[0]) & (data.contract_date == contract1)]
     data2 = data[(data.date > enddate['最後結算日'].values[0]) & (data.contract_date == contract2)]
@@ -1240,7 +1245,7 @@ with tab2:
         
     #空值填入 0
     call_t_df = call_t_df.fillna(0)
-    #call_t_df
+
 
 
     put_df = df.loc[(df['call_put'] == 'put')]
