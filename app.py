@@ -58,7 +58,8 @@ holilist = [str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('
 
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection, parse_dates=['日期'], index_col=['日期'])
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
-kbars = kbars.join(ordervolumn).join(putcallsum)
+putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月價平和 from putcallsum_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
+kbars = kbars.join(ordervolumn).join(putcallsum).join(putcallsum_month)
 
 # 計算布林帶指標
 kbars['MA'] = kbars['收盤指數'].rolling(20).mean()
@@ -70,7 +71,7 @@ kbars['lower_band1'] = kbars['MA'] - 1 * kbars['std']
 
 kbars['IC'] = kbars['收盤指數'] + 2 * kbars['收盤指數'].shift(1) - kbars['收盤指數'].shift(3) -kbars['收盤指數'].shift(4)
 
-kbars['價平和日差'] = kbars['價平和'] - kbars['價平和'].shift(1)
+kbars['月價平和日差'] = kbars['月價平和'] - kbars['月價平和'].shift(1)
 
 # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
 low_list = kbars['最低指數'].rolling(9, min_periods=9).min()
@@ -190,7 +191,13 @@ for dateidx in range(0,len(kbars.index[-60:]),5):
 #max_days20
 
 #max_days20_x
-
+notshowdate = []
+for datei in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
+    try:
+        kbarsdi = np.where(kbars.index == datei)[0]
+        notshowdate.append(kbars.index[kbarsdi+1][0])
+    except:
+        continue
 kbars = kbars.dropna()
 kbars = kbars[kbars.index > kbars.index[-60]]
 
@@ -252,7 +259,7 @@ with tab1:
 
     option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
     option_2d = st.sidebar.checkbox('價平和', value = True)
-    option_2e = st.sidebar.checkbox('價平和日差', value = True)
+    option_2e = st.sidebar.checkbox('月價平和日差', value = True)
     option_2f = st.sidebar.checkbox('月結趨勢', value = True)
     options_vice = [ option_2c , option_2d, option_2e , option_2f]
 
@@ -264,7 +271,7 @@ with tab1:
             optvrank.append(optvn+1)
         else:
             optvrank.append(0)
-    subtitle_all = ['OHLC',   '開盤賣張','價平和','價平和日差','月結趨勢']
+    subtitle_all = ['OHLC',   '開盤賣張','價平和','月價平和日差','月結趨勢']
     subtitle =['OHLC']
     for i in range(1,5):
         if optvrank[i-1] != 0:
@@ -534,11 +541,12 @@ with tab1:
         
 
     ## MA差
-
+    
+    #notshowdate
     if optvrank[2] != 0:
-        fig.add_trace(go.Bar(x=kbars[(kbars['價平和日差']>0)&(~kbars.index.isin(enddate['最後結算日']))].index, y=(kbars[(kbars['價平和日差']>0)&(~kbars.index.isin(enddate['最後結算日']))]['價平和日差']), name='價平和日差',marker=dict(color = red_color_full),showlegend=False), row=optvrank[2], col=1)
-        fig.add_trace(go.Bar(x=kbars[(kbars['價平和日差']<=0)&(~kbars.index.isin(enddate['最後結算日']))].index, y=(kbars[(kbars['價平和日差']<=0)&(~kbars.index.isin(enddate['最後結算日']))]['價平和日差']), name='價平和日差',marker=dict(color = blue_color),showlegend=False), row=optvrank[2], col=1)
-        fig.update_yaxes(title_text="價平和日差", row=optvrank[2], col=1)
+        fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = red_color_full),showlegend=False), row=optvrank[2], col=1)
+        fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = blue_color),showlegend=False), row=optvrank[2], col=1)
+        fig.update_yaxes(title_text="月價平和日差", row=optvrank[2], col=1)
     ## 月結趨勢
     if optvrank[3] != 0:
         fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = black_color),showlegend=False), row=optvrank[3], col=1)
