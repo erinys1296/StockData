@@ -1234,6 +1234,8 @@ with tab2:
     data2 = data[(data.date >= enddate['最後結算日'].values[0]) & (data.contract_date == contract2)]
     df = pd.concat([data1,data2])
 
+    df = df[df['strike_price']>kbars['收盤指數'].values[-1]-500]
+
     call_df = df.loc[(df['call_put'] == 'call')]
     index = call_df['strike_price'].unique()
     idx = np.sort(index)
