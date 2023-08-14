@@ -1235,6 +1235,7 @@ with tab2:
     df = pd.concat([data1,data2])
 
     df = df[df['strike_price']>kbars['收盤指數'].values[-1]-500]
+    df = df[df['strike_price']<kbars['收盤指數'].values[-1]+500]
 
     call_df = df.loc[(df['call_put'] == 'call')]
     index = call_df['strike_price'].unique()
