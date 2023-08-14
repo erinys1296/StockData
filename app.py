@@ -1230,8 +1230,8 @@ with tab2:
     except:
         contract2 = ""
 
-    data1 = data[(data.date <= enddate['最後結算日'].values[0]) & (data.contract_date == contract1)]
-    data2 = data[(data.date > enddate['最後結算日'].values[0]) & (data.contract_date == contract2)]
+    data1 = data[(data.date < enddate['最後結算日'].values[0]) & (data.contract_date == contract1)]
+    data2 = data[(data.date >= enddate['最後結算日'].values[0]) & (data.contract_date == contract2)]
     df = pd.concat([data1,data2])
 
     call_df = df.loc[(df['call_put'] == 'call')]
