@@ -531,3 +531,66 @@ def get_margin(querydate):
     #print(TaiwanStockTotalMarginPurchaseShortSale)
     return value / TaiwanStockTotalMarginPurchaseShortSale['TodayBalance'].values[0]
 
+def callputtable_month(querydate):
+
+    # 建立查詢表單數據
+    data = {
+        'queryType': '2',
+        'marketCode': '0', # 0: 一般交易時段; 1: "盤後交易時段"
+        'dateaddcnt' : '1',
+        'commodity_id': 'TXO',
+        'commodity_id2': '',
+        'queryDate' : querydate,
+        'MarketCode' : '1',
+        'commodity_idt': 'TXO',
+        'commodity_id2t' : '',
+        'commodity_id2t2' : ''
+    }
+
+    # 向網站發送POST請求
+    response = requests.post('https://www.taifex.com.tw/cht/3/optDailyMarketReport', data=data)
+
+    # 解析HTML標記
+    soup = BeautifulSoup(response.text, "lxml")
+
+    # 找到表格元素
+    table = soup.find("table", {"class": "table_f"})
+
+    # 將表格數據轉換成Pandas數據框
+    df = pd.read_html(str(table))[0]
+    
+    #處理欄位空格
+    newcol = [stri.replace(' ','') for stri in df.columns]
+    df.columns = newcol
+    df = df.drop(df.index[-1])
+    df = df.dropna()
+
+    
+
+    #處理欄位空格
+    #newcol = [stri.replace(' ','') for stri in datedf.columns]
+    #datedf.columns = newcol
+
+    weekfilter = df[~(df[df.columns[1]].str.contains("W"))][df.columns[1]].min()
+    #print(weekfilter)
+    
+    df = df[df["到期月份(週別)"] == weekfilter]
+    
+    
+    #將 Call 跟 Put 分成兩個 table，並只取 "履約價","最後成交價" 這兩個欄位
+    Calltable = df[df["買賣權"] == 'Call'][["履約價","最後成交價"]]
+    Puttable = df[df["買賣權"] == 'Put'][["履約價","最後成交價"]]
+    
+    #轉換型態及資料處理
+    Calltable["履約價"] = Calltable["履約價"].astype('int')
+    Puttable["履約價"] = Puttable["履約價"].astype('int')
+
+    Calltable.loc[Calltable["最後成交價"] == '-',"最後成交價"] = None
+    Calltable = Calltable.dropna()
+    Puttable.loc[Puttable["最後成交價"] == '-',"最後成交價"] = None
+    Puttable = Puttable.dropna()
+
+    Calltable["最後成交價"] = Calltable["最後成交價"].astype('float')
+    Puttable["最後成交價"] = Puttable["最後成交價"].astype('float')
+    
+    return Calltable,Puttable

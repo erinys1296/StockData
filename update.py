@@ -279,7 +279,6 @@ dfMTX.to_sql('dfMTX', connection, if_exists='replace', index=False)
 dfMargin = pd.read_sql("select distinct * from dfMargin", connection)
 maxtime = datetime.strptime(dfMargin["Date"].max(), '%Y-%m-%d')
 for i in range((datetime.today() - maxtime).days):#
-   
     try:
         querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
         result = crawler.get_margin(querydate)
@@ -393,6 +392,26 @@ try:
 except:
     print("final error2")
 
+putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
+for i in range(2):
+    querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+    #print(querydate)
+    try:
+        CT,PT = crawler.callputtable_month(querydate)
+        print(querydate,"SUCESS")
+        
+    except:
+        print(querydate,"error")
+        #erroridx.append(i)
+        continue
+    CT.columns = ["履約價","CT成交價"]
+    PT.columns = ["履約價","PT成交價"]
+    sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
+    sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
+    result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
+    putcallsum_month = pd.concat([putcallsum_month,pd.DataFrame([[querydate,result]],columns = ["日期","月選擇權價平和"])])
+    
+putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
 
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
