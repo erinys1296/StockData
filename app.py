@@ -198,7 +198,7 @@ for datei in enddate[~enddate["契約月份"].str.contains("W")]['最後結算�
         notshowdate.append(kbars.index[kbarsdi+1][0])
     except:
         continue
-kbars = kbars.dropna()
+#kbars = kbars.dropna()
 kbars = kbars[kbars.index > kbars.index[-60]]
 
 #kbars['labelb'] = np.where(kbars['收盤指數']< kbars['lower_band1'], -1, 1)
