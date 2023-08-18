@@ -215,6 +215,8 @@ while (kbars['IC'].index[-1] + timedelta(days = datechecki)).weekday() in [5,6] 
     datechecki +=1
 ICdate.append((kbars['IC'].index[-1] + timedelta(days = datechecki)))
 
+
+
 #[kbars['IC'].index[-1] + timedelta(days = 1),kbars['IC'].index[-1] + timedelta(days = 2)]
 
 CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'], index_col=['日期'])
@@ -1313,7 +1315,7 @@ with tab2:
         rows = 1, 
         cols = 2, 
         horizontal_spacing = 0.1,
-        vertical_spacing=0.02,subplot_titles = ["","富邦台灣50正2"]
+        vertical_spacing=0.02,subplot_titles = ["加權週線","加權日線"]
         
     )
     checkb = FinalＷeekdata["labelb"].values[0]
@@ -1356,7 +1358,10 @@ with tab2:
         if bandidx >=len(FinalＷeekdata["labelb"].values):
             break
 
-    
+    ICweek = []
+    finalweek = list(FinalＷeekdata['IC'].index)[-1]
+    ICweek.append(finalweek[:5] + str(int(finalweek[-2:])+1))
+    ICweek.append(finalweek[:5] + str(int(finalweek[-2:])+2))
 
     fig1_1.add_trace(go.Scatter(x=FinalＷeekdata.index,
                             y=FinalＷeekdata['20MA'],
@@ -1374,7 +1379,7 @@ with tab2:
                             line=dict(color='orange'),
                             name='MA200'),row=1, col=1)
 
-    fig1_1.add_trace(go.Scatter(x=list(FinalＷeekdata['IC'].index)[2:]+ICdate,
+    fig1_1.add_trace(go.Scatter(x=list(FinalＷeekdata['IC'].index)[2:]+ICweek,
                             y=FinalＷeekdata['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
@@ -1816,7 +1821,7 @@ with tab2:
 
    # 設定圖的標題跟長寬
     fig1_1.update_annotations(font_size=12)
-    fig1_1.update_layout(title_text = "", 
+    fig1_1.update_layout(title_text = "", hovermode='x unified', 
                     width = 1200, 
                     height = 400)
     
