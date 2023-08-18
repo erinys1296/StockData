@@ -1202,6 +1202,362 @@ with tab1:
     
 
 with tab2:
+
+    # 設定左右子圖
+    fig1_1 = make_subplots(
+        rows = 1, 
+        cols = 2, 
+        horizontal_spacing = 0.1,
+        vertical_spacing=0.02,subplot_titles = ["櫃買指數","富邦台灣50正2"]
+        
+    )
+
+    #櫃買指數
+    #fig1_1.update_yaxes(title_text="櫃買指數", row=1, col=1)  
+    
+
+    checkb = dataTPEx["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(dataTPEx["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(dataTPEx["labelb"].values)-1:
+            break
+        while dataTPEx["labelb"].values[checkidx] == dataTPEx["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(dataTPEx["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        print(bandstart,bandend)
+        if dataTPEx["labelb"].values[bandstart+1] == 1:
+            fig1_1.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+            fig1_1.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        ),rows=[1], cols=[1])
+        else:
+
+
+            fig1_1.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+            fig1_1.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        ),rows=[1], cols=[1])
+        bandidx =checkidx +1
+        if bandidx >=len(dataTPEx["labelb"].values):
+            break
+
+    
+
+    fig1_1.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['20MA'],
+                            mode='lines',
+                            line=dict(color='green'),
+                            name='MA20'),row=1, col=1)
+    fig1_1.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['200MA'],
+                            mode='lines',
+                            line=dict(color='blue'),
+                            name='MA60'),row=1, col=1)
+    fig1_1.add_trace(go.Scatter(x=dataTPEx.index,
+                            y=dataTPEx['60MA'],
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='MA200'),row=1, col=1)
+
+    fig1_1.add_trace(go.Scatter(x=list(dataTPEx['IC'].index)[2:]+ICdate,
+                            y=dataTPEx['IC'].values,
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=1, col=1)
+
+
+
+
+
+    ### K線圖製作 ###
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=2),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=1
+    )
+
+
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=1
+    )
+
+    ### K線圖製作 ###
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=decreasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=decreasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=1
+    )
+
+
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
+            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
+            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
+            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
+            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=increasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=increasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=1
+    )
+
+    # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
+    fig1_1.update_xaxes(
+        rangeslider= {'visible':False},
+        rangebreaks=[
+            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
+            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
+        ],
+                    row = 1, 
+                    col = 1
+    )
+
+
+
+    # 50正2
+    #fig1_1.update_yaxes(title_text="富邦台灣50正2", row=1, col=2)  
+
+    fig1_1.add_trace(go.Scatter(x=data50.index,
+                            y=data50['20MA'],
+                            mode='lines',
+                            line=dict(color='green'),
+                            name='MA20'),row=1, col=2)
+    fig1_1.add_trace(go.Scatter(x=data50.index,
+                            y=data50['200MA'],
+                            mode='lines',
+                            line=dict(color='blue'),
+                            name='MA60'),row=1, col=2)
+    fig1_1.add_trace(go.Scatter(x=data50.index,
+                            y=data50['60MA'],
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='MA200'),row=1, col=2)
+
+    fig1_1.add_trace(go.Scatter(x=list(data50['IC'].index)[2:]+ICdate,
+                            y=data50['IC'].values,
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=1, col=2)
+
+
+
+    
+
+    ### 成本價及上下極限 ###
+
+    checkb = data50["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(data50["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(data50["labelb"].values)-1:
+            break
+        while data50["labelb"].values[checkidx] == data50["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(data50["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        print(bandstart,bandend)
+        if data50["labelb"].values[bandstart+1] == 1:
+            fig1_1.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
+                
+            fig1_1.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        ),rows=[1], cols=[2])
+        else:
+
+
+            fig1_1.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
+                
+            fig1_1.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        ),rows=[1], cols=[2])
+        bandidx =checkidx +1
+        if bandidx >=len(data50["labelb"].values):
+            break
+
+    
+
+    
+
+
+    ### K線圖製作 ###
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )].index,
+            open=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=2),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=2
+    )
+
+
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )].index,
+            open=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=no_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=2
+    )
+
+    ### K線圖製作 ###
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )].index,
+            open=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['close'],
+            increasing_line_color=decreasing_color,
+            increasing_fillcolor=decreasing_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=decreasing_color,
+            decreasing_fillcolor=decreasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=2
+    )
+
+
+    fig1_1.add_trace(
+        go.Candlestick(
+            x=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )].index,
+            open=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['open'],
+            high=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['max'],
+            low=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['min'],
+            close=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['close'],
+            increasing_line_color=increasing_color,
+            increasing_fillcolor=increasing_color, #fill_increasing_color(data50.index>data50.index[50])
+            decreasing_line_color=increasing_color,
+            decreasing_fillcolor=increasing_color,#decreasing_color,
+            line=dict(width=1),
+            name='OHLC',showlegend=False
+        )#,
+        
+        ,row=1, col=2
+    )
+    
+    fig1_1.update_annotations(font_size=12)
+
+    # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
+    fig1_1.update_xaxes(
+        rangeslider= {'visible':False},
+        rangebreaks=[
+            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
+            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
+        ],
+                    row = 1, 
+                    col = 2
+    )
+
+    
+
+    #fig1_1.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
+
+    
+    
+
+   
+
+    
+
+    # 設定圖的標題跟長寬
+    fig1_1.update_annotations(font_size=12)
+    fig1_1.update_layout(title_text = "", 
+                    width = 1200, 
+                    height = 400)
+
+    st.plotly_chart(fig1_1)
+
+
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
     url = "https://api.finmindtrade.com/api/v4/data?"
 
@@ -1495,6 +1851,11 @@ with tab2:
                         col = 10)
     except:
         pass
+    for hi in range(10):
+        try:
+            fig1.add_hline(y=kbars['收盤指數'].values[-1], line_width=1,line_dash="dash", line_color="black",name='當天收盤',row=1,col=hi)#, line_dash="dash"
+        except:
+            pass
 
     # 設定圖的標題跟長寬
     fig1.update_annotations(font_size=12)
@@ -1787,6 +2148,12 @@ with tab2:
                         col = 10)
     except:
         pass
+
+    for hi in range(10):
+        try:
+            fig2.add_hline(y=kbars['收盤指數'].values[-1], line_width=1,line_dash="dash", line_color="black",name='當天收盤',row=1,col=hi)#, line_dash="dash"
+        except:
+            pass
 
     # 設定圖的標題跟長寬
     fig2.update_annotations(font_size=12)
