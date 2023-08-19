@@ -34,6 +34,22 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 #    "True"
 
 
+url = "https://api.finmindtrade.com/api/v4/data?"
+token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
+
+parameter = {
+"dataset": "TaiwanStockPrice",
+"data_id": "TAIEX",
+"start_date": "2020-04-02",
+"end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
+"token": token, # 參考登入，獲取金鑰
+}
+data = requests.get(url, params=parameter)
+data = data.json()
+WeekTAIEXdata = pd.DataFrame(data['data'])
+
+taiexnew = pd.DateFrame(data['data'])
+
 taiex = pd.read_sql("select distinct * from taiex", connection, parse_dates=['日期'], index_col=['日期'])
 taiex_vol = pd.read_sql("select distinct * from taiex_vol", connection, parse_dates=['日期'], index_col=['日期'])
 cost_df = pd.read_sql("select distinct Date as [日期], Cost as [外資成本] from cost", connection, parse_dates=['日期'], index_col=['日期']).dropna()
@@ -1206,19 +1222,7 @@ with tab1:
 with tab2:
 
     #週線
-    url = "https://api.finmindtrade.com/api/v4/data?"
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
-
-    parameter = {
-    "dataset": "TaiwanStockPrice",
-    "data_id": "TAIEX",
-    "start_date": "2020-04-02",
-    "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
-    "token": token, # 參考登入，獲取金鑰
-    }
-    data = requests.get(url, params=parameter)
-    data = data.json()
-    WeekTAIEXdata = pd.DataFrame(data['data'])
+    
     WeekTAIEXdata.date = pd.to_datetime(WeekTAIEXdata.date)
     WeekTAIEXdata["yearww"] = WeekTAIEXdata.date.dt.year.astype(str) + 'W' + WeekTAIEXdata.date.dt.isocalendar().week.astype('str').str.zfill(2)
     FinalＷeekdata = WeekTAIEXdata.groupby('yearww').max()[["max"]].join(WeekTAIEXdata.groupby('yearww').min()[["min"]])
