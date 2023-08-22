@@ -113,7 +113,7 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
 
 #connection.executemany('replace INTO limit VALUES (?, ?, ?, ?, ?)', np.array(limit_df))
-
+"""
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
 taxidateend = datetime.strftime(datetime.today(),'%Y%m')+"01"
 for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%d'):
@@ -138,7 +138,7 @@ for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%
 
 taiex_vol.to_sql('taiex_vol', connection, if_exists='replace', index=False) 
 taiex.to_sql('taiex', connection, if_exists='replace', index=False) 
-
+"""
 #connection.executemany('replace INTO taiex_vol VALUES (?, ?, ?, ?, ?, ?)', np.array(taiex_vol))
 #connection.executemany('replace INTO taiex VALUES (?, ?, ?, ?, ?)', np.array(taiex))
 
