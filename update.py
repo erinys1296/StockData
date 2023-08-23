@@ -113,7 +113,7 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
 
 #connection.executemany('replace INTO limit VALUES (?, ?, ?, ?, ?)', np.array(limit_df))
-"""
+
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
 taxidateend = datetime.strftime(datetime.today(),'%Y%m')+"01"
 for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%d'):
@@ -414,6 +414,6 @@ for i in range(2):
     putcallsum_month = pd.concat([putcallsum_month,pd.DataFrame([[querydate,result]],columns = ["日期","月選擇權價平和"])])
     
 putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
-"""
+
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
