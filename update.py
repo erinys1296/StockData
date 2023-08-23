@@ -183,6 +183,7 @@ putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False)
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
+"""
 data = {'ityIds': '2',
 'commodityIds': '8',
 'commodityIds': '9',
@@ -413,6 +414,6 @@ for i in range(2):
     putcallsum_month = pd.concat([putcallsum_month,pd.DataFrame([[querydate,result]],columns = ["日期","月選擇權價平和"])])
     
 putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
-
+"""
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
