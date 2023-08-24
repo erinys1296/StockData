@@ -114,7 +114,7 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
 
 #connection.executemany('replace INTO limit VALUES (?, ?, ?, ?, ?)', np.array(limit_df))
-
+"""
 taxidatestart = taiex["日期"].max().strftime("%Y%m")+"01"
 taxidateend = datetime.strftime(datetime.today(),'%Y%m')+"01"
 for date in pd.date_range(taxidatestart, taxidateend, freq='MS').strftime('%Y%m%d'):
@@ -184,7 +184,7 @@ putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False)
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
-"""
+
 data = {'ityIds': '2',
 'commodityIds': '8',
 'commodityIds': '9',
