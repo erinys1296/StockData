@@ -265,24 +265,24 @@ dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
 
 dfMargin = pd.read_sql("select distinct * from dfMargin order by Date", connection, parse_dates=['Date'], index_col=['Date'])
 dfMargin = dfMargin[dfMargin.index>kbars.index[0]]
-
+st.set_page_config(layout="wide")
 tab1, tab2, tab3 = st.tabs(["主圖", "支撐壓力","Raw Data"])
 
 with tab1:
 
-    st.sidebar.write('結算日顯示')
-    option_month = st.sidebar.checkbox('月結算日', value = True)
-    option_week = st.sidebar.checkbox('週結算日', value = False)
+    #st.sidebar.write('結算日顯示')
+    #option_month = st.sidebar.checkbox('月結算日', value = True)
+    #option_week = st.sidebar.checkbox('週結算日', value = False)
 
 
-    st.sidebar.write('附圖選擇')
+    #st.sidebar.write('附圖選擇')
 
 
-    option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
-    option_2d = st.sidebar.checkbox('價平和', value = True)
-    option_2e = st.sidebar.checkbox('月價平和日差', value = True)
-    option_2f = st.sidebar.checkbox('月結趨勢', value = True)
-    options_vice = [ option_2c , option_2d, option_2e , option_2f]
+    #option_2c = st.sidebar.checkbox('開盤賣張張數', value = True)
+    #option_2d = st.sidebar.checkbox('價平和', value = True)
+    #option_2e = st.sidebar.checkbox('月價平和日差', value = True)
+    #option_2f = st.sidebar.checkbox('月結趨勢', value = True)
+    options_vice = [ True ]*4
 
     optvn = 0
     optvrank = []
@@ -444,18 +444,18 @@ with tab1:
 
     
     fig.add_trace(go.Scatter(x=[kbars.index[0],kbars.index[0]],y=[15500,17500], line_width=0.1, line_color="green",name='月結算日',showlegend=False),row=1, col=1)
-    if option_month == True:
-        for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
-            if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
-                fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
+    #if option_month == True:
+    for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
+        if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
+            fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
 
     #enddate['最後結算日'].values
     #enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
     #list(enddate['最後結算日'].values)[:3]
-    if option_week == True:
-        for i in enddate['最後結算日']:
-            if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-                fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
+    #if option_week == True:
+    for i in enddate['最後結算日']:
+        if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
+            fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
         #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
 
@@ -925,7 +925,7 @@ with tab1:
         hovermode='x unified', 
         showlegend=True,
         height=350 + 150* rowcount,
-        width = 1000,
+        width = 1200,
         hoverlabel_namelength=-1,
         xaxis2=dict(showgrid=False),
         yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
