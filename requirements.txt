@@ -6,3 +6,4 @@ matplotlib
 datetime
 bs4
 requests
+shioaji
