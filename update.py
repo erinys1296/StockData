@@ -183,8 +183,8 @@ putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False)
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
-"""
-data = {'ityIds': '2',
+try:
+    data = {'ityIds': '2',
 'commodityIds': '8',
 'commodityIds': '9',
 'commodityIds': '11',
@@ -200,25 +200,29 @@ data = {'ityIds': '2',
 
 #response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
 
-response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
+    response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
 
 # 解析HTML標記
-soup = BeautifulSoup(response.text, "lxml")
+    soup = BeautifulSoup(response.text, "lxml")
 
 # 找到表格元素
-table = soup.find("table", {"class": "table_c"}) 
+    table = soup.find("table", {"class": "table_c"}) 
 
 # 將表格數據轉換成Pandas數據框
-datedf = pd.read_html(str(table))[0]
+    datedf = pd.read_html(str(table))[0]
 
 #處理欄位空格
-newcol = [stri.replace(' ','') for stri in datedf.columns]
-datedf.columns = newcol
+    newcol = [stri.replace(' ','') for stri in datedf.columns]
+    datedf.columns = newcol
 
-datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
-datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
+    datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
+
+    datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
+except:
+   print('enddate error')
+
 #connection.executemany('replace INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
-#CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
+#CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期']
 result=pd.DataFrame()
 for i in range(3):
     
