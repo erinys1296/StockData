@@ -183,7 +183,7 @@ putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False)
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
-
+"""
 data = {'ityIds': '2',
 'commodityIds': '8',
 'commodityIds': '9',
@@ -240,6 +240,7 @@ except:
    print("ratio fail")
 print('ratio complete')
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
+"""
 try:
     df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
     df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
