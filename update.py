@@ -192,10 +192,10 @@ try:
 'commodityIds': '16',
 'all' : 'all',
 '_all':'on',
-'start_year': '2019',
+'start_year': '2022',
 'start_month': '06',
 'end_year': '2023',
-'end_month': '06',
+'end_month': '09',
        'button':'送出查詢'}
 
 #response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
