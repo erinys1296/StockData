@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -51,7 +50,7 @@ datedf.to_sql('end_date', connection, if_exists='append', index=False)
 
 ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
-
+bank8 = pd.read_sql("select distinct * from bank", connection)
 #test = crawler.catch_cost('20230601')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
 response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
@@ -96,7 +95,6 @@ cost_df.to_sql('cost', connection, if_exists='replace', index=False)
 maxtime = datetime.strptime(limit_df["日期"].max(), '%Y/%m/%d')
 
 for i in range((datetime.today() - maxtime).days):
-
     try:
         querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
         
@@ -185,44 +183,42 @@ print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
 try:
     data = {'ityIds': '2',
-'commodityIds': '8',
-'commodityIds': '9',
-'commodityIds': '11',
-'commodityIds': '14',
-'commodityIds': '16',
-'all' : 'all',
-'_all':'on',
-'start_year': '2022',
-'start_month': '06',
-'end_year': '2023',
-'end_month': '09',
-       'button':'送出查詢'}
+    'commodityIds': '8',
+    'commodityIds': '9',
+    'commodityIds': '11',
+    'commodityIds': '14',
+    'commodityIds': '16',
+    'all' : 'all',
+    '_all':'on',
+    'start_year': '2019',
+    'start_month': '06',
+    'end_year': '2023',
+    'end_month': '06',
+        'button':'送出查詢'}
 
-#response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
+    #response = requests.post('https://www.taifex.com.tw/cht/5/optIndxFSP', data=data)
 
     response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
 
-# 解析HTML標記
+    # 解析HTML標記
     soup = BeautifulSoup(response.text, "lxml")
 
-# 找到表格元素
+    # 找到表格元素
     table = soup.find("table", {"class": "table_c"}) 
 
-# 將表格數據轉換成Pandas數據框
+    # 將表格數據轉換成Pandas數據框
     datedf = pd.read_html(str(table))[0]
 
-#處理欄位空格
+    #處理欄位空格
     newcol = [stri.replace(' ','') for stri in datedf.columns]
     datedf.columns = newcol
 
     datedf.columns = ['最後結算日', '契約月份', '臺指選擇權（TXO）', '電子選擇權（TEO）', '金融選擇權（TFO）']
-
-    datedf.to_sql('end_date', connection, if_exists='replace', index=False) 
+    datedf.to_sql('end_date', connection, if_exists='replace', index=False)
 except:
-   print('enddate error')
-
+    print('enddate error') 
 #connection.executemany('replace INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
-#CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期']
+#CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
 result=pd.DataFrame()
 for i in range(3):
     
@@ -245,21 +241,43 @@ except:
 print('ratio complete')
 #connection.executemany('replace INTO putcallratio VALUES (?, ?, ?, ?, ?, ?, ?)', np.array(result))     
 
-try:
-    df1 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[1].drop(0)
-    df2 = pd.read_html("https://chart.capital.com.tw/Chart/TWII/TAIEX11.aspx")[2].drop(0)
 
-    bank8 = pd.concat([df1,df2]).reset_index().drop(columns=['index'])
-    bank8.columns = ["日期","八大行庫買賣超金額","台指期"]
-    bank8["八大行庫買賣超金額"] = bank8["八大行庫買賣超金額"].astype(float)
-    bank8["台指期"] = bank8["台指期"].astype(int)
+def eight_bank(datetime):
+    url = "https://api.finmindtrade.com/api/v4/data"
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0wOSAyMDo0OToyOSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.ZFpDG2LY-jW2bWjd_WTBq4g0AM6I8myU1CTVh12Ka5Q"
 
-    bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
-    
-except:
-    print("八大error")
+    parameter = {
+        "dataset": "TaiwanStockGovernmentBankBuySell",
+        "start_date": datetime,
+        "token": token, # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    data = pd.DataFrame(data['data'])
+    return (data.buy_amount.sum() - data.sell_amount.sum())
 
+maxtime = datetime.strptime(bank8["日期"].max(), '%Y-%m-%d')
+
+
+for i in range((datetime.today() - maxtime).days):#
+   
+    try:
+        querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
+        result = eight_bank(querydate)
+        if result != None:
+            bank8 = pd.concat([bank8,pd.DataFrame([[querydate,result]],columns = ["日期","八大行庫買賣超金額"])])
+    except:
+        sleep(5)
+        try:
+            querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
+            result = eight_bank(querydate)
+            if result != None:
+                cbank8 = pd.concat([bank8,pd.DataFrame([[querydate,result]],columns = ["日期","八大行庫買賣超金額"])])
+        except:
+            print(querydate,"八大error")
+
+bank8.to_sql('bank', connection, if_exists='replace', index=False) 
 
 dfMTX = pd.read_sql("select distinct * from dfMTX", connection)
 maxtime = datetime.strptime(dfMTX["Date"].max(), '%Y/%m/%d')
