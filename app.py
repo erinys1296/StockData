@@ -23,37 +23,37 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-api_key="Aojj3LVfz1FMAFAGKkgkNQyyZRUBQrwcdNkuMMMC5GZo"
-secret_key="75QdpLYJ5Bb2sy3pJPvSuwtyUeSN8z3kP5vfQisiUAx"
+#api_key="Aojj3LVfz1FMAFAGKkgkNQyyZRUBQrwcdNkuMMMC5GZo"
+#secret_key="75QdpLYJ5Bb2sy3pJPvSuwtyUeSN8z3kP5vfQisiUAx"
 # 建立Shioaji物件
-api = sj.Shioaji(simulation=True) # 模擬模式
-api.login(
-    api_key=api_key,     # 請修改此處
-    secret_key=secret_key   # 請修改此處
-)
+#api = sj.Shioaji(simulation=True) # 模擬模式
+#api.login(
+#    api_key=api_key,     # 請修改此處
+#    secret_key=secret_key   # 請修改此處
+#)
 
 
-def resample_df(original_df, frequency):
-    df_resample = original_df.resample(frequency)
+#def resample_df(original_df, frequency):
+#    df_resample = original_df.resample(frequency)
 
-    df = pd.DataFrame()
-    df['Open'] = df_resample['Open'].first()
-    df['Low'] = df_resample['Low'].min()
-    df['Volume'] = df_resample['Volume'].sum()
-    df['Close'] = df_resample['Close'].last()
-    df['High'] = df_resample['High'].max()
+#    df = pd.DataFrame()
+#    df['Open'] = df_resample['Open'].first()
+#    df['Low'] = df_resample['Low'].min()
+#    df['Volume'] = df_resample['Volume'].sum()
+#    df['Close'] = df_resample['Close'].last()
+#    df['High'] = df_resample['High'].max()
 
-    return df
+#    return df
 
-def get_future_raw_data(start, end):
-    deadline = api.Contracts.Futures.TXF.TXFR1
-    k_bars = api.kbars(api.Contracts.Futures['TXF'][deadline.symbol], start=start, end=end)
-    df = pd.DataFrame({**k_bars})
-    df.ts = pd.to_datetime(df.ts)
-    df.sort_values(["ts"], ascending=True, inplace=True)
-    df.set_index('ts', inplace=True)
+#def get_future_raw_data(start, end):
+#    deadline = api.Contracts.Futures.TXF.TXFR1
+#    k_bars = api.kbars(api.Contracts.Futures['TXF'][deadline.symbol], start=start, end=end)
+#    df = pd.DataFrame({**k_bars})
+#    df.ts = pd.to_datetime(df.ts)
+#    df.sort_values(["ts"], ascending=True, inplace=True)
+#    df.set_index('ts', inplace=True)
 
-    return resample_df(df, 'T')
+#    return resample_df(df, 'T')
 
 
 
@@ -78,7 +78,7 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 #    "True"
 
 #週線
-url = "https://api.finmindtrade.com/api/v4/data?"
+url = "https://.finmindtrade.com/api/v4/data?"
 token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
 
 parameter = {
