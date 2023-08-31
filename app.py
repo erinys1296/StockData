@@ -78,7 +78,7 @@ connection = sqlite3.connect('主圖資料.sqlite3')
 #    "True"
 
 #週線
-url = "https://.finmindtrade.com/api/v4/data?"
+url = "https://api.finmindtrade.com/api/v4/data?"
 token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
 
 parameter = {
