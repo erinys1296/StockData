@@ -401,7 +401,7 @@ with tab1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
                                         ),secondary_ys= [True,True])
         else:
 
@@ -412,7 +412,7 @@ with tab1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
                                         ),secondary_ys= [True,True])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
@@ -1092,7 +1092,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
                                         ),rows=[1], cols=[1])
         else:
 
@@ -1103,7 +1103,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
                                         ),rows=[1], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(FinalＷeekdata["labelb"].values):
@@ -1240,7 +1240,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
                                         ),rows=[1], cols=[2])
         else:
 
@@ -1251,7 +1251,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
                                         ),rows=[1], cols=[2])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
@@ -1416,7 +1416,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
                                         ),rows=[1], cols=[1])
         else:
 
@@ -1427,7 +1427,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
                                         ),rows=[1], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(dataTPEx["labelb"].values):
@@ -1604,7 +1604,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.4)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
                                         ),rows=[1], cols=[2])
         else:
 
@@ -1615,7 +1615,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.4)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
                                         ),rows=[1], cols=[2])
         bandidx =checkidx +1
         if bandidx >=len(data50["labelb"].values):
@@ -2381,7 +2381,7 @@ with tab3:
     startFuture = datetime.strftime(datetime.today()- timedelta(days=20),'%Y-%m-%d')
     endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
     FutureData = pd.read_sql("select distinct * from futurehourly", connectionfuture, parse_dates=['ts'], index_col=['ts'])#get_future_raw_data(startFuture,endFuture)
-    
+
     df_ts = FutureData.reset_index()
     FutureData = FutureData.reset_index()
     FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8),'ts'] = FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8)].ts - timedelta(minutes=46)
@@ -2393,8 +2393,7 @@ with tab3:
     FutureData['date'] = np.array(pd.to_datetime(FutureData.index).values)
     FutureData = FutureData.dropna()
     FutureData.index = FutureData['date']
-    
-    FutureData
+
 
 
     Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]])
@@ -2406,16 +2405,18 @@ with tab3:
     Final60Tdata = Final60Tdata.join(tempopen[["Open",'date']]).join(tempclose[["Close"]])
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata.columns = ['max','min','open','date','close']
-    
+
     #Final60Tdata
-    Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=6)).dt.date)
-    Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期")
-    Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期")
-    Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期")
+    Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=30)).dt.date)
+    Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=6)).dt.weekday ==0,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=6)).dt.weekday ==0].date- timedelta(hours=78)).dt.date)
+    Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
+    Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
+    Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
     Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata = Final60Tdata.sort_index()
-    
+
+
     # 計算布林帶指標
     # 計算布林帶指標
     Final60Tdata['20MA'] = Final60Tdata['close'].rolling(20).mean()
@@ -2426,8 +2427,11 @@ with tab3:
     Final60Tdata['lower_band'] = Final60Tdata['20MA'] - 2 * Final60Tdata['std']
     Final60Tdata['upper_band1'] = Final60Tdata['20MA'] + 1 * Final60Tdata['std']
     Final60Tdata['lower_band1'] = Final60Tdata['20MA'] - 1 * Final60Tdata['std']
-    Final60Tdata
-    
+
+    Final60Tdata['IC'] = Final60Tdata['close'] + 2 * Final60Tdata['close'].shift(1) - Final60Tdata['close'].shift(3) -Final60Tdata['close'].shift(4)
+
+
+
     # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
     low_list = Final60Tdata['min'].rolling(9, min_periods=9).min()
     low_list.fillna(value=Final60Tdata['min'].expanding().min(), inplace=True)
@@ -2440,7 +2444,7 @@ with tab3:
     enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
     Final60Tdata['end_low'] = 0
     Final60Tdata['end_high'] = 0
-    
+
     #詢問
     ds = 2
     Final60Tdata['uline'] = Final60Tdata['max'].rolling(ds, min_periods=1).max()
@@ -2497,46 +2501,101 @@ with tab3:
             Final60Tdata.loc[Final60Tdata.index[i],"all_kk"] = -1
 
     Final60Tdata = Final60Tdata[Final60Tdata.index>Final60Tdata.index[-100]]
-    Final60Tdata.index = Final60Tdata.date.astype('str')
-    # 設定左右子圖
+
+
+
     fig3_1 = make_subplots(
         rows = 2, 
         cols = 1, 
         horizontal_spacing = 0.1,
         vertical_spacing=0.2,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"]
-        
+
     )
-    
+    checkb = Final60Tdata["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(Final60Tdata["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(Final60Tdata["labelb"].values)-1:
+            break
+        while Final60Tdata["labelb"].values[checkidx] == Final60Tdata["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(Final60Tdata["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        #print(bandstart,bandend)
+        if Final60Tdata["labelb"].values[bandstart+1] == 1:
+            fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+            fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        ),rows=[1], cols=[1])
+        else:
+
+
+            fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+            fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        ),rows=[1], cols=[1])
+        bandidx =checkidx +1
+        if bandidx >=len(Final60Tdata["labelb"].values):
+            break
 
 
 
-    #IChour = []
-    #finalhour = list(Final60Tdata['IC'].index)[-1]
-    #IChour.append(finalhour + timedelta(hours = 1))
-    #IChour.append(finalhour + timedelta(hours = 2))
+    IChour = []
+    finalhour = list(Final60Tdata['IC'].index)[-1]
+    plusi = 1
+    while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
+        plusi = plusi + 1
+    IChour.append(finalhour + timedelta(hours = plusi))
+    IChour.append(finalhour + timedelta(hours = plusi+1))
     fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
                             y=Final60Tdata['外資成本'],
                             mode='lines',
                             #line=dict(color='green'),
                             name='外資成本'),row=1, col=1)
-    fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
-                            y=Final60Tdata['外資上極限'],
-                            mode='lines',
-                            #line=dict(color='green'),
-                            name='外資上極限'),row=1, col=1)
-    fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
-                            y=Final60Tdata['外資下極限'],
-                            mode='lines',
-                            #line=dict(color='green'),
-                            name='外資下極限'),row=1, col=1)
-    
-
 
     #fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
-    #                        y=Final60Tdata['20MA'],
+    #                        y=Final60Tdata['外資下極限'],
     #                        mode='lines',
-    #                        line=dict(color='green'),
-    #                        name='MA20'),row=1, col=1)
+    #                        #line=dict(color='green'),
+    #                        name='外資下極限'),row=1, col=1)
+    
+    fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+    fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商上極限'].values,
+                                line = dict(color='rgba(0,0,0,0)'),
+                                fill='tonexty', 
+                                fillcolor = 'rgba(0,0,256,0.3)',showlegend=False
+                                ),rows=[1], cols=[1])
+    fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資下極限'].values,
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
+                
+    fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商下極限'].values,
+                                line = dict(color='rgba(0,0,0,0)'),
+                                fill='tonexty', 
+                                fillcolor = 'rgba(256,0,0,0.3)',showlegend=False
+                                ),rows=[1], cols=[1])
+
+
+
+    fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+                            y=Final60Tdata['20MA'],
+                            mode='lines',
+                            line=dict(color='green'),
+                            name='MA20'),row=1, col=1)
     #fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
     #                        y=Final60Tdata['200MA'],
     #                        mode='lines',
@@ -2548,11 +2607,11 @@ with tab3:
     #                        line=dict(color='orange'),
     #                        name='MA60'),row=1, col=1)
 
-    #fig3_1.add_trace(go.Scatter(x=list(Final60Tdata['IC'].index)[2:]+IChour,
-    #                        y=Final60Tdata['IC'].values,
-    #                        mode='lines',
-    #                        line=dict(color='orange'),
-    #                        name='IC操盤線'),row=1, col=1)
+    fig3_1.add_trace(go.Scatter(x=list(Final60Tdata['IC'].index)[2:]+IChour,
+                            y=Final60Tdata['IC'].values,
+                            mode='lines',
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=1, col=1)
 
 
 
@@ -2573,7 +2632,7 @@ with tab3:
             line=dict(width=2),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=1, col=1
     )
 
@@ -2592,7 +2651,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=1, col=1
     )
 
@@ -2611,7 +2670,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=1, col=1
     )
 
@@ -2630,7 +2689,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=1, col=1
     )
 
@@ -2639,7 +2698,7 @@ with tab3:
                 timedelta(hours=15), timedelta(hours=20)]
     data_300 = []
 
-    
+
 
     current_date = datetime.combine(df_ts.iloc[0]['ts'].date(), time(0, 0, 0))
 
@@ -2660,13 +2719,16 @@ with tab3:
 
     df_300 = pd.DataFrame(data_300, columns=['ts', 'open','close','max','min'])
     df_300['date'] = df_300['ts']
+    df_300 = df_300.dropna()
 
     df_300.set_index('ts', inplace=True)
-    df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=6)).date)
-    df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期")
-    df_300 = pd.merge(df_300, inves_limit, on="日期")
-    df_300 = pd.merge(df_300, dealer_limit, on="日期")
+    df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=30)).date)
+    df_300.loc[(df_300.date - timedelta(hours=6)).dt.weekday ==0,'dateonly'] = pd.to_datetime((df_300[(df_300.date - timedelta(hours=6)).dt.weekday ==0].date- timedelta(hours=78)).dt.date)
+    df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
+    df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
+    df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
     df_300.index = df_300.date
+    
     df_300 = df_300.sort_index()
 
     # 計算布林帶指標
@@ -2680,6 +2742,10 @@ with tab3:
     df_300['lower_band1'] = df_300['20MA'] - 1 * df_300['std']
 
     
+
+
+
+
     # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
     low_list = df_300['min'].rolling(9, min_periods=9).min()
     low_list.fillna(value=df_300['min'].expanding().min(), inplace=True)
@@ -2692,7 +2758,7 @@ with tab3:
     enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
     df_300['end_low'] = 0
     df_300['end_high'] = 0
-    
+
     #詢問
     ds = 2
     df_300['uline'] = df_300['max'].rolling(ds, min_periods=1).max()
@@ -2703,6 +2769,12 @@ with tab3:
     barssince6 = 0
     df_300['labelb'] = 1
     df_300 = df_300[~df_300.index.duplicated(keep='first')]
+
+    #df_300 = df_300.dropna(subset = ['open','close','max','min'])
+    
+    df_300['IC'] = df_300['close'] + 2 * df_300['close'].shift(1) - df_300['close'].shift(3) -df_300['close'].shift(4)
+    #df_300 = df_300[df_300.index>df_300.index[-80]]
+
     for i in range(2,len(df_300.index)):
         try:
             #(df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i-1],"uline"])
@@ -2748,23 +2820,115 @@ with tab3:
         else:
             df_300.loc[df_300.index[i],"all_kk"] = -1
 
-    #df_300 = df_300[df_300.index>df_300.index[-79]]
+    
+    df_300 = df_300[df_300.index>df_300.index[-60]]
+    IChour2 = []
+    finalhour = list(Final60Tdata['IC'].index)[-1]
+    plusi = 1
+    while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
+        plusi = plusi + 1
+    IChour2.append(finalhour + timedelta(hours = plusi))
+    IChour2.append(finalhour + timedelta(hours = plusi+5))
+ 
+
+    checkb = df_300["labelb"].values[0]
+    bandstart = 1
+    bandidx = 1
+    checkidx = 0
+    while bandidx < len(df_300["labelb"].values):
+        #checkidx = bandidx
+        bandstart = bandidx-1
+        checkidx = bandstart+1
+        if checkidx >=len(df_300["labelb"].values)-1:
+            break
+        while df_300["labelb"].values[checkidx] == df_300["labelb"].values[checkidx+1]:
+            checkidx +=1
+            if checkidx >=len(df_300["labelb"].values)-1:
+                break
+        bandend = checkidx+1
+        #print(bandstart,bandend)
+        if df_300["labelb"].values[bandstart+1] == 1:
+            fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                
+            fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        ),rows=[2], cols=[1])
+        else:
+
+
+            fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                
+            fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
+                                        line = dict(color='rgba(0,0,0,0)'),
+                                        fill='tonexty', 
+                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        ),rows=[2], cols=[1])
+        bandidx =checkidx +1
+        if bandidx >=len(df_300["labelb"].values):
+            break
+
 
     fig3_1.add_trace(go.Scatter(x=df_300.index,
                             y=df_300['外資成本'],
                             mode='lines',
                             #line=dict(color='green'),
                             name='外資成本'),row=2, col=1)
+    #fig3_1.add_trace(go.Scatter(x=df_300.index,
+    #                        y=df_300['外資上極限'],
+    #                        mode='lines',
+    #                        #line=dict(color='green'),
+    #                        name='外資上極限'),row=2, col=1)
+    #fig3_1.add_trace(go.Scatter(x=df_300.index,
+    #                        y=df_300['外資下極限'],
+    #                        mode='lines',
+    #                        #line=dict(color='green'),
+    #                        name='外資下極限'),row=2, col=1)
+    
+    fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資上極限'].values,
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                
+    fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商上極限'].values,
+                                line = dict(color='rgba(0,0,0,0)'),
+                                fill='tonexty', 
+                                fillcolor = 'rgba(0,0,256,0.3)',showlegend=False
+                                ),rows=[2], cols=[1])
+    fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資下極限'].values,
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                
+    fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商下極限'].values,
+                                line = dict(color='rgba(0,0,0,0)'),
+                                fill='tonexty', 
+                                fillcolor = 'rgba(256,0,0,0.3)',showlegend=False
+                                ),rows=[2], cols=[1])
+
+
+
     fig3_1.add_trace(go.Scatter(x=df_300.index,
-                            y=df_300['外資上極限'],
+                            y=df_300['20MA'],
                             mode='lines',
-                            #line=dict(color='green'),
-                            name='外資上極限'),row=2, col=1)
-    fig3_1.add_trace(go.Scatter(x=df_300.index,
-                            y=df_300['外資下極限'],
+                            line=dict(color='green'),
+                            name='MA20'),row=2, col=1)
+    #fig3_1.add_trace(go.Scatter(x=df_300.index,
+    #                        y=df_300['200MA'],
+    #                        mode='lines',
+    #                        line=dict(color='blue'),
+    #                        name='MA200'),row=1, col=1)
+    #fig3_1.add_trace(go.Scatter(x=df_300.index,
+    #                        y=df_300['60MA'],
+    #                        mode='lines',
+    #                        line=dict(color='orange'),
+    #                        name='MA60'),row=1, col=1)
+
+    fig3_1.add_trace(go.Scatter(x=list(df_300['IC'].index)[2:]+IChour2,
+                            y=df_300['IC'].values,
                             mode='lines',
-                            #line=dict(color='green'),
-                            name='外資下極限'),row=2, col=1)
+                            line=dict(color='orange'),
+                            name='IC操盤線'),row=2, col=1)
+
 
 
     ### K線圖製作 ###
@@ -2782,7 +2946,7 @@ with tab3:
             line=dict(width=2),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=2, col=1
     )
 
@@ -2801,7 +2965,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=2, col=1
     )
 
@@ -2820,7 +2984,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=2, col=1
     )
 
@@ -2839,7 +3003,7 @@ with tab3:
             line=dict(width=1),
             name='OHLC',showlegend=False
         )#,
-        
+
         ,row=2, col=1
     )
 
@@ -2849,7 +3013,7 @@ with tab3:
     #    if curdatetime not in Final60Tdata.index:
     #        T60noshow.append(datetime.strftime(curdatetime,'%Y-%m-%d %H:%M:%S'))
     #    curdatetime = curdatetime + timedelta(hours = 1)
-    
+
     #T60noshow
 
     T300noshow = []
@@ -2863,7 +3027,6 @@ with tab3:
                 T300noshow.append(curdatetimestr)
         curdatetime = curdatetime + timedelta(days = 1)
 
-    T300noshow
 
     fig3_1.update_xaxes(
         rangeslider= {'visible':False},
@@ -2871,7 +3034,7 @@ with tab3:
             dict(bounds=[6, 8], pattern="hour"),
             #dict(bounds=[6,24],pattern = "sat"),
             dict(bounds=[13, 15], pattern="hour"),
-            dict(bounds=[6,24], pattern="hour"),#,bounds=['sat','sun']),# hide weekends, eg. hide sat to before mon
+            #dict(bounds=[6,24], pattern="hour"),#,bounds=['sat','sun']),# hide weekends, eg. hide sat to before mon
             dict(bounds=['sun','mon']),
             #dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
             #dict(dvalues=T60noshow[10:], pattern="hour")
@@ -2885,14 +3048,14 @@ with tab3:
         rangeslider= {'visible':False},
         rangebreaks=[
             #dict(bounds=[6, 8], pattern="hour"),
-            
-            #dict(bounds=['sat', 'mon']),# hide weekends, eg. hide sat to before mon
-            dict(values=T300noshow)
+
+            dict(bounds=['sun', 'mon']),# hide weekends, eg. hide sat to before mon
+            #dict(values=T300noshow)
         ],
                     row = 2, 
                     col = 1
     )
-    
+
 
     # 設定圖的標題跟長寬
     fig3_1.update_annotations(font_size=12)
@@ -2900,5 +3063,6 @@ with tab3:
                     width = 1200, 
                     height = 800,
                     hoverlabel_namelength=-1)
+
     
     st.plotly_chart(fig3_1)
