@@ -2407,14 +2407,18 @@ with tab3:
     Final60Tdata.columns = ['max','min','open','date','close']
 
     #Final60Tdata
-    Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=30)).dt.date)
-    Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=6)).dt.weekday ==0,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=6)).dt.weekday ==0].date- timedelta(hours=78)).dt.date)
+    Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=15)).dt.date)
+    Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
     Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
     Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata = Final60Tdata.sort_index()
+
+    Final60Tdata[Final60Tdata.index == Final60Tdata.index[-1]][["日期","外資成本","外資上極限","外資下極限","自營商上極限","自營商下極限"]]
+
+
 
 
     # 計算布林帶指標
@@ -2722,8 +2726,8 @@ with tab3:
     df_300 = df_300.dropna()
 
     df_300.set_index('ts', inplace=True)
-    df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=30)).date)
-    df_300.loc[(df_300.date - timedelta(hours=6)).dt.weekday ==0,'dateonly'] = pd.to_datetime((df_300[(df_300.date - timedelta(hours=6)).dt.weekday ==0].date- timedelta(hours=78)).dt.date)
+    df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=15)).date)
+    df_300.loc[(df_300.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((df_300[(df_300.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
     df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
     df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
     df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
