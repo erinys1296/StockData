@@ -7,6 +7,7 @@ on:
 
   schedule:
     - cron: '2 * * * *'
+    - cron: '47 0-5 * * *'
 
   push:
     branches: [ "erinys1296-patch-4" ]
