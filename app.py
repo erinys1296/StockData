@@ -2381,22 +2381,24 @@ with tab3:
     startFuture = datetime.strftime(datetime.today()- timedelta(days=20),'%Y-%m-%d')
     endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
     FutureData = pd.read_sql("select distinct * from futurehourly", connectionfuture, parse_dates=['ts'], index_col=['ts'])#get_future_raw_data(startFuture,endFuture)
-    FutureData
+
     df_ts = FutureData.reset_index()
     FutureData = FutureData.reset_index()
     FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8),'ts'] = FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8)].ts - timedelta(minutes=46)
     FutureData.index = FutureData.ts
 
-    FutureData.index = FutureData.ts
+    #FutureData.index = FutureData.ts
     FutureData.date = pd.to_datetime(FutureData.index)
     FutureData["hourdate"] = np.array(FutureData.date.date.astype(str)) +  np.array(FutureData.date.hour.astype(str))
     FutureData['date'] = np.array(pd.to_datetime(FutureData.index).values)
-    FutureData = FutureData.dropna()
+    #FutureData
+    FutureData = FutureData.dropna(subset = ['Open'])
     FutureData.index = FutureData['date']
-
+    #FutureData
 
 
     Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]])
+    #Final60Tdata
     #Final60Tdata.index = Final60Tdata['hourdate']
     tempopen = FutureData.loc[FutureData.groupby('hourdate').min()['date'].values]
     tempopen.index = tempopen.hourdate
@@ -2406,7 +2408,7 @@ with tab3:
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata.columns = ['max','min','open','date','close']
 
-    #Final60Tdata
+    
     Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=15)).dt.date)
     Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
     Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
@@ -2415,7 +2417,7 @@ with tab3:
     Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata = Final60Tdata.sort_index()
-    Final60Tdata
+    #Final60Tdata
     Final60Tdata[Final60Tdata.index == Final60Tdata.index[-1]][["日期","外資成本","外資上極限","外資下極限","自營商上極限","自營商下極限"]]
 
 
@@ -2711,7 +2713,7 @@ with tab3:
             start = current_date + start_time
             end = start + timedelta(hours=5)
 
-            period = df_ts[(df_ts['ts'] > start) & (df_ts['ts'] < end)].dropna()
+            period = df_ts[(df_ts['ts'] > start) & (df_ts['ts'] < end)].dropna(subset = ['Open'])
 
             if period.shape[0]:
                 data_300.append([start, period.iloc[0]['Open'], period.iloc[-1]['Close'], period['High'].max(),
@@ -2723,7 +2725,8 @@ with tab3:
 
     df_300 = pd.DataFrame(data_300, columns=['ts', 'open','close','max','min'])
     df_300['date'] = df_300['ts']
-    df_300 = df_300.dropna()
+
+    df_300 = df_300.dropna(subset = ['open'])
 
     df_300.set_index('ts', inplace=True)
     df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=15)).date)
