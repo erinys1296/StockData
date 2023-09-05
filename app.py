@@ -2381,7 +2381,7 @@ with tab3:
     startFuture = datetime.strftime(datetime.today()- timedelta(days=20),'%Y-%m-%d')
     endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
     FutureData = pd.read_sql("select distinct * from futurehourly", connectionfuture, parse_dates=['ts'], index_col=['ts'])#get_future_raw_data(startFuture,endFuture)
-
+    FutureData
     df_ts = FutureData.reset_index()
     FutureData = FutureData.reset_index()
     FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8),'ts'] = FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8)].ts - timedelta(minutes=46)
