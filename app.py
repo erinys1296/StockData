@@ -2415,7 +2415,7 @@ with tab3:
     Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata = Final60Tdata.sort_index()
-
+    Final60Tdata
     Final60Tdata[Final60Tdata.index == Final60Tdata.index[-1]][["日期","外資成本","外資上極限","外資下極限","自營商上極限","自營商下極限"]]
 
 
