@@ -150,11 +150,11 @@ for i in range(2,len(kbars.index)):
     try:
         #(kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"])
         condition51 = (kbars.loc[kbars.index[i-1],"最高指數"] < kbars.loc[kbars.index[i-2],"最低指數"] ) and (kbars.loc[kbars.index[i],"最低指數"] > kbars.loc[kbars.index[i-1],"最高指數"] )
-        condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
+        #condition52 = (kbars.loc[kbars.index[i-1],'收盤指數'] < kbars.loc[kbars.index[i-2],"最低指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']>kbars.loc[kbars.index[i-1],"最高指數"] )
         condition53 = (kbars.loc[kbars.index[i],'收盤指數'] > kbars.loc[kbars.index[i-1],"uline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] <= kbars.loc[kbars.index[i-1],"uline"])
 
         condition61 = (kbars.loc[kbars.index[i-1],"最低指數"] > kbars.loc[kbars.index[i-2],"最高指數"] ) and (kbars.loc[kbars.index[i],"最高指數"] < kbars.loc[kbars.index[i-1],"最低指數"] )
-        condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
+        #condition62 = (kbars.loc[kbars.index[i-1],'收盤指數'] > kbars.loc[kbars.index[i-2],"最高指數"]) and (kbars.loc[kbars.index[i-1],'成交金額'] > kbars.loc[kbars.index[i-2],'成交金額']) and (kbars.loc[kbars.index[i],'收盤指數']<kbars.loc[kbars.index[i-1],"最低指數"] )
         condition63 = (kbars.loc[kbars.index[i],'收盤指數'] < kbars.loc[kbars.index[i-1],"dline"]) and (kbars.loc[kbars.index[i-1],'收盤指數'] >= kbars.loc[kbars.index[i-1],"dline"])
     except:
         condition51 = True
@@ -770,11 +770,11 @@ with tab1:
         try:
             #(dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"])
             condition51 = (dataTPEx.loc[dataTPEx.index[i-1],"max"] < dataTPEx.loc[dataTPEx.index[i-2],"min"] ) and (dataTPEx.loc[dataTPEx.index[i],"min"] > dataTPEx.loc[dataTPEx.index[i-1],"max"] )
-            condition52 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] < dataTPEx.loc[dataTPEx.index[i-2],"min"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']>dataTPEx.loc[dataTPEx.index[i-1],"max"] )
+            #condition52 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] < dataTPEx.loc[dataTPEx.index[i-2],"min"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']>dataTPEx.loc[dataTPEx.index[i-1],"max"] )
             condition53 = (dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] <= dataTPEx.loc[dataTPEx.index[i-1],"uline"])
 
             condition61 = (dataTPEx.loc[dataTPEx.index[i-1],"min"] > dataTPEx.loc[dataTPEx.index[i-2],"max"] ) and (dataTPEx.loc[dataTPEx.index[i],"max"] < dataTPEx.loc[dataTPEx.index[i-1],"min"] )
-            condition62 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] > dataTPEx.loc[dataTPEx.index[i-2],"max"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']<dataTPEx.loc[dataTPEx.index[i-1],"min"] )
+            #condition62 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] > dataTPEx.loc[dataTPEx.index[i-2],"max"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']<dataTPEx.loc[dataTPEx.index[i-1],"min"] )
             condition63 = (dataTPEx.loc[dataTPEx.index[i],'close'] < dataTPEx.loc[dataTPEx.index[i-1],"dline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] >= dataTPEx.loc[dataTPEx.index[i-1],"dline"])
         except:
             condition51 = True
@@ -881,11 +881,11 @@ with tab1:
         try:
             #(data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"])
             condition51 = (data50.loc[data50.index[i-1],"max"] < data50.loc[data50.index[i-2],"min"] ) and (data50.loc[data50.index[i],"min"] > data50.loc[data50.index[i-1],"max"] )
-            condition52 = (data50.loc[data50.index[i-1],'close'] < data50.loc[data50.index[i-2],"min"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']>data50.loc[data50.index[i-1],"max"] )
+            #condition52 = (data50.loc[data50.index[i-1],'close'] < data50.loc[data50.index[i-2],"min"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']>data50.loc[data50.index[i-1],"max"] )
             condition53 = (data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"]) and (data50.loc[data50.index[i-1],'close'] <= data50.loc[data50.index[i-1],"uline"])
 
             condition61 = (data50.loc[data50.index[i-1],"min"] > data50.loc[data50.index[i-2],"max"] ) and (data50.loc[data50.index[i],"max"] < data50.loc[data50.index[i-1],"min"] )
-            condition62 = (data50.loc[data50.index[i-1],'close'] > data50.loc[data50.index[i-2],"max"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']<data50.loc[data50.index[i-1],"min"] )
+            #condition62 = (data50.loc[data50.index[i-1],'close'] > data50.loc[data50.index[i-2],"max"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']<data50.loc[data50.index[i-1],"min"] )
             condition63 = (data50.loc[data50.index[i],'close'] < data50.loc[data50.index[i-1],"dline"]) and (data50.loc[data50.index[i-1],'close'] >= data50.loc[data50.index[i-1],"dline"])
         except:
             condition51 = True
@@ -1018,11 +1018,11 @@ with tab2:
         try:
             #(FinalＷeekdata.loc[FinalＷeekdata.index[i],'close'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"uline"])
             condition51 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"max"] < FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"min"] ) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],"min"] > FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"max"] )
-            condition52 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] < FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"min"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'成交金額'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],'成交金額']) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close']>FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"max"] )
+            #condition52 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] < FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"min"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'成交金額'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],'成交金額']) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close']>FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"max"] )
             condition53 = (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"uline"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] <= FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"uline"])
 
             condition61 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"min"] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"max"] ) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],"max"] < FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"min"] )
-            condition62 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"max"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'成交金額'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],'成交金額']) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close']<FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"min"] )
+            #condition62 = (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],"max"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'成交金額'] > FinalＷeekdata.loc[FinalＷeekdata.index[i-2],'成交金額']) and (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close']<FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"min"] )
             condition63 = (FinalＷeekdata.loc[FinalＷeekdata.index[i],'close'] < FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"dline"]) and (FinalＷeekdata.loc[FinalＷeekdata.index[i-1],'close'] >= FinalＷeekdata.loc[FinalＷeekdata.index[i-1],"dline"])
         except:
             condition51 = True
@@ -2465,11 +2465,11 @@ with tab3:
         try:
             #(Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i-1],"uline"])
             condition51 = (Final60Tdata.loc[Final60Tdata.index[i-1],"max"] < Final60Tdata.loc[Final60Tdata.index[i-2],"min"] ) and (Final60Tdata.loc[Final60Tdata.index[i],"min"] > Final60Tdata.loc[Final60Tdata.index[i-1],"max"] )
-            condition52 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] < Final60Tdata.loc[Final60Tdata.index[i-2],"min"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']>Final60Tdata.loc[Final60Tdata.index[i-1],"max"] )
+            #condition52 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] < Final60Tdata.loc[Final60Tdata.index[i-2],"min"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']>Final60Tdata.loc[Final60Tdata.index[i-1],"max"] )
             condition53 = (Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i-1],"uline"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] <= Final60Tdata.loc[Final60Tdata.index[i-1],"uline"])
 
             condition61 = (Final60Tdata.loc[Final60Tdata.index[i-1],"min"] > Final60Tdata.loc[Final60Tdata.index[i-2],"max"] ) and (Final60Tdata.loc[Final60Tdata.index[i],"max"] < Final60Tdata.loc[Final60Tdata.index[i-1],"min"] )
-            condition62 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] > Final60Tdata.loc[Final60Tdata.index[i-2],"max"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']<Final60Tdata.loc[Final60Tdata.index[i-1],"min"] )
+            #condition62 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] > Final60Tdata.loc[Final60Tdata.index[i-2],"max"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']<Final60Tdata.loc[Final60Tdata.index[i-1],"min"] )
             condition63 = (Final60Tdata.loc[Final60Tdata.index[i],'close'] < Final60Tdata.loc[Final60Tdata.index[i-1],"dline"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] >= Final60Tdata.loc[Final60Tdata.index[i-1],"dline"])
         except:
             condition51 = True
@@ -2786,11 +2786,11 @@ with tab3:
         try:
             #(df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i-1],"uline"])
             condition51 = (df_300.loc[df_300.index[i-1],"max"] < df_300.loc[df_300.index[i-2],"min"] ) and (df_300.loc[df_300.index[i],"min"] > df_300.loc[df_300.index[i-1],"max"] )
-            condition52 = (df_300.loc[df_300.index[i-1],'close'] < df_300.loc[df_300.index[i-2],"min"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']>df_300.loc[df_300.index[i-1],"max"] )
+            #condition52 = (df_300.loc[df_300.index[i-1],'close'] < df_300.loc[df_300.index[i-2],"min"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']>df_300.loc[df_300.index[i-1],"max"] )
             condition53 = (df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i-1],"uline"]) and (df_300.loc[df_300.index[i-1],'close'] <= df_300.loc[df_300.index[i-1],"uline"])
 
             condition61 = (df_300.loc[df_300.index[i-1],"min"] > df_300.loc[df_300.index[i-2],"max"] ) and (df_300.loc[df_300.index[i],"max"] < df_300.loc[df_300.index[i-1],"min"] )
-            condition62 = (df_300.loc[df_300.index[i-1],'close'] > df_300.loc[df_300.index[i-2],"max"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']<df_300.loc[df_300.index[i-1],"min"] )
+            #condition62 = (df_300.loc[df_300.index[i-1],'close'] > df_300.loc[df_300.index[i-2],"max"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']<df_300.loc[df_300.index[i-1],"min"] )
             condition63 = (df_300.loc[df_300.index[i],'close'] < df_300.loc[df_300.index[i-1],"dline"]) and (df_300.loc[df_300.index[i-1],'close'] >= df_300.loc[df_300.index[i-1],"dline"])
         except:
             condition51 = True
