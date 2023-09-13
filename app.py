@@ -433,6 +433,14 @@ with tab1:
     #                 line=dict(color='#17becf'),
     #                 name='外資下極限'))
 
+    ### 成交量圖製作 ###
+    volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
+    volume_colors[0] = green_color
+
+    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1)
+
+
     fig.add_trace(go.Scatter(x=kbars.index,
                             y=kbars['20MA'],
                             mode='lines',
@@ -552,13 +560,7 @@ with tab1:
 
 
 
-    ### 成交量圖製作 ###
-    volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
-    volume_colors[0] = green_color
-
-    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1)
-
+    
     ### KD線 ###
     #if optvrank[0] != 0:
     #    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['K'], name='K', line=dict(width=1, color='rgb(41, 98, 255)'),showlegend=False), row=optvrank[0], col=1)
@@ -2381,7 +2383,7 @@ with tab3:
     startFuture = datetime.strftime(datetime.today()- timedelta(days=20),'%Y-%m-%d')
     endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
     FutureData = pd.read_sql("select distinct * from futurehourly", connectionfuture, parse_dates=['ts'], index_col=['ts'])#get_future_raw_data(startFuture,endFuture)
-
+    #FutureData
     df_ts = FutureData.reset_index()
     FutureData = FutureData.reset_index()
     FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8),'ts'] = FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8)].ts - timedelta(minutes=46)
@@ -2397,16 +2399,18 @@ with tab3:
     #FutureData
 
 
-    Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]])
+    Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]]).join(FutureData.groupby('hourdate').sum()[["Volume"]])
     #Final60Tdata
     #Final60Tdata.index = Final60Tdata['hourdate']
     tempopen = FutureData.loc[FutureData.groupby('hourdate').min()['date'].values]
     tempopen.index = tempopen.hourdate
     tempclose = FutureData.loc[FutureData.groupby('hourdate').max()['date'].values]
     tempclose.index = tempclose.hourdate
+    #tempvolume = FutureData.loc[FutureData.groupby('hourdate').sum()['Volume'].values]
+    #tempvolume.index = tempvolume.hourdate
     Final60Tdata = Final60Tdata.join(tempopen[["Open",'date']]).join(tempclose[["Close"]])
     Final60Tdata.index = Final60Tdata.date
-    Final60Tdata.columns = ['max','min','open','date','close']
+    Final60Tdata.columns = ['max','min','Volume','open','date','close']
 
     
     Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=15)).dt.date)
@@ -2419,6 +2423,7 @@ with tab3:
     Final60Tdata = Final60Tdata.sort_index()
     #Final60Tdata
     Final60Tdata[Final60Tdata.index == Final60Tdata.index[-1]][["日期","外資成本","外資上極限","外資下極限","自營商上極限","自營商下極限"]]
+    
 
 
 
@@ -2461,6 +2466,7 @@ with tab3:
     barssince6 = 0
     Final60Tdata['labelb'] = 1
     Final60Tdata = Final60Tdata[~Final60Tdata.index.duplicated(keep='first')]
+    
     for i in range(2,len(Final60Tdata.index)):
         try:
             #(Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i-1],"uline"])
@@ -2507,15 +2513,27 @@ with tab3:
             Final60Tdata.loc[Final60Tdata.index[i],"all_kk"] = -1
 
     Final60Tdata = Final60Tdata[Final60Tdata.index>Final60Tdata.index[-100]]
+    IChour = []
+    finalhour = list(Final60Tdata['IC'].index)[-1]
+    plusi = 1
+    while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
+        plusi = plusi + 1
+    IChour.append(finalhour + timedelta(hours = plusi))
+    IChour.append(finalhour + timedelta(hours = plusi+1))
+
+    Final60Tdata.index = Final60Tdata.index.astype('str')
 
 
-
+    #Final60Tdata
     fig3_1 = make_subplots(
         rows = 2, 
         cols = 1, 
         horizontal_spacing = 0.1,
-        vertical_spacing=0.2,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"]
-
+        vertical_spacing=0.1,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"],
+        shared_yaxes=False,
+        #subplot_titles=subtitle,
+        #y_title = "test"# subtitle,
+        specs = [[{"secondary_y":True}]]*2
     )
     checkb = Final60Tdata["labelb"].values[0]
     bandstart = 1
@@ -2559,13 +2577,7 @@ with tab3:
 
 
 
-    IChour = []
-    finalhour = list(Final60Tdata['IC'].index)[-1]
-    plusi = 1
-    while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
-        plusi = plusi + 1
-    IChour.append(finalhour + timedelta(hours = plusi))
-    IChour.append(finalhour + timedelta(hours = plusi+1))
+    
     fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
                             y=Final60Tdata['外資成本'],
                             mode='lines',
@@ -2577,6 +2589,14 @@ with tab3:
     #                        mode='lines',
     #                        #line=dict(color='green'),
     #                        name='外資下極限'),row=1, col=1)
+
+    ### 成交量圖製作 ###
+    volume_colors1 = [red_color if Final60Tdata['close'][i] > Final60Tdata['close'][i-1] else green_color for i in range(len(Final60Tdata['close']))]
+    volume_colors1[0] = green_color
+
+    #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='Volume', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
+
     
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
                                         line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
@@ -2613,7 +2633,7 @@ with tab3:
     #                        line=dict(color='orange'),
     #                        name='MA60'),row=1, col=1)
 
-    fig3_1.add_trace(go.Scatter(x=list(Final60Tdata['IC'].index)[2:]+IChour,
+    fig3_1.add_trace(go.Scatter(x=np.array(list(Final60Tdata['IC'].index)[2:]+IChour).astype('str'),
                             y=Final60Tdata['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
@@ -2717,13 +2737,13 @@ with tab3:
 
             if period.shape[0]:
                 data_300.append([start, period.iloc[0]['Open'], period.iloc[-1]['Close'], period['High'].max(),
-                                period['Low'].min()])
+                                period['Low'].min(),period['Volume'].sum()])
             else:
-                data_300.append([start, None, None, None, None])
+                data_300.append([start, None, None, None, None,None])
 
         current_date += timedelta(days=1)
 
-    df_300 = pd.DataFrame(data_300, columns=['ts', 'open','close','max','min'])
+    df_300 = pd.DataFrame(data_300, columns=['ts', 'open','close','max','min','Volume'])
     df_300['date'] = df_300['ts']
 
     df_300 = df_300.dropna(subset = ['open'])
@@ -2830,7 +2850,7 @@ with tab3:
     
     df_300 = df_300[df_300.index>df_300.index[-60]]
     IChour2 = []
-    finalhour = list(Final60Tdata['IC'].index)[-1]
+    finalhour = list(df_300['IC'].index)[-1]
     plusi = 1
     while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
         plusi = plusi + 1
@@ -2877,7 +2897,14 @@ with tab3:
         bandidx =checkidx +1
         if bandidx >=len(df_300["labelb"].values):
             break
+    ### 成交量圖製作 ###
+    volume_colors1 = [red_color if df_300['close'][i] > df_300['close'][i-1] else green_color for i in range(len(df_300['close']))]
+    volume_colors1[0] = green_color
 
+    #fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='Volume', marker=dict(color=volume_colors1)), row=2, col=1, secondary_y= True)
+
+    
 
     fig3_1.add_trace(go.Scatter(x=df_300.index,
                             y=df_300['外資成本'],
@@ -3063,13 +3090,47 @@ with tab3:
                     col = 1
     )
 
+    fig3_1.update_yaxes(
+        range=[0, Final60Tdata['Volume'].max()+100],
+        secondary_y=True,
+                    row = 1, 
+                    col = 1
+    )
+    fig3_1.update_yaxes(
+        range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50],
+        secondary_y=False,
+                    row = 1, 
+                    col = 1
+    )
+    fig3_1.update_yaxes(
+        range=[df_300['min'].min() - 200, df_300['max'].max() + 200],
+         secondary_y=False,
+                    row = 2, 
+                    col = 1
+    )
+    fig3_1.update_yaxes(
+        range=[0, df_300['Volume'].max()+100],
+        secondary_y=True,
+                    row = 2, 
+                    col = 1
+    )
+    
+
+
 
     # 設定圖的標題跟長寬
     fig3_1.update_annotations(font_size=12)
     fig3_1.update_layout(title_text = "", hovermode='x unified', 
+                    #yaxis = dict(showgrid=False,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
+                    #yaxis2 = dict(showgrid=False,showticklabels=False,range=[0, Final60Tdata['Volume'].max()+100]),
+
                     width = 1200, 
-                    height = 800,
-                    hoverlabel_namelength=-1)
+                    height = 1200,
+                    hoverlabel_namelength=-1,
+                    hoverlabel=dict(align='left'),
+                    legend_traceorder="reversed",
+                    )
+    #fig3_1.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
 
     
     st.plotly_chart(fig3_1)
@@ -3137,11 +3198,11 @@ with tab4:
             try:
                 #(stockdata.loc[stockdata.index[i],'close'] > stockdata.loc[stockdata.index[i-1],"uline"])
                 condition51 = (stockdata.loc[stockdata.index[i-1],"max"] < stockdata.loc[stockdata.index[i-2],"min"] ) and (stockdata.loc[stockdata.index[i],"min"] > stockdata.loc[stockdata.index[i-1],"max"] )
-                condition52 = (stockdata.loc[stockdata.index[i-1],'close'] < stockdata.loc[stockdata.index[i-2],"min"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']>stockdata.loc[stockdata.index[i-1],"max"] )
+                #condition52 = (stockdata.loc[stockdata.index[i-1],'close'] < stockdata.loc[stockdata.index[i-2],"min"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']>stockdata.loc[stockdata.index[i-1],"max"] )
                 condition53 = (stockdata.loc[stockdata.index[i],'close'] > stockdata.loc[stockdata.index[i-1],"uline"]) and (stockdata.loc[stockdata.index[i-1],'close'] <= stockdata.loc[stockdata.index[i-1],"uline"])
 
                 condition61 = (stockdata.loc[stockdata.index[i-1],"min"] > stockdata.loc[stockdata.index[i-2],"max"] ) and (stockdata.loc[stockdata.index[i],"max"] < stockdata.loc[stockdata.index[i-1],"min"] )
-                condition62 = (stockdata.loc[stockdata.index[i-1],'close'] > stockdata.loc[stockdata.index[i-2],"max"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']<stockdata.loc[stockdata.index[i-1],"min"] )
+                #condition62 = (stockdata.loc[stockdata.index[i-1],'close'] > stockdata.loc[stockdata.index[i-2],"max"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']<stockdata.loc[stockdata.index[i-1],"min"] )
                 condition63 = (stockdata.loc[stockdata.index[i],'close'] < stockdata.loc[stockdata.index[i-1],"dline"]) and (stockdata.loc[stockdata.index[i-1],'close'] >= stockdata.loc[stockdata.index[i-1],"dline"])
             except:
                 condition51 = True
