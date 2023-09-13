@@ -2397,9 +2397,12 @@ with tab3:
     FutureData = FutureData.dropna(subset = ['Open'])
     FutureData.index = FutureData['date']
     #FutureData
+    tempdf = FutureData[['hourdate','Volume']]
+    tempdf = tempdf.reset_index()
+    tempdf = tempdf[['hourdate','Volume']]
+    #tempdf
 
-
-    Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]]).join(FutureData[['hourdate','Volume']].groupby('hourdate').sum()[["Volume"]])
+    Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]]).join(tempdf.groupby('hourdate').sum()[["Volume"]])
     #Final60Tdata
     #Final60Tdata.index = Final60Tdata['hourdate']
     tempopen = FutureData.loc[FutureData.groupby('hourdate').min()['date'].values]
