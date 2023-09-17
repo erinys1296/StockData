@@ -240,9 +240,9 @@ kbars = kbars[kbars.index > kbars.index[-60]]
 
 def fillcol(label):
     if label >= 1:
-        return 'rgba(0,250,0,0.3)'
+        return 'rgba(0,250,0,0.2)'
     else:
-        return 'rgba(0,256,256,0.3)'
+        return 'rgba(0,256,256,0.2)'
 
 ICdate = []
 datechecki = 1
@@ -333,7 +333,7 @@ with tab1:
     )
 
     increasing_color = 'rgb(255, 0, 0)'
-    decreasing_color = 'rgb(30, 144, 255)'
+    decreasing_color = 'rgb(0, 0, 245)'
 
     red_color = 'rgba(255, 0, 0, 0.1)'
     green_color = 'rgba(30, 144, 255,0.1)'
@@ -401,7 +401,7 @@ with tab1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False,hoverinfo='none'
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False,hoverinfo='none'
                                         ),secondary_ys= [True,True])
         else:
 
@@ -412,7 +412,7 @@ with tab1:
             fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False,hoverinfo='none'
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False,hoverinfo='none'
                                         ),secondary_ys= [True,True])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
@@ -438,7 +438,7 @@ with tab1:
     volume_colors[0] = green_color
 
     #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1)
+    fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1)
 
 
     fig.add_trace(go.Scatter(x=kbars.index,
@@ -573,7 +573,7 @@ with tab1:
         
         min_days20 = days20["九點累積委託賣出數量"].values.min()
         #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
-        fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='Volume',showlegend=False), row=optvrank[0], col=1)
+        fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='成交數量',showlegend=False), row=optvrank[0], col=1)
         fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = blue_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
         fig.add_scatter(x=np.array(min_days20_x), y=np.array(min_days20_list),marker=dict(color = orange_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
         fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
@@ -616,7 +616,7 @@ with tab1:
     #fut_colors[0] = blue_color
     fut_colors = [increasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else decreasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
     fut_colors[0] = decreasing_color
-    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
+    #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
     fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=optvrank[3]+2, col=1)
     #fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=optvrank[3]+2, col=1)
     fig.update_yaxes(title_text="外資未平倉淨口數", row=optvrank[3]+2, col=1)
@@ -939,7 +939,6 @@ with tab1:
         #title_x=0.5,
         #title_y=0.93,
         hovermode='x unified',
-        showlegend=True,
         height=350 + 150* rowcount,
         width = 1200,
         hoverlabel_namelength=-1,
@@ -949,7 +948,7 @@ with tab1:
         yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
         #yaxis = dict(range=[kbars['min'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
-        hoverlabel=dict(align='left'),
+        hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
         legend_traceorder="reversed",
         
     )
@@ -1095,7 +1094,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                         ),rows=[1], cols=[1])
         else:
 
@@ -1106,7 +1105,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                         ),rows=[1], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(FinalＷeekdata["labelb"].values):
@@ -1243,7 +1242,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                         ),rows=[1], cols=[2])
         else:
 
@@ -1254,7 +1253,7 @@ with tab2:
             fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                         ),rows=[1], cols=[2])
         bandidx =checkidx +1
         if bandidx >=len(kbars["labelb"].values):
@@ -1419,7 +1418,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                         ),rows=[1], cols=[1])
         else:
 
@@ -1430,7 +1429,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                         ),rows=[1], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(dataTPEx["labelb"].values):
@@ -1607,7 +1606,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                         ),rows=[1], cols=[2])
         else:
 
@@ -1618,7 +1617,7 @@ with tab2:
             fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                         ),rows=[1], cols=[2])
         bandidx =checkidx +1
         if bandidx >=len(data50["labelb"].values):
@@ -1745,7 +1744,7 @@ with tab2:
 
    # 設定圖的標題跟長寬
     fig1_1.update_annotations(font_size=12)
-    fig1_1.update_layout(title_text = "", hovermode='x unified', 
+    fig1_1.update_layout(title_text = "", hovermode='x unified',#,hoverlabel=list(bgcolor='rgba(255,255,255,0.5),font=list(color='black')'),
                     width = 1200, 
                     height = 400)
     
@@ -2535,6 +2534,7 @@ with tab3:
         horizontal_spacing = 0.1,
         vertical_spacing=0.1,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"],
         shared_yaxes=False,
+        
         #subplot_titles=subtitle,
         #y_title = "test"# subtitle,
         specs = [[{"secondary_y":True}]]*2
@@ -2562,7 +2562,7 @@ with tab3:
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False,hoverinfo='none'
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False,hoverinfo='none'
                                         ),rows=[1], cols=[1])
         else:
 
@@ -2573,7 +2573,7 @@ with tab3:
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False,hoverinfo='none'
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False,hoverinfo='none'
                                         ),rows=[1], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(Final60Tdata["labelb"].values):
@@ -2598,8 +2598,8 @@ with tab3:
     volume_colors1 = [red_color if Final60Tdata['close'][i] > Final60Tdata['close'][i-1] else green_color for i in range(len(Final60Tdata['close']))]
     volume_colors1[0] = green_color
 
-    #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='Volume', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
+    #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='成交數量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
 
     
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
@@ -2608,7 +2608,7 @@ with tab3:
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商上極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
-                                fillcolor = 'rgba(0,0,256,0.3)',showlegend=False,name='自營商上極限'
+                                fillcolor = 'rgba(0,0,256,0.2)',showlegend=False,name='自營商上極限'
                                 ),rows=[1], cols=[1])
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資下極限'].values,
                                         line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資下極限'),rows=[1], cols=[1])
@@ -2616,7 +2616,7 @@ with tab3:
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商下極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
-                                fillcolor = 'rgba(256,0,0,0.3)',showlegend=False,name='自營商下極限'
+                                fillcolor = 'rgba(256,0,0,0.2)',showlegend=False,name='自營商下極限'
                                 ),rows=[1], cols=[1])
 
 
@@ -2885,7 +2885,7 @@ with tab3:
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                         ),rows=[2], cols=[1])
         else:
 
@@ -2896,7 +2896,7 @@ with tab3:
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                         ),rows=[2], cols=[1])
         bandidx =checkidx +1
         if bandidx >=len(df_300["labelb"].values):
@@ -2905,8 +2905,8 @@ with tab3:
     volume_colors1 = [red_color if df_300['close'][i] > df_300['close'][i-1] else green_color for i in range(len(df_300['close']))]
     volume_colors1[0] = green_color
 
-    #fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='Volume', marker=dict(color=volume_colors1)), row=2, col=1, secondary_y= True)
+    #fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='成交量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=2, col=1, secondary_y= True)
 
     
 
@@ -2932,7 +2932,7 @@ with tab3:
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商上極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
-                                fillcolor = 'rgba(0,0,256,0.3)',showlegend=False
+                                fillcolor = 'rgba(0,0,256,0.2)',showlegend=False
                                 ),rows=[2], cols=[1])
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資下極限'].values,
                                         line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
@@ -2940,7 +2940,7 @@ with tab3:
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商下極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
-                                fillcolor = 'rgba(256,0,0,0.3)',showlegend=False
+                                fillcolor = 'rgba(256,0,0,0.2)',showlegend=False
                                 ),rows=[2], cols=[1])
 
 
@@ -3095,25 +3095,25 @@ with tab3:
     )
 
     fig3_1.update_yaxes(
-        range=[0, Final60Tdata['Volume'].max()+100],
+        range=[0, Final60Tdata['Volume'].max()+100],showgrid=False,
         secondary_y=True,
                     row = 1, 
                     col = 1
     )
     fig3_1.update_yaxes(
-        range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50],
+        range=[Final60Tdata['外資下極限'].min() - 30, Final60Tdata['自營商上極限'].max() + 30],showgrid=False,
         secondary_y=False,
                     row = 1, 
                     col = 1
     )
     fig3_1.update_yaxes(
-        range=[df_300['min'].min() - 200, df_300['max'].max() + 200],
+        range=[df_300['min'].min() - 200, df_300['max'].max() + 200],showgrid=False,
          secondary_y=False,
                     row = 2, 
                     col = 1
     )
     fig3_1.update_yaxes(
-        range=[0, df_300['Volume'].max()+100],
+        range=[0, df_300['Volume'].max()+100],showgrid=False,
         secondary_y=True,
                     row = 2, 
                     col = 1
@@ -3125,13 +3125,14 @@ with tab3:
     # 設定圖的標題跟長寬
     fig3_1.update_annotations(font_size=12)
     fig3_1.update_layout(title_text = "", hovermode='x unified',
-                    #yaxis = dict(showgrid=False,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
-                    #yaxis2 = dict(showgrid=False,showticklabels=False,range=[0, Final60Tdata['Volume'].max()+100]),
+                    yaxis = dict(showgrid=False),#,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
+                    yaxis2 = dict(showgrid=False),#showticklabels=False,range=[0, Final60Tdata['Volume'].max()+100]),
 
                     width = 1200, 
                     height = 1200,
                     hoverlabel_namelength=-1,
-                    hoverlabel=dict(align='left'),
+                    
+                    hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
                     legend_traceorder="reversed",
                     )
     #fig3_1.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
@@ -3307,7 +3308,7 @@ with tab4:
                 fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['upper_band'].values[bandstart:bandend],
                                             line = dict(color='rgba(0,0,0,0)'),
                                             fill='tonexty', 
-                                            fillcolor = 'rgba(256,256,0,0.3)',showlegend=False
+                                            fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
                                             ),rows=[1], cols=[1],secondary_ys= [True,True])
             else:
 
@@ -3318,7 +3319,7 @@ with tab4:
                 fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['upper_band'].values[bandstart:bandend],
                                             line = dict(color='rgba(0,0,0,0)'),
                                             fill='tonexty', 
-                                            fillcolor = 'rgba(137, 207, 240,0.3)',showlegend=False
+                                            fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
                                             ),rows=[1], cols=[1],secondary_ys= [True,True])
             bandidx =checkidx +1
             if bandidx >=len(stockdata["labelb"].values):
@@ -3414,12 +3415,12 @@ with tab4:
 
 
         fig4.update_annotations(font_size=12)
-        fig4.update_layout(title_text = "", hovermode='x unified', 
+        fig4.update_layout(title_text = "", hovermode='x unified',
                         width = 1200, 
                         height = 600,
                         hoverlabel_namelength=-1,
                         dragmode = 'drawline',
-                        hoverlabel=dict(align='left'),
+                        hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
                         legend_traceorder="reversed",
                         )
         
