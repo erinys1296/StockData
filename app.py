@@ -13,6 +13,8 @@ from plotly.subplots import make_subplots
 
 import requests
 
+from PlotFunction import *
+
 
 import warnings
 
@@ -705,226 +707,11 @@ with tab1:
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
     url = "https://api.finmindtrade.com/api/v4/data?"
 
-
-    #櫃買指數
-    fig.update_yaxes(title_text="櫃買指數", row=optvrank[3]+9, col=1)  
-    parameter = {
-    "dataset": "TaiwanStockPrice",
-    "data_id": "TPEx",
-    "start_date": "2022-04-02",
-    "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
-    "token": token, # 參考登入，獲取金鑰
-    }
-    resp = requests.get(url, params=parameter)
-    dataTPEx = resp.json()
-    dataTPEx = pd.DataFrame(dataTPEx["data"])
-
-    dataTPEx.date = pd.to_datetime(dataTPEx.date)
-    dataTPEx.index = dataTPEx.date
-
-
-    # 計算布林帶指標
-    dataTPEx['20MA'] = dataTPEx['close'].rolling(20).mean()
-    dataTPEx['60MA'] = dataTPEx['close'].rolling(60).mean()
-    dataTPEx['200MA'] = dataTPEx['close'].rolling(200).mean()
-    dataTPEx['std'] = dataTPEx['close'].rolling(20).std()
-    dataTPEx['upper_band'] = dataTPEx['20MA'] + 2 * dataTPEx['std']
-    dataTPEx['lower_band'] = dataTPEx['20MA'] - 2 * dataTPEx['std']
-    dataTPEx['upper_band1'] = dataTPEx['20MA'] + 1 * dataTPEx['std']
-    dataTPEx['lower_band1'] = dataTPEx['20MA'] - 1 * dataTPEx['std']
-
-    dataTPEx['IC'] = dataTPEx['close'] + 2 * dataTPEx['close'].shift(1) - dataTPEx['close'].shift(3) -dataTPEx['close'].shift(4)
-
-    # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
-    low_list = dataTPEx['min'].rolling(9, min_periods=9).min()
-    low_list.fillna(value=dataTPEx['min'].expanding().min(), inplace=True)
-    high_list = dataTPEx['max'].rolling(9, min_periods=9).max()
-    high_list.fillna(value=dataTPEx['max'].expanding().max(), inplace=True)
-    rsv = (dataTPEx['close'] - low_list) / (high_list - low_list) * 100
-    dataTPEx['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
-    dataTPEx['D'] = dataTPEx['K'].ewm(com=2).mean()
-
-    enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
-    dataTPEx['end_low'] = 0
-    dataTPEx['end_high'] = 0
-    #dataTPEx
-    for datei in dataTPEx.index:
-        
-        month_low = dataTPEx[(dataTPEx.index >= enddatemonth[enddatemonth<datei].max())&(dataTPEx.index<=datei)]["min"].min()
-        month_high = dataTPEx[(dataTPEx.index >= enddatemonth[enddatemonth<datei].max())&(dataTPEx.index<=datei)]['max'].max()
-        dataTPEx.loc[datei,'end_low'] =  dataTPEx.loc[datei,'max'] - month_low
-        dataTPEx.loc[datei,'end_high'] = dataTPEx.loc[datei,'min'] - month_high
-        
-    dataTPEx["MAX_MA"] = dataTPEx["max"] - dataTPEx["20MA"]
-    dataTPEx["MIN_MA"] = dataTPEx["min"] - dataTPEx["20MA"]
-
-    #詢問
-    ds = 2
-    dataTPEx['uline'] = dataTPEx['max'].rolling(ds, min_periods=1).max()
-    dataTPEx['dline'] = dataTPEx['min'].rolling(ds, min_periods=1).min()
-
-    dataTPEx["all_kk"] = 0
-    barssince5 = 0
-    barssince6 = 0
-    dataTPEx['labelb'] = 1
-    dataTPEx = dataTPEx[~dataTPEx.index.duplicated(keep='first')]
-    for i in range(2,len(dataTPEx.index)):
-        try:
-            #(dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"])
-            condition51 = (dataTPEx.loc[dataTPEx.index[i-1],"max"] < dataTPEx.loc[dataTPEx.index[i-2],"min"] ) and (dataTPEx.loc[dataTPEx.index[i],"min"] > dataTPEx.loc[dataTPEx.index[i-1],"max"] )
-            #condition52 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] < dataTPEx.loc[dataTPEx.index[i-2],"min"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']>dataTPEx.loc[dataTPEx.index[i-1],"max"] )
-            condition53 = (dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i-1],"uline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] <= dataTPEx.loc[dataTPEx.index[i-1],"uline"])
-
-            condition61 = (dataTPEx.loc[dataTPEx.index[i-1],"min"] > dataTPEx.loc[dataTPEx.index[i-2],"max"] ) and (dataTPEx.loc[dataTPEx.index[i],"max"] < dataTPEx.loc[dataTPEx.index[i-1],"min"] )
-            #condition62 = (dataTPEx.loc[dataTPEx.index[i-1],'close'] > dataTPEx.loc[dataTPEx.index[i-2],"max"]) and (dataTPEx.loc[dataTPEx.index[i-1],'成交金額'] > dataTPEx.loc[dataTPEx.index[i-2],'成交金額']) and (dataTPEx.loc[dataTPEx.index[i],'close']<dataTPEx.loc[dataTPEx.index[i-1],"min"] )
-            condition63 = (dataTPEx.loc[dataTPEx.index[i],'close'] < dataTPEx.loc[dataTPEx.index[i-1],"dline"]) and (dataTPEx.loc[dataTPEx.index[i-1],'close'] >= dataTPEx.loc[dataTPEx.index[i-1],"dline"])
-        except:
-            condition51 = True
-            condition52 = True
-            condition53 = True
-            condition61 = True
-            condition63 = True
-        condition54 = condition51 or condition53 #or condition52
-        condition64 = condition61 or condition63 #or condition62 
-
-        #dataTPEx['labelb'] = np.where((dataTPEx['close']> dataTPEx['upper_band1']) , 1, np.where((dataTPEx['close']< dataTPEx['lower_band1']),-1,1))
-
-        #print(i)
-        if dataTPEx.loc[dataTPEx.index[i],'close'] > dataTPEx.loc[dataTPEx.index[i],'upper_band1']:
-            dataTPEx.loc[dataTPEx.index[i],'labelb'] = 1
-        elif dataTPEx.loc[dataTPEx.index[i],'close'] < dataTPEx.loc[dataTPEx.index[i],'lower_band1']:
-            dataTPEx.loc[dataTPEx.index[i],'labelb'] = -1
-        else:
-            dataTPEx.loc[dataTPEx.index[i],'labelb'] = dataTPEx.loc[dataTPEx.index[i-1],'labelb']
-
-        if condition54 == True:
-            barssince5 = 1
-        else:
-            barssince5 += 1
-
-        if condition64 == True:
-            barssince6 = 1
-        else:
-            barssince6 += 1
-
-
-        if barssince5 < barssince6:
-            dataTPEx.loc[dataTPEx.index[i],"all_kk"] = 1
-        else:
-            dataTPEx.loc[dataTPEx.index[i],"all_kk"] = -1
-
-    dataTPEx = dataTPEx[dataTPEx.index>kbars.index[0]]
+    
 
     
 
-
-
-    # 50正2
-    fig.update_yaxes(title_text="富邦台灣50正2", row=optvrank[3]+10, col=1)  
-    parameter = {
-        "dataset": "TaiwanStockPrice",
-        "data_id": "00675L",
-        "start_date": "2022-04-02",
-        "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
-        "token": token, # 參考登入，獲取金鑰
-    }
-    resp = requests.get(url, params=parameter)
-    data50 = resp.json()
-    data50 = pd.DataFrame(data50["data"]) 
-    data50.date = pd.to_datetime(data50.date)
-    data50.index = data50.date 
-
-    # 計算布林帶指標
-    data50['20MA'] = data50['close'].rolling(20).mean()
-    data50['60MA'] = data50['close'].rolling(60).mean()
-    data50['200MA'] = data50['close'].rolling(200).mean()
-    data50['std'] = data50['close'].rolling(20).std()
-    data50['upper_band'] = data50['20MA'] + 2 * data50['std']
-    data50['lower_band'] = data50['20MA'] - 2 * data50['std']
-    data50['upper_band1'] = data50['20MA'] + 1 * data50['std']
-    data50['lower_band1'] = data50['20MA'] - 1 * data50['std']
-
-    data50['IC'] = data50['close'] + 2 * data50['close'].shift(1) - data50['close'].shift(3) -data50['close'].shift(4)
-
-    # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
-    low_list = data50['min'].rolling(9, min_periods=9).min()
-    low_list.fillna(value=data50['min'].expanding().min(), inplace=True)
-    high_list = data50['max'].rolling(9, min_periods=9).max()
-    high_list.fillna(value=data50['max'].expanding().max(), inplace=True)
-    rsv = (data50['close'] - low_list) / (high_list - low_list) * 100
-    data50['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
-    data50['D'] = data50['K'].ewm(com=2).mean()
-
-    enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
-    data50['end_low'] = 0
-    data50['end_high'] = 0
-    #data50
-    for datei in data50.index:
-        
-        month_low = data50[(data50.index >= enddatemonth[enddatemonth<datei].max())&(data50.index<=datei)]["min"].min()
-        month_high = data50[(data50.index >= enddatemonth[enddatemonth<datei].max())&(data50.index<=datei)]['max'].max()
-        data50.loc[datei,'end_low'] =  data50.loc[datei,'max'] - month_low
-        data50.loc[datei,'end_high'] = data50.loc[datei,'min'] - month_high
-        
-    data50["MAX_MA"] = data50["max"] - data50["20MA"]
-    data50["MIN_MA"] = data50["min"] - data50["20MA"]
-
-    #詢問
-    ds = 2
-    data50['uline'] = data50['max'].rolling(ds, min_periods=1).max()
-    data50['dline'] = data50['min'].rolling(ds, min_periods=1).min()
-
-    data50["all_kk"] = 0
-    barssince5 = 0
-    barssince6 = 0
-    data50['labelb'] = 1
-    data50 = data50[~data50.index.duplicated(keep='first')]
-    for i in range(2,len(data50.index)):
-        try:
-            #(data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"])
-            condition51 = (data50.loc[data50.index[i-1],"max"] < data50.loc[data50.index[i-2],"min"] ) and (data50.loc[data50.index[i],"min"] > data50.loc[data50.index[i-1],"max"] )
-            #condition52 = (data50.loc[data50.index[i-1],'close'] < data50.loc[data50.index[i-2],"min"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']>data50.loc[data50.index[i-1],"max"] )
-            condition53 = (data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i-1],"uline"]) and (data50.loc[data50.index[i-1],'close'] <= data50.loc[data50.index[i-1],"uline"])
-
-            condition61 = (data50.loc[data50.index[i-1],"min"] > data50.loc[data50.index[i-2],"max"] ) and (data50.loc[data50.index[i],"max"] < data50.loc[data50.index[i-1],"min"] )
-            #condition62 = (data50.loc[data50.index[i-1],'close'] > data50.loc[data50.index[i-2],"max"]) and (data50.loc[data50.index[i-1],'成交金額'] > data50.loc[data50.index[i-2],'成交金額']) and (data50.loc[data50.index[i],'close']<data50.loc[data50.index[i-1],"min"] )
-            condition63 = (data50.loc[data50.index[i],'close'] < data50.loc[data50.index[i-1],"dline"]) and (data50.loc[data50.index[i-1],'close'] >= data50.loc[data50.index[i-1],"dline"])
-        except:
-            condition51 = True
-            condition52 = True
-            condition53 = True
-            condition61 = True
-            condition63 = True
-        condition54 = condition51 or condition53 #or condition52
-        condition64 = condition61 or condition63 #or condition62 
-
-        #data50['labelb'] = np.where((data50['close']> data50['upper_band1']) , 1, np.where((data50['close']< data50['lower_band1']),-1,1))
-
-        #print(i)
-        if data50.loc[data50.index[i],'close'] > data50.loc[data50.index[i],'upper_band1']:
-            data50.loc[data50.index[i],'labelb'] = 1
-        elif data50.loc[data50.index[i],'close'] < data50.loc[data50.index[i],'lower_band1']:
-            data50.loc[data50.index[i],'labelb'] = -1
-        else:
-            data50.loc[data50.index[i],'labelb'] = data50.loc[data50.index[i-1],'labelb']
-
-        if condition54 == True:
-            barssince5 = 1
-        else:
-            barssince5 += 1
-
-        if condition64 == True:
-            barssince6 = 1
-        else:
-            barssince6 += 1
-
-
-        if barssince5 < barssince6:
-            data50.loc[data50.index[i],"all_kk"] = 1
-        else:
-            data50.loc[data50.index[i],"all_kk"] = -1
-
-    data50 = data50[data50.index>kbars.index[0]]
+    
 
     
 
@@ -974,7 +761,7 @@ with tab2:
     
     WeekTAIEXdata.date = pd.to_datetime(WeekTAIEXdata.date)
     WeekTAIEXdata["yearww"] = WeekTAIEXdata.date.dt.year.astype(str) + 'W' + WeekTAIEXdata.date.dt.isocalendar().week.astype('str').str.zfill(2)
-    FinalＷeekdata = WeekTAIEXdata.groupby('yearww').max()[["max"]].join(WeekTAIEXdata.groupby('yearww').min()[["min"]])
+    FinalＷeekdata = WeekTAIEXdata.groupby('yearww').max()[["max"]].join(WeekTAIEXdata.groupby('yearww').min()[["min"]]).join(WeekTAIEXdata.groupby('yearww').sum()[["Trading_Volume"]]).join(WeekTAIEXdata.groupby('yearww').sum()[["Trading_money"]])
     WeekTAIEXdata.index = WeekTAIEXdata.date
     tempopen = WeekTAIEXdata.loc[WeekTAIEXdata.groupby('yearww').min()['date'].values]
     tempopen.index = tempopen.yearww
@@ -1068,656 +855,46 @@ with tab2:
         rows = 1, 
         cols = 2, 
         horizontal_spacing = 0.1,
-        vertical_spacing=0.02,subplot_titles = ["加權週線","加權日線"]
+        vertical_spacing=0.02,subplot_titles = ["加權週線","加權日線"],
+        specs = [[{"secondary_y":True}]*2]
         
     )
-    checkb = FinalＷeekdata["labelb"].values[0]
-    bandstart = 1
-    bandidx = 1
-    checkidx = 0
-    while bandidx < len(FinalＷeekdata["labelb"].values):
-        #checkidx = bandidx
-        bandstart = bandidx-1
-        checkidx = bandstart+1
-        if checkidx >=len(FinalＷeekdata["labelb"].values)-1:
-            break
-        while FinalＷeekdata["labelb"].values[checkidx] == FinalＷeekdata["labelb"].values[checkidx+1]:
-            checkidx +=1
-            if checkidx >=len(FinalＷeekdata["labelb"].values)-1:
-                break
-        bandend = checkidx+1
-        #print(bandstart,bandend)
-        if FinalＷeekdata["labelb"].values[bandstart+1] == 1:
-            fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
-                
-            fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                        ),rows=[1], cols=[1])
-        else:
-
-
-            fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
-                
-            fig1_1.add_traces(go.Scatter(x=FinalＷeekdata.index[bandstart:bandend], y = FinalＷeekdata['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                        ),rows=[1], cols=[1])
-        bandidx =checkidx +1
-        if bandidx >=len(FinalＷeekdata["labelb"].values):
-            break
+    
 
     ICweek = []
     finalweek = list(FinalＷeekdata['IC'].index)[-1]
     ICweek.append(finalweek[:5] + str(int(finalweek[-2:])+1))
     ICweek.append(finalweek[:5] + str(int(finalweek[-2:])+2))
 
-    fig1_1.add_trace(go.Scatter(x=FinalＷeekdata.index,
-                            y=FinalＷeekdata['20MA'],
-                            mode='lines',
-                            line=dict(color='green'),
-                            name='MA20'),row=1, col=1)
-    fig1_1.add_trace(go.Scatter(x=FinalＷeekdata.index,
-                            y=FinalＷeekdata['200MA'],
-                            mode='lines',
-                            line=dict(color='blue'),
-                            name='MA200'),row=1, col=1)
-    fig1_1.add_trace(go.Scatter(x=FinalＷeekdata.index,
-                            y=FinalＷeekdata['60MA'],
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='MA60'),row=1, col=1)
+    dataTPEx,ICdate1 = get_stock_data("TPEx")
+    dataTPEx = dataTPEx[dataTPEx.index>kbars.index[0]]
+    data50,ICdate1 = get_stock_data("00675L")
+    data50 = data50[data50.index>kbars.index[0]]
 
-    fig1_1.add_trace(go.Scatter(x=list(FinalＷeekdata['IC'].index)[2:]+ICweek,
-                            y=FinalＷeekdata['IC'].values,
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=1)
+    oldcol = list(kbars.columns)
+    refcol = list(kbars.columns)
+    newcol = list(dataTPEx.columns)
+    refcol[1:10] = newcol[1:10]
+    kbars.columns = refcol
 
+    plot_stockdata(fig1_1,holidf,FinalＷeekdata,1,1,ICweek)
+    plot_stockdata(fig1_1,holidf,kbars,1,2,ICdate)
 
-
-
-
-    ### K線圖製作 ###
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )].index,
-            open=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['open'],
-            high=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['max'],
-            low=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['min'],
-            close=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(FinalＷeekdata.index>FinalＷeekdata.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=2),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )].index,
-            open=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['open'],
-            high=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['max'],
-            low=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['min'],
-            close=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] >FinalＷeekdata['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(FinalＷeekdata.index>FinalＷeekdata.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-    ### K線圖製作 ###
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )].index,
-            open=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['open'],
-            high=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['max'],
-            low=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['min'],
-            close=FinalＷeekdata[(FinalＷeekdata['all_kk'] == -1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=decreasing_color, #fill_increasing_color(FinalＷeekdata.index>FinalＷeekdata.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=decreasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )].index,
-            open=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['open'],
-            high=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['max'],
-            low=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['min'],
-            close=FinalＷeekdata[(FinalＷeekdata['all_kk'] == 1)&(FinalＷeekdata['close'] <FinalＷeekdata['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=increasing_color, #fill_increasing_color(FinalＷeekdata.index>FinalＷeekdata.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=increasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-
-    checkb = kbars["labelb"].values[0]
-    bandstart = 1
-    bandidx = 1
-    checkidx = 0
-    while bandidx < len(kbars["labelb"].values):
-        #checkidx = bandidx
-        bandstart = bandidx-1
-        checkidx = bandstart+1
-        if checkidx >=len(kbars["labelb"].values)-1:
-            break
-        while kbars["labelb"].values[checkidx] == kbars["labelb"].values[checkidx+1]:
-            checkidx +=1
-            if checkidx >=len(kbars["labelb"].values)-1:
-                break
-        bandend = checkidx+1
-        #print(bandstart,bandend)
-        if kbars["labelb"].values[bandstart+1] == 1:
-            fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
-                
-            fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                        ),rows=[1], cols=[2])
-        else:
-
-
-            fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
-                
-            fig1_1.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                        ),rows=[1], cols=[2])
-        bandidx =checkidx +1
-        if bandidx >=len(kbars["labelb"].values):
-            break
-
-    #fig1_1.add_scatter(x=np.concatenate([kbars[kbars['收盤指數'] <= kbars['upper_band1']].index,kbars[kbars['收盤指數']<= kbars['upper_band1']].index[::-1]]), y=np.concatenate([kbars[kbars['收盤指數']<= kbars['upper_band1']]['lower_band'], kbars[kbars['收盤指數'] <= kbars['upper_band1']]['upper_band'][::-1]]), 
-    #                fill='toself',fillcolor= 'rgba(0,256,256,0.1)', line_width=0,name='布林上下極限',row=1, col=1)
-
-    #fig1_1.add_trace(go.Scatter(x=kbars.index,
-    #                 y=kbars['外資上極限'],
-    #                 mode='lines',
-    #                 line=dict(color='#9467bd'),
-    #                 name='外資上極限'))
-
-    #fig1_1.add_trace(go.Scatter(x=kbars.index,
-    #                 y=kbars['外資下極限'],
-    #                 mode='lines',
-    #                 line=dict(color='#17becf'),
-    #                 name='外資下極限'))
-
-    fig1_1.add_trace(go.Scatter(x=kbars.index,
-                            y=kbars['20MA'],
-                            mode='lines',
-                            line=dict(color='green'),
-                            name='20MA'),row=1, col=2)
-
-    fig1_1.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
-                            y=kbars['IC'].values,
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=2)
+    kbars.columns = oldcol
     
-    fig1_1.add_trace(go.Scatter(x=kbars.index,
-                            y=kbars['200MA'],
-                            mode='lines',
-                            line=dict(color='blue'),
-                            name='MA200'),row=1, col=2)
-    fig1_1.add_trace(go.Scatter(x=kbars.index,
-                            y=kbars['60MA'],
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='MA60'),row=1, col=2)
-
-    
-   
-
-
-
-    ### K線圖製作 ###
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
-            open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
-            high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
-            low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
-            close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=2),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
-            open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
-            high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
-            low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
-            close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-    ### K線圖製作 ###
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
-            open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
-            high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
-            low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
-            close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=decreasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=decreasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-
-    fig1_1.add_trace(
-        go.Candlestick(
-            x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
-            open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
-            high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
-            low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
-            close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=increasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=increasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-    
-
-    
-
 
     # 設定左右子圖
     fig1_2 = make_subplots(
         rows = 1, 
         cols = 2, 
         horizontal_spacing = 0.1,
-        vertical_spacing=0.02,subplot_titles = ["櫃買指數","富邦台灣50正2"]
+        vertical_spacing=0.02,subplot_titles = ["櫃買指數","富邦台灣50正2"],
+        specs = [[{"secondary_y":True}]*2]
         
     )
+    plot_stockdata(fig1_2,holidf,dataTPEx,1,1,ICdate)
+    plot_stockdata(fig1_2,holidf,data50,1,2,ICdate)
 
-    #櫃買指數
-    #fig1_2.update_yaxes(title_text="櫃買指數", row=1, col=1)  
-    
-
-    checkb = dataTPEx["labelb"].values[0]
-    bandstart = 1
-    bandidx = 1
-    checkidx = 0
-    while bandidx < len(dataTPEx["labelb"].values):
-        #checkidx = bandidx
-        bandstart = bandidx-1
-        checkidx = bandstart+1
-        if checkidx >=len(dataTPEx["labelb"].values)-1:
-            break
-        while dataTPEx["labelb"].values[checkidx] == dataTPEx["labelb"].values[checkidx+1]:
-            checkidx +=1
-            if checkidx >=len(dataTPEx["labelb"].values)-1:
-                break
-        bandend = checkidx+1
-        #print(bandstart,bandend)
-        if dataTPEx["labelb"].values[bandstart+1] == 1:
-            fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
-                
-            fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                        ),rows=[1], cols=[1])
-        else:
-
-
-            fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1])
-                
-            fig1_2.add_traces(go.Scatter(x=dataTPEx.index[bandstart:bandend], y = dataTPEx['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                        ),rows=[1], cols=[1])
-        bandidx =checkidx +1
-        if bandidx >=len(dataTPEx["labelb"].values):
-            break
-
-    
-
-    fig1_2.add_trace(go.Scatter(x=dataTPEx.index,
-                            y=dataTPEx['20MA'],
-                            mode='lines',
-                            line=dict(color='green'),
-                            name='MA20'),row=1, col=1)
-    fig1_2.add_trace(go.Scatter(x=dataTPEx.index,
-                            y=dataTPEx['200MA'],
-                            mode='lines',
-                            line=dict(color='blue'),
-                            name='MA200'),row=1, col=1)
-    fig1_2.add_trace(go.Scatter(x=dataTPEx.index,
-                            y=dataTPEx['60MA'],
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='MA60'),row=1, col=1)
-
-    fig1_2.add_trace(go.Scatter(x=list(dataTPEx['IC'].index)[2:]+ICdate,
-                            y=dataTPEx['IC'].values,
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=1)
-
-
-
-
-
-    ### K線圖製作 ###
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
-            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
-            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
-            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
-            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=2),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )].index,
-            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['open'],
-            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['max'],
-            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['min'],
-            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] >dataTPEx['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-    ### K線圖製作 ###
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
-            open=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
-            high=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
-            low=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
-            close=dataTPEx[(dataTPEx['all_kk'] == -1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=decreasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=decreasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )].index,
-            open=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['open'],
-            high=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['max'],
-            low=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['min'],
-            close=dataTPEx[(dataTPEx['all_kk'] == 1)&(dataTPEx['close'] <dataTPEx['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=increasing_color, #fill_increasing_color(dataTPEx.index>dataTPEx.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=increasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=1
-    )
-
-    # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
-    fig1_2.update_xaxes(
-        rangeslider= {'visible':False},
-        rangebreaks=[
-            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
-        ],
-                    row = 1, 
-                    col = 1
-    )
-
-
-
-    # 50正2
-    #fig1_2.update_yaxes(title_text="富邦台灣50正2", row=1, col=2)  
-
-    fig1_2.add_trace(go.Scatter(x=data50.index,
-                            y=data50['20MA'],
-                            mode='lines',
-                            line=dict(color='green'),
-                            name='MA20'),row=1, col=2)
-    fig1_2.add_trace(go.Scatter(x=data50.index,
-                            y=data50['200MA'],
-                            mode='lines',
-                            line=dict(color='blue'),
-                            name='MA200'),row=1, col=2)
-    fig1_2.add_trace(go.Scatter(x=data50.index,
-                            y=data50['60MA'],
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='MA60'),row=1, col=2)
-
-    fig1_2.add_trace(go.Scatter(x=list(data50['IC'].index)[2:]+ICdate,
-                            y=data50['IC'].values,
-                            mode='lines',
-                            line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=2)
-
-
-
-    
-
-    ### 成本價及上下極限 ###
-
-    checkb = data50["labelb"].values[0]
-    bandstart = 1
-    bandidx = 1
-    checkidx = 0
-    while bandidx < len(data50["labelb"].values):
-        #checkidx = bandidx
-        bandstart = bandidx-1
-        checkidx = bandstart+1
-        if checkidx >=len(data50["labelb"].values)-1:
-            break
-        while data50["labelb"].values[checkidx] == data50["labelb"].values[checkidx+1]:
-            checkidx +=1
-            if checkidx >=len(data50["labelb"].values)-1:
-                break
-        bandend = checkidx+1
-        #print(bandstart,bandend)
-        if data50["labelb"].values[bandstart+1] == 1:
-            fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
-                
-            fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                        ),rows=[1], cols=[2])
-        else:
-
-
-            fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[2])
-                
-            fig1_2.add_traces(go.Scatter(x=data50.index[bandstart:bandend], y = data50['upper_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),
-                                        fill='tonexty', 
-                                        fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                        ),rows=[1], cols=[2])
-        bandidx =checkidx +1
-        if bandidx >=len(data50["labelb"].values):
-            break
-
-    
-
-    
-
-
-    ### K線圖製作 ###
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )].index,
-            open=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['open'],
-            high=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['max'],
-            low=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['min'],
-            close=data50[(data50['all_kk'] == -1)&(data50['close'] >data50['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=2),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )].index,
-            open=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['open'],
-            high=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['max'],
-            low=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['min'],
-            close=data50[(data50['all_kk'] == 1)&(data50['close'] >data50['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=no_color, #fill_increasing_color(data50.index>data50.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=no_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-    ### K線圖製作 ###
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )].index,
-            open=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['open'],
-            high=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['max'],
-            low=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['min'],
-            close=data50[(data50['all_kk'] == -1)&(data50['close'] <data50['open'] )]['close'],
-            increasing_line_color=decreasing_color,
-            increasing_fillcolor=decreasing_color, #fill_increasing_color(data50.index>data50.index[50])
-            decreasing_line_color=decreasing_color,
-            decreasing_fillcolor=decreasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-
-
-    fig1_2.add_trace(
-        go.Candlestick(
-            x=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )].index,
-            open=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['open'],
-            high=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['max'],
-            low=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['min'],
-            close=data50[(data50['all_kk'] == 1)&(data50['close'] <data50['open'] )]['close'],
-            increasing_line_color=increasing_color,
-            increasing_fillcolor=increasing_color, #fill_increasing_color(data50.index>data50.index[50])
-            decreasing_line_color=increasing_color,
-            decreasing_fillcolor=increasing_color,#decreasing_color,
-            line=dict(width=1),
-            name='OHLC',showlegend=False
-        )#,
-        
-        ,row=1, col=2
-    )
-    
-    fig1_2.update_annotations(font_size=12)
-
-    # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
-    fig1_2.update_xaxes(
-        rangeslider= {'visible':False},
-        rangebreaks=[
-            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
-        ],
-                    row = 1, 
-                    col = 2
-    )
-
-    
 
     #fig1_2.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
 
@@ -1746,7 +923,10 @@ with tab2:
     fig1_1.update_annotations(font_size=12)
     fig1_1.update_layout(title_text = "", hovermode='x unified',#,hoverlabel=list(bgcolor='rgba(255,255,255,0.5),font=list(color='black')'),
                     width = 1200, 
-                    height = 400)
+                    height = 400,
+               
+                    yaxis2=dict(showgrid=False),
+                    yaxis=dict(showgrid=False))
     
     st.plotly_chart(fig1_1)
 
@@ -1756,9 +936,14 @@ with tab2:
     fig1_2.update_annotations(font_size=12)
     fig1_2.update_layout(title_text = "", 
                     width = 1200, 
-                    height = 400)
+                    height = 400,
+              
+                    yaxis2=dict(showgrid=False),
+                    yaxis=dict(showgrid=False))
 
     st.plotly_chart(fig1_2)
+    
+    
 
 
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
@@ -1828,206 +1013,28 @@ with tab2:
         subplot_titles = titlelist
     )
 
-    ## 圖一
-    # 畫買權長條圖
-    fig1.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[0]],
-                        orientation = 'h',
-                        name = datecol[0] + ' Call',
-                        #text = ("(" + (call_t_df[datecol[0]] - call_t_df['2021-11-3']).astype('int').astype('str') + ") " + call_t_df['2021-11-4'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 1 )
-
-    # 畫賣權長條圖
-    fig1.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[0]],
-                        orientation = 'h',
-                        name = datecol[0] + ' Put',
-                        #text = (put_t_df['2021-11-4'].astype('int').astype('str') + " (" + (put_t_df['2021-11-4'] - put_t_df['2021-11-3']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 2 )
-
-
-    # 設定圖的x跟y軸標題
-    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 1)
-
-    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 2)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    title_text = "履約價",
-                    row = 1, 
-                    col = 1)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 2)
-
-
-    ## 圖二
-    # 畫買權長條圖
-    fig1.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[1]],
-                        orientation = 'h',
-                        name = datecol[1] + ' Call',
-                        #text = ("(" + (call_t_df['2021-11-5'] - call_t_df['2021-11-4']).astype('int').astype('str') + ") " + call_t_df['2021-11-5'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 3 )
-
-    # 畫賣權長條圖
-    fig1.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[1]],
-                        orientation = 'h',
-                        name = datecol[1]+' Put',
-                        #text = (put_t_df['2021-11-5'].astype('int').astype('str') + " (" + (put_t_df['2021-11-5'] - put_t_df['2021-11-4']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 4 )
-
-
-    # 設定圖的x跟y軸標題
-    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 3)
-
-    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 4)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 3)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 4)
-
-
-    ## 圖三
-    # 畫買權長條圖
-    fig1.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[2]],
-                        orientation = 'h',
-                        name = datecol[2] + ' Call',
-                        #text = ("(" + (call_t_df['2021-11-8'] - call_t_df['2021-11-5']).astype('int').astype('str') + ") " + call_t_df['2021-11-8'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 5 )
-
-    # 畫賣權長條圖
-    fig1.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[2]],
-                        orientation = 'h',
-                        name = datecol[2] + ' Put',
-                        #text = (put_t_df['2021-11-8'].astype('int').astype('str') + " (" + (put_t_df['2021-11-8'] - put_t_df['2021-11-5']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 6 )
-
-
-    # 設定圖的x跟y軸標題
-    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 5)
-
-    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 6)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 5)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 6)
-
-    ## 圖四
-    # 畫買權長條圖
-    fig1.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Call',
-                        #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 7 )
-
-    # 畫賣權長條圖
-    fig1.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Put',
-                        #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 8 )
-
-
-    # 設定圖的x跟y軸標題
-    fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 7)
-
-    fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 8)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 7)
-
-    fig1.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 8)
-
-    ## 圖五
     try:
+
+        ## 圖一
         # 畫買權長條圖
         fig1.add_trace(go.Bar(y = call_t_df.index,
-                            x = -call_t_df[datecol[4]],
+                            x = -call_t_df[datecol[0]],
                             orientation = 'h',
-                            name = datecol[4]+' Call',
-                            #text = ("(" + (call_t_df['2021-11-10'] - call_t_df['2021-11-9']).astype('int').astype('str') + ") " + call_t_df['2021-11-10'].astype('int').astype('str')),
+                            name = datecol[0] + ' Call',
+                            #text = ("(" + (call_t_df[datecol[0]] - call_t_df['2021-11-3']).astype('int').astype('str') + ") " + call_t_df['2021-11-4'].astype('int').astype('str')),
                             marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 9 )
+                    col = 1 )
 
         # 畫賣權長條圖
         fig1.add_trace(go.Bar(y = put_t_df.index,
-                            x = put_t_df[datecol[4]],
+                            x = put_t_df[datecol[0]],
                             orientation = 'h',
-                            name = datecol[4]+' Put',
-                            #text = (put_t_df['2021-11-10'].astype('int').astype('str') + " (" + (put_t_df['2021-11-10'] - put_t_df['2021-11-9']).astype('int').astype('str') + ")"),
+                            name = datecol[0] + ' Put',
+                            #text = (put_t_df['2021-11-4'].astype('int').astype('str') + " (" + (put_t_df['2021-11-4'] - put_t_df['2021-11-3']).astype('int').astype('str') + ")"),
                             marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 10 )
+                    col = 2 )
 
 
         # 設定圖的x跟y軸標題
@@ -2035,87 +1042,268 @@ with tab2:
                         ticktext = ['15k',  '10k',  '5k',  '0'], 
                         title_text = "未沖銷契約數",
                         row = 1, 
-                        col = 9)
+                        col = 1)
 
         fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
                         ticktext = ['0',  '5k',  '10k',  '15k'], 
                         title_text = "未沖銷契約數",
                         row = 1, 
-                        col = 10)
+                        col = 2)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        title_text = "履約價",
+                        row = 1, 
+                        col = 1)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 2)
+
+
+        ## 圖二
+        # 畫買權長條圖
+        fig1.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[1]],
+                            orientation = 'h',
+                            name = datecol[1] + ' Call',
+                            #text = ("(" + (call_t_df['2021-11-5'] - call_t_df['2021-11-4']).astype('int').astype('str') + ") " + call_t_df['2021-11-5'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
+                    row = 1, 
+                    col = 3 )
+
+        # 畫賣權長條圖
+        fig1.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[1]],
+                            orientation = 'h',
+                            name = datecol[1]+' Put',
+                            #text = (put_t_df['2021-11-5'].astype('int').astype('str') + " (" + (put_t_df['2021-11-5'] - put_t_df['2021-11-4']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
+                    row = 1, 
+                    col = 4 )
+
+
+        # 設定圖的x跟y軸標題
+        fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 3)
+
+        fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 4)
 
         fig1.update_yaxes(autorange = "reversed", 
                         showticklabels = False, 
                         row = 1, 
-                        col = 9)
+                        col = 3)
 
         fig1.update_yaxes(autorange = "reversed", 
-                        
                         row = 1, 
-                        col = 10)
-    except:
-        pass
-    for hi in range(10):
+                        col = 4)
+
+
+        ## 圖三
+        # 畫買權長條圖
+        fig1.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[2]],
+                            orientation = 'h',
+                            name = datecol[2] + ' Call',
+                            #text = ("(" + (call_t_df['2021-11-8'] - call_t_df['2021-11-5']).astype('int').astype('str') + ") " + call_t_df['2021-11-8'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
+                    row = 1, 
+                    col = 5 )
+
+        # 畫賣權長條圖
+        fig1.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[2]],
+                            orientation = 'h',
+                            name = datecol[2] + ' Put',
+                            #text = (put_t_df['2021-11-8'].astype('int').astype('str') + " (" + (put_t_df['2021-11-8'] - put_t_df['2021-11-5']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
+                    row = 1, 
+                    col = 6 )
+
+
+        # 設定圖的x跟y軸標題
+        fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 5)
+
+        fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 6)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 5)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 6)
+
+        ## 圖四
+        # 畫買權長條圖
+        fig1.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Call',
+                            #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
+                    row = 1, 
+                    col = 7 )
+
+        # 畫賣權長條圖
+        fig1.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Put',
+                            #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
+                    row = 1, 
+                    col = 8 )
+
+
+        # 設定圖的x跟y軸標題
+        fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 7)
+
+        fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 8)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 7)
+
+        fig1.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 8)
+
+        ## 圖五
         try:
-            fig1.add_hline(y=kbars['收盤指數'].values[-1], line_width=1,line_dash="dash", line_color="black",name='當天收盤',row=1,col=hi)#, line_dash="dash"
+            # 畫買權長條圖
+            fig1.add_trace(go.Bar(y = call_t_df.index,
+                                x = -call_t_df[datecol[4]],
+                                orientation = 'h',
+                                name = datecol[4]+' Call',
+                                #text = ("(" + (call_t_df['2021-11-10'] - call_t_df['2021-11-9']).astype('int').astype('str') + ") " + call_t_df['2021-11-10'].astype('int').astype('str')),
+                                marker = dict(color = 'red'),showlegend=False), 
+                        row = 1, 
+                        col = 9 )
+
+            # 畫賣權長條圖
+            fig1.add_trace(go.Bar(y = put_t_df.index,
+                                x = put_t_df[datecol[4]],
+                                orientation = 'h',
+                                name = datecol[4]+' Put',
+                                #text = (put_t_df['2021-11-10'].astype('int').astype('str') + " (" + (put_t_df['2021-11-10'] - put_t_df['2021-11-9']).astype('int').astype('str') + ")"),
+                                marker = dict(color = 'green'),showlegend=False), 
+                        row = 1, 
+                        col = 10 )
+
+
+            # 設定圖的x跟y軸標題
+            fig1.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                            ticktext = ['15k',  '10k',  '5k',  '0'], 
+                            title_text = "未沖銷契約數",
+                            row = 1, 
+                            col = 9)
+
+            fig1.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                            ticktext = ['0',  '5k',  '10k',  '15k'], 
+                            title_text = "未沖銷契約數",
+                            row = 1, 
+                            col = 10)
+
+            fig1.update_yaxes(autorange = "reversed", 
+                            showticklabels = False, 
+                            row = 1, 
+                            col = 9)
+
+            fig1.update_yaxes(autorange = "reversed", 
+                            
+                            row = 1, 
+                            col = 10)
         except:
             pass
+        for hi in range(10):
+            try:
+                fig1.add_hline(y=kbars['收盤指數'].values[-1], line_width=1,line_dash="dash", line_color="black",name='當天收盤',row=1,col=hi)#, line_dash="dash"
+            except:
+                pass
 
-    # 設定圖的標題跟長寬
-    fig1.update_annotations(font_size=12)
-    fig1.update_layout(title_text = "臺指選擇權 未沖銷契約數 支撐壓力圖 (週)", 
-                    width = 1200, 
-                    height = 650)
+        # 設定圖的標題跟長寬
+        fig1.update_annotations(font_size=12)
+        fig1.update_layout(title_text = "臺指選擇權 未沖銷契約數 支撐壓力圖 (週)", 
+                        width = 1200, 
+                        height = 650)
 
-    #fig.show()
-    st.plotly_chart(fig1)
+        #fig.show()
+        st.plotly_chart(fig1)
 
 
-    contract1 = data[(data.date == data.date.max())&(~data.contract_date.str.contains("W"))].contract_date.min()
-    try:
-        contract2 = data[(data.date == data.date.min())&(~data.contract_date.str.contains("W"))].contract_date.min()
+        contract1 = data[(data.date == data.date.max())&(~data.contract_date.str.contains("W"))].contract_date.min()
+        try:
+            contract2 = data[(data.date == data.date.min())&(~data.contract_date.str.contains("W"))].contract_date.min()
+        except:
+            contract2 = ""
+        #contract1 
+        #contract2
+        #data
+        #enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
+        #enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]
+
+        data1 = data[(data.date < enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]) & (data.contract_date == contract2)]
+        data2 = data[(data.date >= enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]) & (data.contract_date == contract1)]
+        df = pd.concat([data1,data2])
+        #data2
+
+        df = df[df['strike_price']>kbars['收盤指數'].values[-1]-1000]
+        dfmonth = df[df['strike_price']<kbars['收盤指數'].values[-1]+1000]
+
+        contract_month = data[(data.date == data.date.max())&(~data.contract_date.str.contains("W"))].contract_date.min()
+        #dfmonth = data[(data.date == data.date.max())&(data.contract_date==contract_month)]
+
+        call_df = dfmonth.loc[(dfmonth['call_put'] == 'call')]
+        index = call_df['strike_price'].unique()
+        idx = np.sort(index)
+        dates = call_df['date'].unique()
+        call_t_df = pd.DataFrame(index = idx, columns = list(dates))
+        # 取出各日期的未沖銷契約數 依序放入 dataframe 中
+        for col in call_t_df.columns:
+            call_t_df[col] = call_df.loc[call_df['date'] == col].set_index('strike_price')['open_interest']
+            
+        #空值填入 0
+        call_t_df = call_t_df.fillna(0)
+
+
+        put_df = dfmonth.loc[(dfmonth['call_put'] == 'put')]
+        index = put_df['strike_price'].unique()
+        idx = np.sort(index)
+        dates = put_df['date'].unique()
+        put_t_df = pd.DataFrame(index = idx, columns = list(dates))
+        for col in put_t_df.columns:
+            put_t_df[col] = put_df.loc[put_df['date'] == col].set_index('strike_price')['open_interest']
+
+        #空值填入 0
+        put_t_df = put_t_df.fillna(0)
     except:
-        contract2 = ""
-    #contract1 
-    #contract2
-    #data
-    #enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
-    #enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]
-
-    data1 = data[(data.date < enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]) & (data.contract_date == contract2)]
-    data2 = data[(data.date >= enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[0]) & (data.contract_date == contract1)]
-    df = pd.concat([data1,data2])
-    #data2
-
-    df = df[df['strike_price']>kbars['收盤指數'].values[-1]-1000]
-    dfmonth = df[df['strike_price']<kbars['收盤指數'].values[-1]+1000]
-
-    contract_month = data[(data.date == data.date.max())&(~data.contract_date.str.contains("W"))].contract_date.min()
-    #dfmonth = data[(data.date == data.date.max())&(data.contract_date==contract_month)]
-
-    call_df = dfmonth.loc[(dfmonth['call_put'] == 'call')]
-    index = call_df['strike_price'].unique()
-    idx = np.sort(index)
-    dates = call_df['date'].unique()
-    call_t_df = pd.DataFrame(index = idx, columns = list(dates))
-    # 取出各日期的未沖銷契約數 依序放入 dataframe 中
-    for col in call_t_df.columns:
-        call_t_df[col] = call_df.loc[call_df['date'] == col].set_index('strike_price')['open_interest']
-        
-    #空值填入 0
-    call_t_df = call_t_df.fillna(0)
-
-
-    put_df = dfmonth.loc[(dfmonth['call_put'] == 'put')]
-    index = put_df['strike_price'].unique()
-    idx = np.sort(index)
-    dates = put_df['date'].unique()
-    put_t_df = pd.DataFrame(index = idx, columns = list(dates))
-    for col in put_t_df.columns:
-        put_t_df[col] = put_df.loc[put_df['date'] == col].set_index('strike_price')['open_interest']
-
-    #空值填入 0
-    put_t_df = put_t_df.fillna(0)
-
+        pass
     #call_t_df 
     #  設定左右子圖
     fig2 = make_subplots(
@@ -2124,185 +1312,187 @@ with tab2:
         horizontal_spacing = 0.02, 
         subplot_titles = titlelist
     )
-
-    ## 圖一
-    # 畫買權長條圖
-    fig2.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[0]],
-                        orientation = 'h',
-                        name = datecol[0] + ' Call',
-                        #text = ("(" + (call_t_df[datecol[0]] - call_t_df['2021-11-3']).astype('int').astype('str') + ") " + call_t_df['2021-11-4'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 1 )
-
-    # 畫賣權長條圖
-    fig2.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[0]],
-                        orientation = 'h',
-                        name = datecol[0] + ' Put',
-                        #text = (put_t_df['2021-11-4'].astype('int').astype('str') + " (" + (put_t_df['2021-11-4'] - put_t_df['2021-11-3']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 2 )
-
-
-    # 設定圖的x跟y軸標題
-    fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
+    try:
+        ## 圖一
+        # 畫買權長條圖
+        fig2.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[0]],
+                            orientation = 'h',
+                            name = datecol[0] + ' Call',
+                            #text = ("(" + (call_t_df[datecol[0]] - call_t_df['2021-11-3']).astype('int').astype('str') + ") " + call_t_df['2021-11-4'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 1)
+                    col = 1 )
 
-    fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
+        # 畫賣權長條圖
+        fig2.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[0]],
+                            orientation = 'h',
+                            name = datecol[0] + ' Put',
+                            #text = (put_t_df['2021-11-4'].astype('int').astype('str') + " (" + (put_t_df['2021-11-4'] - put_t_df['2021-11-3']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 2)
+                    col = 2 )
 
-    fig2.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    title_text = "履約價",
+
+        # 設定圖的x跟y軸標題
+        fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 1)
+
+        fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 2)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        title_text = "履約價",
+                        row = 1, 
+                        col = 1)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 2)
+
+
+        ## 圖二
+        # 畫買權長條圖
+        fig2.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[1]],
+                            orientation = 'h',
+                            name = datecol[1] + ' Call',
+                            #text = ("(" + (call_t_df['2021-11-5'] - call_t_df['2021-11-4']).astype('int').astype('str') + ") " + call_t_df['2021-11-5'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 1)
+                    col = 3 )
 
-    fig2.update_yaxes(autorange = "reversed", 
+        # 畫賣權長條圖
+        fig2.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[1]],
+                            orientation = 'h',
+                            name = datecol[1]+' Put',
+                            #text = (put_t_df['2021-11-5'].astype('int').astype('str') + " (" + (put_t_df['2021-11-5'] - put_t_df['2021-11-4']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 2)
+                    col = 4 )
 
 
-    ## 圖二
-    # 畫買權長條圖
-    fig2.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[1]],
-                        orientation = 'h',
-                        name = datecol[1] + ' Call',
-                        #text = ("(" + (call_t_df['2021-11-5'] - call_t_df['2021-11-4']).astype('int').astype('str') + ") " + call_t_df['2021-11-5'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 3 )
+        # 設定圖的x跟y軸標題
+        fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 3)
 
-    # 畫賣權長條圖
-    fig2.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[1]],
-                        orientation = 'h',
-                        name = datecol[1]+' Put',
-                        #text = (put_t_df['2021-11-5'].astype('int').astype('str') + " (" + (put_t_df['2021-11-5'] - put_t_df['2021-11-4']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 4 )
+        fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 4)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 3)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 4)
 
 
-    # 設定圖的x跟y軸標題
-    fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
+        ## 圖三
+        # 畫買權長條圖
+        fig2.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[2]],
+                            orientation = 'h',
+                            name = datecol[2] + ' Call',
+                            #text = ("(" + (call_t_df['2021-11-8'] - call_t_df['2021-11-5']).astype('int').astype('str') + ") " + call_t_df['2021-11-8'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 3)
+                    col = 5 )
 
-    fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
+        # 畫賣權長條圖
+        fig2.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[2]],
+                            orientation = 'h',
+                            name = datecol[2] + ' Put',
+                            #text = (put_t_df['2021-11-8'].astype('int').astype('str') + " (" + (put_t_df['2021-11-8'] - put_t_df['2021-11-5']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 4)
+                    col = 6 )
 
-    fig2.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
+
+        # 設定圖的x跟y軸標題
+        fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 5)
+
+        fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 6)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 5)
+
+        fig2.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 6)
+
+        ## 圖四
+        # 畫買權長條圖
+        fig2.add_trace(go.Bar(y = call_t_df.index,
+                            x = -call_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Call',
+                            #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
+                            marker = dict(color = 'red'),showlegend=False), 
                     row = 1, 
-                    col = 3)
+                    col = 7 )
 
-    fig2.update_yaxes(autorange = "reversed", 
+        # 畫賣權長條圖
+        fig2.add_trace(go.Bar(y = put_t_df.index,
+                            x = put_t_df[datecol[3]],
+                            orientation = 'h',
+                            name = datecol[3]+' Put',
+                            #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
+                            marker = dict(color = 'green'),showlegend=False), 
                     row = 1, 
-                    col = 4)
+                    col = 8 )
 
 
-    ## 圖三
-    # 畫買權長條圖
-    fig2.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[2]],
-                        orientation = 'h',
-                        name = datecol[2] + ' Call',
-                        #text = ("(" + (call_t_df['2021-11-8'] - call_t_df['2021-11-5']).astype('int').astype('str') + ") " + call_t_df['2021-11-8'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 5 )
+        # 設定圖的x跟y軸標題
+        fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
+                        ticktext = ['15k',  '10k',  '5k',  '0'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 7)
 
-    # 畫賣權長條圖
-    fig2.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[2]],
-                        orientation = 'h',
-                        name = datecol[2] + ' Put',
-                        #text = (put_t_df['2021-11-8'].astype('int').astype('str') + " (" + (put_t_df['2021-11-8'] - put_t_df['2021-11-5']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 6 )
+        fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
+                        ticktext = ['0',  '5k',  '10k',  '15k'], 
+                        title_text = "未沖銷契約數",
+                        row = 1, 
+                        col = 8)
 
+        fig2.update_yaxes(autorange = "reversed", 
+                        showticklabels = False, 
+                        row = 1, 
+                        col = 7)
 
-    # 設定圖的x跟y軸標題
-    fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 5)
-
-    fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 6)
-
-    fig2.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 5)
-
-    fig2.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 6)
-
-    ## 圖四
-    # 畫買權長條圖
-    fig2.add_trace(go.Bar(y = call_t_df.index,
-                        x = -call_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Call',
-                        #text = ("(" + (call_t_df['2021-11-9'] - call_t_df['2021-11-8']).astype('int').astype('str') + ") " + call_t_df['2021-11-9'].astype('int').astype('str')),
-                         marker = dict(color = 'red'),showlegend=False), 
-                row = 1, 
-                col = 7 )
-
-    # 畫賣權長條圖
-    fig2.add_trace(go.Bar(y = put_t_df.index,
-                        x = put_t_df[datecol[3]],
-                        orientation = 'h',
-                        name = datecol[3]+' Put',
-                        #text = (put_t_df['2021-11-9'].astype('int').astype('str') + " (" + (put_t_df['2021-11-9'] - put_t_df['2021-11-8']).astype('int').astype('str') + ")"),
-                         marker = dict(color = 'green'),showlegend=False), 
-                row = 1, 
-                col = 8 )
-
-
-    # 設定圖的x跟y軸標題
-    fig2.update_xaxes(tickvals = [-15000,  -10000,  -5000,  0],
-                    ticktext = ['15k',  '10k',  '5k',  '0'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 7)
-
-    fig2.update_xaxes(tickvals = [0, 5000, 10000, 15000],
-                    ticktext = ['0',  '5k',  '10k',  '15k'], 
-                    title_text = "未沖銷契約數",
-                    row = 1, 
-                    col = 8)
-
-    fig2.update_yaxes(autorange = "reversed", 
-                    showticklabels = False, 
-                    row = 1, 
-                    col = 7)
-
-    fig2.update_yaxes(autorange = "reversed", 
-                    row = 1, 
-                    col = 8)
+        fig2.update_yaxes(autorange = "reversed", 
+                        row = 1, 
+                        col = 8)
+    except:
+        pass
 
     ## 圖五
     try:
@@ -2515,7 +1705,7 @@ with tab3:
         else:
             Final60Tdata.loc[Final60Tdata.index[i],"all_kk"] = -1
 
-    Final60Tdata = Final60Tdata[Final60Tdata.index>Final60Tdata.index[-100]]
+    Final60Tdata = Final60Tdata[Final60Tdata.index>Final60Tdata.index[-130]]
     IChour = []
     finalhour = list(Final60Tdata['IC'].index)[-1]
     plusi = 1
@@ -2524,21 +1714,33 @@ with tab3:
     IChour.append(finalhour + timedelta(hours = plusi))
     IChour.append(finalhour + timedelta(hours = plusi+1))
 
-    Final60Tdata.index = Final60Tdata.index.astype('str')
+    #Final60Tdata.index = Final60Tdata.index.astype('str')
+    Final60Tdata.index = Final60Tdata.index.strftime("%m-%d-%Y %H:%M")
+
+    
 
 
     #Final60Tdata
     fig3_1 = make_subplots(
         rows = 2, 
         cols = 1, 
-        horizontal_spacing = 0.1,
-        vertical_spacing=0.1,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"],
+        horizontal_spacing = 0.2,
+        vertical_spacing=0.2,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"],
         shared_yaxes=False,
         
         #subplot_titles=subtitle,
         #y_title = "test"# subtitle,
         specs = [[{"secondary_y":True}]]*2
     )
+
+    ### 成交量圖製作 ###
+    volume_colors1 = [red_color if Final60Tdata['close'][i] > Final60Tdata['close'][i-1] else green_color for i in range(len(Final60Tdata['close']))]
+    volume_colors1[0] = green_color
+
+    #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='成交數量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
+    #Final60Tdata.index = Final60Tdata.index - timedelta(hours = 6)
+
     checkb = Final60Tdata["labelb"].values[0]
     bandstart = 1
     bandidx = 1
@@ -2594,13 +1796,7 @@ with tab3:
     #                        #line=dict(color='green'),
     #                        name='外資下極限'),row=1, col=1)
 
-    ### 成交量圖製作 ###
-    volume_colors1 = [red_color if Final60Tdata['close'][i] > Final60Tdata['close'][i-1] else green_color for i in range(len(Final60Tdata['close']))]
-    volume_colors1[0] = green_color
-
-    #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='成交數量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
-
+    
     
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
                                         line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資上極限'),rows=[1], cols=[1])
@@ -2852,7 +2048,13 @@ with tab3:
             df_300.loc[df_300.index[i],"all_kk"] = -1
 
     
-    df_300 = df_300[df_300.index>df_300.index[-60]]
+    df_300 = df_300[df_300.index>df_300.index[-80]]
+    
+
+
+
+
+    
     IChour2 = []
     finalhour = list(df_300['IC'].index)[-1]
     plusi = 1
@@ -2860,7 +2062,8 @@ with tab3:
         plusi = plusi + 1
     IChour2.append(finalhour + timedelta(hours = plusi))
     IChour2.append(finalhour + timedelta(hours = plusi+5))
- 
+
+    df_300.index = df_300.index.strftime(("%m-%d-%Y %H:%M"))
 
     checkb = df_300["labelb"].values[0]
     bandstart = 1
@@ -2908,7 +2111,7 @@ with tab3:
     #fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='成交量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
     fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=2, col=1, secondary_y= True)
 
-    
+    #df_300.index = df_300.index - timedelta(hours = 6)
 
     fig3_1.add_trace(go.Scatter(x=df_300.index,
                             y=df_300['外資成本'],
@@ -3054,16 +2257,7 @@ with tab3:
 
     #T60noshow
 
-    T300noshow = []
-    timelist = ['08:00:00','15:00:00','20:00:00','01:00:00']
-    curdatetime = df_300.index[0]
-    while curdatetime < datetime.today():
-        curdatestr = datetime.strftime(curdatetime,'%Y-%m-%d')
-        for ti in timelist:
-            curdatetimestr = curdatestr + ' ' + ti
-            if curdatetimestr not in df_300.index.astype('str'):
-                T300noshow.append(curdatetimestr)
-        curdatetime = curdatetime + timedelta(days = 1)
+    
 
 
     fig3_1.update_xaxes(
@@ -3087,7 +2281,7 @@ with tab3:
         rangebreaks=[
             #dict(bounds=[6, 8], pattern="hour"),
 
-            dict(bounds=['sun', 'mon']),# hide weekends, eg. hide sat to before mon
+            dict(bounds=['sat', 'mon']),# hide weekends, eg. hide sat to before mon
             #dict(values=T300noshow)
         ],
                     row = 2, 
@@ -3150,101 +2344,9 @@ with tab4:
     if st.button('Get Chart'):
         
 
-        #  個股
+        stockdata,ICdate = get_stock_data(stocknumber)
 
-        parameter = {
-        "dataset": "TaiwanStockPrice",
-        "data_id": stocknumber,
-        "start_date": "2021-04-02",
-        "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
-        "token": token, # 參考登入，獲取金鑰
-        }
-        resp = requests.get(url, params=parameter)
-        data = resp.json()
-        data = pd.DataFrame(data["data"]) 
-        data.date = pd.to_datetime(data.date)
-        data.index = data.date 
-        stockdata = data.copy()
-
-        # 計算布林帶指標
-        stockdata['20MA'] = stockdata['close'].rolling(20).mean()
-        stockdata['60MA'] = stockdata['close'].rolling(60).mean()
-        stockdata['200MA'] = stockdata['close'].rolling(200).mean()
-        stockdata['std'] = stockdata['close'].rolling(20).std()
-        stockdata['upper_band'] = stockdata['20MA'] + 2 * stockdata['std']
-        stockdata['lower_band'] = stockdata['20MA'] - 2 * stockdata['std']
-        stockdata['upper_band1'] = stockdata['20MA'] + 1 * stockdata['std']
-        stockdata['lower_band1'] = stockdata['20MA'] - 1 * stockdata['std']
-
-        stockdata['IC'] = stockdata['close'] + 2 * stockdata['close'].shift(1) - stockdata['close'].shift(3) -stockdata['close'].shift(4)
-
-        # 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
-        low_list = stockdata['min'].rolling(9, min_periods=9).min()
-        low_list.fillna(value=stockdata['min'].expanding().min(), inplace=True)
-        high_list = stockdata['max'].rolling(9, min_periods=9).max()
-        high_list.fillna(value=stockdata['max'].expanding().max(), inplace=True)
-        rsv = (stockdata['close'] - low_list) / (high_list - low_list) * 100
-        stockdata['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
-        stockdata['D'] = stockdata['K'].ewm(com=2).mean()
-
-
-
-        #詢問
-        ds = 2
-        stockdata['uline'] = stockdata['max'].rolling(ds, min_periods=1).max()
-        stockdata['dline'] = stockdata['min'].rolling(ds, min_periods=1).min()
-
-        stockdata["all_kk"] = 0
-        barssince5 = 0
-        barssince6 = 0
-        stockdata['labelb'] = 1
-        stockdata = stockdata[~stockdata.index.duplicated(keep='first')]
-        for i in range(2,len(stockdata.index)):
-            try:
-                #(stockdata.loc[stockdata.index[i],'close'] > stockdata.loc[stockdata.index[i-1],"uline"])
-                condition51 = (stockdata.loc[stockdata.index[i-1],"max"] < stockdata.loc[stockdata.index[i-2],"min"] ) and (stockdata.loc[stockdata.index[i],"min"] > stockdata.loc[stockdata.index[i-1],"max"] )
-                #condition52 = (stockdata.loc[stockdata.index[i-1],'close'] < stockdata.loc[stockdata.index[i-2],"min"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']>stockdata.loc[stockdata.index[i-1],"max"] )
-                condition53 = (stockdata.loc[stockdata.index[i],'close'] > stockdata.loc[stockdata.index[i-1],"uline"]) and (stockdata.loc[stockdata.index[i-1],'close'] <= stockdata.loc[stockdata.index[i-1],"uline"])
-
-                condition61 = (stockdata.loc[stockdata.index[i-1],"min"] > stockdata.loc[stockdata.index[i-2],"max"] ) and (stockdata.loc[stockdata.index[i],"max"] < stockdata.loc[stockdata.index[i-1],"min"] )
-                #condition62 = (stockdata.loc[stockdata.index[i-1],'close'] > stockdata.loc[stockdata.index[i-2],"max"]) and (stockdata.loc[stockdata.index[i-1],'成交金額'] > stockdata.loc[stockdata.index[i-2],'成交金額']) and (stockdata.loc[stockdata.index[i],'close']<stockdata.loc[stockdata.index[i-1],"min"] )
-                condition63 = (stockdata.loc[stockdata.index[i],'close'] < stockdata.loc[stockdata.index[i-1],"dline"]) and (stockdata.loc[stockdata.index[i-1],'close'] >= stockdata.loc[stockdata.index[i-1],"dline"])
-            except:
-                condition51 = True
-                condition52 = True
-                condition53 = True
-                condition61 = True
-                condition63 = True
-            condition54 = condition51 or condition53 #or condition52
-            condition64 = condition61 or condition63 #or condition62 
-
-            #stockdata['labelb'] = np.where((stockdata['close']> stockdata['upper_band1']) , 1, np.where((stockdata['close']< stockdata['lower_band1']),-1,1))
-
-            #print(i)
-            if stockdata.loc[stockdata.index[i],'close'] > stockdata.loc[stockdata.index[i],'upper_band1']:
-                stockdata.loc[stockdata.index[i],'labelb'] = 1
-            elif stockdata.loc[stockdata.index[i],'close'] < stockdata.loc[stockdata.index[i],'lower_band1']:
-                stockdata.loc[stockdata.index[i],'labelb'] = -1
-            else:
-                stockdata.loc[stockdata.index[i],'labelb'] = stockdata.loc[stockdata.index[i-1],'labelb']
-
-            if condition54 == True:
-                barssince5 = 1
-            else:
-                barssince5 += 1
-
-            if condition64 == True:
-                barssince6 = 1
-            else:
-                barssince6 += 1
-
-
-            if barssince5 < barssince6:
-                stockdata.loc[stockdata.index[i],"all_kk"] = 1
-            else:
-                stockdata.loc[stockdata.index[i],"all_kk"] = -1
-
-        stockdata = stockdata[stockdata.index>stockdata.index[-120]]
+        #stockdata = stockdata[stockdata.index>stockdata.index[-120]]
 
 
         # 設定左右子圖
@@ -3256,163 +2358,8 @@ with tab4:
             specs = [[{"secondary_y":True}]]
 
         )
-
-        fig4.add_trace(go.Scatter(x=stockdata.index,
-                                y=stockdata['20MA'],
-                                mode='lines',
-                                line=dict(color='green'),
-                                name='MA20'),row=1, col=1, secondary_y= True)
-        fig4.add_trace(go.Scatter(x=stockdata.index,
-                                y=stockdata['200MA'],
-                                mode='lines',
-                                line=dict(color='blue'),
-                                name='MA200'),row=1, col=1, secondary_y= True)
-        fig4.add_trace(go.Scatter(x=stockdata.index,
-                                y=stockdata['60MA'],
-                                mode='lines',
-                                line=dict(color='orange'),
-                                name='MA60'),row=1, col=1, secondary_y= True)
-
-        fig4.add_trace(go.Scatter(x=list(stockdata['IC'].index)[1:]+ICdate,
-                                y=stockdata['IC'].values,
-                                mode='lines',
-                                line=dict(color='orange'),
-                                name='IC操盤線'),row=1, col=1, secondary_y= True)
+        plot_stockdata(fig4,holidf,stockdata,1,1,ICdate)
         
-
-
-
-
-        ### 成本價及上下極限 ###
-
-        checkb = stockdata["labelb"].values[0]
-        bandstart = 1
-        bandidx = 1
-        checkidx = 0
-        while bandidx < len(stockdata["labelb"].values):
-            #checkidx = bandidx
-            bandstart = bandidx-1
-            checkidx = bandstart+1
-            if checkidx >=len(stockdata["labelb"].values)-1:
-                break
-            while stockdata["labelb"].values[checkidx] == stockdata["labelb"].values[checkidx+1]:
-                checkidx +=1
-                if checkidx >=len(stockdata["labelb"].values)-1:
-                    break
-            bandend = checkidx+1
-            #print(bandstart,bandend)
-            if stockdata["labelb"].values[bandstart+1] == 1:
-                fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['lower_band'].values[bandstart:bandend],
-                                            line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1],secondary_ys= [True,True])
-                    
-                fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['upper_band'].values[bandstart:bandend],
-                                            line = dict(color='rgba(0,0,0,0)'),
-                                            fill='tonexty', 
-                                            fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                            ),rows=[1], cols=[1],secondary_ys= [True,True])
-            else:
-
-
-                fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['lower_band'].values[bandstart:bandend],
-                                            line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[1], cols=[1],secondary_ys= [True,True])
-                    
-                fig4.add_traces(go.Scatter(x=stockdata.index[bandstart:bandend], y = stockdata['upper_band'].values[bandstart:bandend],
-                                            line = dict(color='rgba(0,0,0,0)'),
-                                            fill='tonexty', 
-                                            fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                            ),rows=[1], cols=[1],secondary_ys= [True,True])
-            bandidx =checkidx +1
-            if bandidx >=len(stockdata["labelb"].values):
-                break
-
-
-
-
-
-
-        ### K線圖製作 ###
-        fig4.add_trace(
-            go.Candlestick(
-                x=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] >stockdata['open'] )].index,
-                open=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] >stockdata['open'] )]['open'],
-                high=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] >stockdata['open'] )]['max'],
-                low=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] >stockdata['open'] )]['min'],
-                close=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] >stockdata['open'] )]['close'],
-                increasing_line_color=decreasing_color,
-                increasing_fillcolor=no_color, #fill_increasing_color(stockdata.index>stockdata.index[50])
-                decreasing_line_color=decreasing_color,
-                decreasing_fillcolor=no_color,#decreasing_color,
-                line=dict(width=1),
-                name='OHLC',showlegend=False
-            )#,
-            
-            ,row=1, col=1, secondary_y= True
-        )
-
-
-        fig4.add_trace(
-            go.Candlestick(
-                x=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] >stockdata['open'] )].index,
-                open=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] >stockdata['open'] )]['open'],
-                high=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] >stockdata['open'] )]['max'],
-                low=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] >stockdata['open'] )]['min'],
-                close=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] >stockdata['open'] )]['close'],
-                increasing_line_color=increasing_color,
-                increasing_fillcolor=no_color, #fill_increasing_color(stockdata.index>stockdata.index[50])
-                decreasing_line_color=increasing_color,
-                decreasing_fillcolor=no_color,#decreasing_color,
-                line=dict(width=1),
-                name='OHLC',showlegend=False
-            )#,
-            
-            ,row=1, col=1, secondary_y= True
-        )
-
-        ### K線圖製作 ###
-        fig4.add_trace(
-            go.Candlestick(
-                x=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] <stockdata['open'] )].index,
-                open=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] <stockdata['open'] )]['open'],
-                high=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] <stockdata['open'] )]['max'],
-                low=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] <stockdata['open'] )]['min'],
-                close=stockdata[(stockdata['all_kk'] == -1)&(stockdata['close'] <stockdata['open'] )]['close'],
-                increasing_line_color=decreasing_color,
-                increasing_fillcolor=decreasing_color, #fill_increasing_color(stockdata.index>stockdata.index[50])
-                decreasing_line_color=decreasing_color,
-                decreasing_fillcolor=decreasing_color,#decreasing_color,
-                line=dict(width=1),
-                name='OHLC',showlegend=False
-            )#,
-            
-            ,row=1, col=1, secondary_y= True
-        )
-
-
-        fig4.add_trace(
-            go.Candlestick(
-                x=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] <stockdata['open'] )].index,
-                open=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] <stockdata['open'] )]['open'],
-                high=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] <stockdata['open'] )]['max'],
-                low=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] <stockdata['open'] )]['min'],
-                close=stockdata[(stockdata['all_kk'] == 1)&(stockdata['close'] <stockdata['open'] )]['close'],
-                increasing_line_color=increasing_color,
-                increasing_fillcolor=increasing_color, #fill_increasing_color(stockdata.index>stockdata.index[50])
-                decreasing_line_color=increasing_color,
-                decreasing_fillcolor=increasing_color,#decreasing_color,
-                line=dict(width=1),
-                name='OHLC',showlegend=False
-            )#,
-            
-            ,row=1, col=1, secondary_y= True
-        )
-        ### 成交量圖製作 ###
-        volume_colors = [red_color if stockdata['close'][i] > stockdata['close'][i-1] else green_color for i in range(len(stockdata['close']))]
-        volume_colors[0] = green_color
-
-        #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-        fig4.add_trace(go.Bar(x=stockdata.index, y=stockdata['Trading_money'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1)
-
-
 
         fig4.update_annotations(font_size=12)
         fig4.update_layout(title_text = "", hovermode='x unified',
@@ -3420,6 +2367,9 @@ with tab4:
                         height = 600,
                         hoverlabel_namelength=-1,
                         dragmode = 'drawline',
+                        xaxis2=dict(showgrid=False),
+                        yaxis2=dict(showgrid=False),
+                        yaxis=dict(showgrid=False),
                         hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
                         legend_traceorder="reversed",
                         )
