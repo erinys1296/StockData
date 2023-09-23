@@ -761,7 +761,7 @@ with tab2:
     
     WeekTAIEXdata.date = pd.to_datetime(WeekTAIEXdata.date)
     WeekTAIEXdata["yearww"] = WeekTAIEXdata.date.dt.year.astype(str) + 'W' + WeekTAIEXdata.date.dt.isocalendar().week.astype('str').str.zfill(2)
-    FinalＷeekdata = WeekTAIEXdata.groupby('yearww').max()[["max"]].join(WeekTAIEXdata.groupby('yearww').min()[["min"]]).join(WeekTAIEXdata.groupby('yearww').sum()[["Trading_Volume"]]).join(WeekTAIEXdata.groupby('yearww').sum()[["Trading_money"]])
+    FinalＷeekdata = WeekTAIEXdata.groupby('yearww').max()[["max"]].join(WeekTAIEXdata.groupby('yearww').min()[["min"]]).join(WeekTAIEXdata[['yearww',"Trading_Volume"]].groupby('yearww').sum()[["Trading_Volume"]]).join(WeekTAIEXdata[['yearww',"Trading_money"]].groupby('yearww').sum()[["Trading_money"]])
     WeekTAIEXdata.index = WeekTAIEXdata.date
     tempopen = WeekTAIEXdata.loc[WeekTAIEXdata.groupby('yearww').min()['date'].values]
     tempopen.index = tempopen.yearww
