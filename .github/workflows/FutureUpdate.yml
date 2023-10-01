@@ -6,8 +6,9 @@ name: Future Update
 on:
 
   schedule:
-    - cron: '2 * * * *'
-    - cron: '47 0-5 * * *'
+    - cron: '2 6-23 * * 1-5'
+    - cron: '47 0-5 * * 1-5'
+
 
   push:
     branches: [ "erinys1296-patch-4" ]
