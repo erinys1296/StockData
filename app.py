@@ -1605,12 +1605,14 @@ with tab3:
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata.columns = ['max','min','Volume','open','date','close']
 
-    
+
     Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=15)).dt.date)
     Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
+    Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
     Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
+    #Final60Tdata.loc[Final60Tdata["外資成本"]==None,['外資成本','外資上極限','外資下極限','自營商上極限','自營商下極限']] = [16347,16673,16227,16645,16155]
     Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
     Final60Tdata.index = Final60Tdata.date
     Final60Tdata = Final60Tdata.sort_index()
@@ -1716,6 +1718,7 @@ with tab3:
 
     #Final60Tdata.index = Final60Tdata.index.astype('str')
     Final60Tdata.index = Final60Tdata.index.strftime("%m-%d-%Y %H:%M")
+    #Final60Tdata
 
     
 
@@ -1951,9 +1954,12 @@ with tab3:
     df_300.set_index('ts', inplace=True)
     df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=15)).date)
     df_300.loc[(df_300.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((df_300[(df_300.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
+    df_300.loc[df_300.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
     df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
     df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
     df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
+
+   #df_300.loc[Final60Tdata["外資成本"]==None,['外資成本','外資上極限','外資下極限','自營商上極限','自營商下極限']] = [16347,16673,16227,16645,16155]
     df_300.index = df_300.date
     
     df_300 = df_300.sort_index()
@@ -2064,6 +2070,7 @@ with tab3:
     IChour2.append(finalhour + timedelta(hours = plusi+5))
 
     df_300.index = df_300.index.strftime(("%m-%d-%Y %H:%M"))
+    #df_300
 
     checkb = df_300["labelb"].values[0]
     bandstart = 1
