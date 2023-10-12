@@ -1715,8 +1715,8 @@ with tab3:
     plusi = 1
     while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
         plusi = plusi + 1
-    IChour.append(finalhour + timedelta(hours = plusi))
-    IChour.append(finalhour + timedelta(hours = plusi+1))
+    IChour.append((finalhour + timedelta(hours = plusi)).strftime("%m-%d-%Y %H:%M"))
+    IChour.append((finalhour + timedelta(hours = plusi+1)).strftime("%m-%d-%Y %H:%M"))
 
     #Final60Tdata.index = Final60Tdata.index.astype('str')
     Final60Tdata.index = Final60Tdata.index.strftime("%m-%d-%Y %H:%M")
@@ -1743,7 +1743,7 @@ with tab3:
     volume_colors1[0] = green_color
 
     #fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='成交數量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1, secondary_y= True)
+    fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1)
     #Final60Tdata.index = Final60Tdata.index - timedelta(hours = 6)
 
     checkb = Final60Tdata["labelb"].values[0]
@@ -1764,24 +1764,24 @@ with tab3:
         #print(bandstart,bandend)
         if Final60Tdata["labelb"].values[bandstart+1] == 1:
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1], secondary_ys= [True])
                 
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(256,256,0,0.2)',showlegend=False,hoverinfo='none'
-                                        ),rows=[1], cols=[1])
+                                        ),rows=[1], cols=[1], secondary_ys= [True])
         else:
 
 
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1], secondary_ys= [True])
                 
             fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False,hoverinfo='none'
-                                        ),rows=[1], cols=[1])
+                                        ),rows=[1], cols=[1], secondary_ys= [True])
         bandidx =checkidx +1
         if bandidx >=len(Final60Tdata["labelb"].values):
             break
@@ -1793,7 +1793,7 @@ with tab3:
                             y=Final60Tdata['外資成本'],
                             mode='lines',
                             #line=dict(color='green'),
-                            name='外資成本'),row=1, col=1)
+                            name='外資成本'),row=1, col=1, secondary_y= True)
 
     #fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
     #                        y=Final60Tdata['外資下極限'],
@@ -1804,21 +1804,21 @@ with tab3:
     
     
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資上極限'),rows=[1], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資上極限'),rows=[1], cols=[1], secondary_ys= [True])
                 
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商上極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
                                 fillcolor = 'rgba(0,0,256,0.2)',showlegend=False,name='自營商上極限'
-                                ),rows=[1], cols=[1])
+                                ),rows=[1], cols=[1], secondary_ys= [True])
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資下極限'].values,
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資下極限'),rows=[1], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資下極限'),rows=[1], cols=[1], secondary_ys= [True])
                 
     fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商下極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
                                 fillcolor = 'rgba(256,0,0,0.2)',showlegend=False,name='自營商下極限'
-                                ),rows=[1], cols=[1])
+                                ),rows=[1], cols=[1], secondary_ys= [True])
 
 
 
@@ -1826,7 +1826,7 @@ with tab3:
                             y=Final60Tdata['20MA'],
                             mode='lines',
                             line=dict(color='green'),
-                            name='MA20'),row=1, col=1)
+                            name='MA20'),row=1, col=1, secondary_y= True)
     #fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
     #                        y=Final60Tdata['200MA'],
     #                        mode='lines',
@@ -1842,7 +1842,7 @@ with tab3:
                             y=Final60Tdata['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
-                            name='IC操盤線'),row=1, col=1)
+                            name='IC操盤線'),row=1, col=1, secondary_y= True)
 
 
 
@@ -1864,7 +1864,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -1883,7 +1883,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
     ### K線圖製作 ###
@@ -1902,7 +1902,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -1921,7 +1921,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=1, col=1
+        ,row=1, col=1, secondary_y= True
     )
 
 
@@ -2069,8 +2069,8 @@ with tab3:
     plusi = 1
     while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
         plusi = plusi + 1
-    IChour2.append(finalhour + timedelta(hours = plusi))
-    IChour2.append(finalhour + timedelta(hours = plusi+5))
+    IChour2.append((finalhour + timedelta(hours = plusi)).strftime("%m-%d-%Y %H:%M"))
+    IChour2.append((finalhour + timedelta(hours = plusi+5)).strftime("%m-%d-%Y %H:%M"))
 
     df_300.index = df_300.index.strftime(("%m-%d-%Y %H:%M"))
     #df_300
@@ -2119,7 +2119,7 @@ with tab3:
     volume_colors1[0] = green_color
 
     #fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='成交量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-    fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=2, col=1, secondary_y= True)
+    fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=2, col=1)
 
     #df_300.index = df_300.index - timedelta(hours = 6)
 
@@ -2127,7 +2127,7 @@ with tab3:
                             y=df_300['外資成本'],
                             mode='lines',
                             #line=dict(color='green'),
-                            name='外資成本'),row=2, col=1)
+                            name='外資成本'),row=2, col=1, secondary_y= True)
     #fig3_1.add_trace(go.Scatter(x=df_300.index,
     #                        y=df_300['外資上極限'],
     #                        mode='lines',
@@ -2140,21 +2140,21 @@ with tab3:
     #                        name='外資下極限'),row=2, col=1)
     
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資上極限'].values,
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
                 
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商上極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
                                 fillcolor = 'rgba(0,0,256,0.2)',showlegend=False
-                                ),rows=[2], cols=[1])
+                                ),rows=[2], cols=[1], secondary_ys= [True])
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資下極限'].values,
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
                 
     fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商下極限'].values,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
                                 fillcolor = 'rgba(256,0,0,0.2)',showlegend=False
-                                ),rows=[2], cols=[1])
+                                ),rows=[2], cols=[1], secondary_ys= [True])
 
 
 
@@ -2162,7 +2162,7 @@ with tab3:
                             y=df_300['20MA'],
                             mode='lines',
                             line=dict(color='green'),
-                            name='MA20'),row=2, col=1)
+                            name='MA20'),row=2, col=1, secondary_y= True)
     #fig3_1.add_trace(go.Scatter(x=df_300.index,
     #                        y=df_300['200MA'],
     #                        mode='lines',
@@ -2178,7 +2178,7 @@ with tab3:
                             y=df_300['IC'].values,
                             mode='lines',
                             line=dict(color='orange'),
-                            name='IC操盤線'),row=2, col=1)
+                            name='IC操盤線'),row=2, col=1, secondary_y= True)
 
 
 
@@ -2198,7 +2198,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=2, col=1
+        ,row=2, col=1, secondary_y= True
     )
 
 
@@ -2217,7 +2217,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=2, col=1
+        ,row=2, col=1, secondary_y= True
     )
 
     ### K線圖製作 ###
@@ -2236,7 +2236,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=2, col=1
+        ,row=2, col=1, secondary_y= True
     )
 
 
@@ -2255,7 +2255,7 @@ with tab3:
             name='OHLC',showlegend=False
         )#,
 
-        ,row=2, col=1
+        ,row=2, col=1, secondary_y= True
     )
 
     #T60noshow = []
@@ -2300,27 +2300,27 @@ with tab3:
 
     fig3_1.update_yaxes(
         range=[0, Final60Tdata['Volume'].max()+100],showgrid=False,
-        secondary_y=True,
-                    row = 1, 
-                    col = 1
-    )
-    fig3_1.update_yaxes(
-        range=[Final60Tdata['外資下極限'].min() - 30, Final60Tdata['自營商上極限'].max() + 30],showgrid=False,
         secondary_y=False,
                     row = 1, 
                     col = 1
     )
     fig3_1.update_yaxes(
+        range=[Final60Tdata['外資下極限'].min() - 30, Final60Tdata['自營商上極限'].max() + 30],showgrid=False,
+        secondary_y=True,
+                    row = 1, 
+                    col = 1
+    )
+    fig3_1.update_yaxes(
         range=[df_300['min'].min() - 200, df_300['max'].max() + 200],showgrid=False,
-         secondary_y=False,
+         secondary_y=True,
                     row = 2, 
                     col = 1
     )
     fig3_1.update_yaxes(
         range=[0, df_300['Volume'].max()+100],showgrid=False,
-        secondary_y=True,
+        secondary_y=False,
                     row = 2, 
-                    col = 1
+                    col = 1,showticklabels=False
     )
     
 
@@ -2329,8 +2329,9 @@ with tab3:
     # 設定圖的標題跟長寬
     fig3_1.update_annotations(font_size=12)
     fig3_1.update_layout(title_text = "", hovermode='x unified',
-                    yaxis = dict(showgrid=False),#,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
+                    yaxis = dict(showgrid=False,showticklabels=False),#,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
                     yaxis2 = dict(showgrid=False),#showticklabels=False,range=[0, Final60Tdata['Volume'].max()+100]),
+                    #yaxis = dict(showgrid=False,showticklabels=False),
 
                     width = 1200, 
                     height = 1200,
