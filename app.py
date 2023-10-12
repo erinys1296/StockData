@@ -2093,24 +2093,24 @@ with tab3:
         #print(bandstart,bandend)
         if df_300["labelb"].values[bandstart+1] == 1:
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
                 
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
-                                        ),rows=[2], cols=[1])
+                                        ),rows=[2], cols=[1], secondary_ys= [True])
         else:
 
 
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
-                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1])
+                                        line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
                 
             fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
                                         line = dict(color='rgba(0,0,0,0)'),
                                         fill='tonexty', 
                                         fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
-                                        ),rows=[2], cols=[1])
+                                        ),rows=[2], cols=[1], secondary_ys= [True])
         bandidx =checkidx +1
         if bandidx >=len(df_300["labelb"].values):
             break
