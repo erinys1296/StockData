@@ -50,6 +50,7 @@ datedf.to_sql('end_date', connection, if_exists='append', index=False)
 
 ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
+putcallsum = putcallsum[putcallsum["價平和"]>0.1]
 bank8 = pd.read_sql("select distinct * from bank", connection)
 #test = crawler.catch_cost('20230601')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
@@ -163,8 +164,9 @@ ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False)
 maxtime = datetime.strptime(putcallsum["日期"].max(), '%Y/%m/%d')
 
 #價平和
-for i in range((datetime.today() - maxtime).days+10):
+for i in range((datetime.today() - maxtime).days+7):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+    #CT,PT = crawler.callputtable(querydate)
     #print(querydate)
     try:
         CT,PT = crawler.callputtable(querydate)
@@ -178,6 +180,8 @@ for i in range((datetime.today() - maxtime).days+10):
     putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
 
 putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
+print(putcallsum.head())
+print(putcallsum.tail())
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
@@ -419,7 +423,7 @@ except:
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
 for i in range(2):
-    querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
+    querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
     #print(querydate)
     try:
         CT,PT = crawler.callputtable_month(querydate)
@@ -435,8 +439,10 @@ for i in range(2):
     sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
     result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
     putcallsum_month = pd.concat([putcallsum_month,pd.DataFrame([[querydate,result]],columns = ["日期","月選擇權價平和"])])
+    print(querydate,result)
     
 putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
+print(putcallsum_month.tail())
 
 #connection.executemany('replace INTO bank VALUES (?, ?, ?)', np.array(bank8))     
 connection.close()
