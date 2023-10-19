@@ -98,6 +98,7 @@ holilist = [str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('
 ordervolumn = pd.read_sql("select distinct * from ordervolumn", connection, parse_dates=['日期'], index_col=['日期'])
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月價平和 from putcallsum_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
+print(putcallsum_month.tail())
 kbars = kbars.join(ordervolumn).join(putcallsum).join(putcallsum_month)
 
 # 計算布林帶指標
