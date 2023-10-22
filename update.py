@@ -180,8 +180,7 @@ for i in range((datetime.today() - maxtime).days+7):
     putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
 
 putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
-print(putcallsum.head())
-print(putcallsum.tail())
+print(putcallsum.tail(20))
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
 print('putcallsum complete')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
@@ -423,7 +422,7 @@ except:
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
 for i in range(2):
-    querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y-%m-%d')
+    querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
     #print(querydate)
     try:
         CT,PT = crawler.callputtable_month(querydate)
