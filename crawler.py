@@ -180,38 +180,29 @@ def catch_cost(date):
 
 def callputtable(querydate):
 
-    # 建立查詢表單數據
-    data = {
-        'queryType': '2',
-        'marketCode': '0', # 0: 一般交易時段; 1: "盤後交易時段"
-        'dateaddcnt' : '1',
-        'commodity_id': 'TXO',
-        'commodity_id2': '',
-        'queryDate' : querydate,
-        'MarketCode' : '1',
-        'commodity_idt': 'TXO',
-        'commodity_id2t' : '',
-        'commodity_id2t2' : ''
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
+
+    parameter = {
+        "dataset": "TaiwanOptionDaily",
+        "data_id":"TXO",
+        "start_date": querydate.replace('/','-'),
+        "token": token, # 參考登入，獲取金鑰
     }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    data = pd.DataFrame(data['data'])
+    data = data[data["trading_session"] == 'position']
+    data.date = pd.to_datetime(data.date)
+    data.columns = ["日期","契約","到期月份(週別)","履約價","買賣權","開盤價","最高價","最低價","最後成交價","成交量","A","b","C"]
 
-    # 向網站發送POST請求
-    response = requests.post('https://www.taifex.com.tw/cht/3/optDailyMarketReport', data=data)
-
-    # 解析HTML標記
-    soup = BeautifulSoup(response.text, "lxml")
-
-    # 找到表格元素
-    table = soup.find("table", {"class": "table_f"})
-
-    # 將表格數據轉換成Pandas數據框
-    df = pd.read_html(str(table))[0]
-    
+    df = data
     #處理欄位空格
     newcol = [stri.replace(' ','') for stri in df.columns]
     df.columns = newcol
-    
+
     #抓取契約結算日
-    
+
     # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
     response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
 
@@ -239,23 +230,24 @@ def callputtable(querydate):
         else:
             weekfilter = df["到期月份(週別)"].unique()[0]
         df = df[df["到期月份(週別)"] == weekfilter]
-    
-    
+
+
     #將 Call 跟 Put 分成兩個 table，並只取 "履約價","最後成交價" 這兩個欄位
-    Calltable = df[df["買賣權"] == 'Call'][["履約價","最後成交價"]]
-    Puttable = df[df["買賣權"] == 'Put'][["履約價","最後成交價"]]
-    
+    Calltable = df[df["買賣權"] == 'call'][["履約價","最後成交價"]]
+    Puttable = df[df["買賣權"] == 'put'][["履約價","最後成交價"]]
+
     #轉換型態及資料處理
     Calltable["履約價"] = Calltable["履約價"].astype('int')
     Puttable["履約價"] = Puttable["履約價"].astype('int')
 
-    Calltable.loc[Calltable["最後成交價"] == '-',"最後成交價"] = None
+    Calltable.loc[Calltable["最後成交價"] == 0,"最後成交價"] = None
     Calltable = Calltable.dropna()
-    Puttable.loc[Puttable["最後成交價"] == '-',"最後成交價"] = None
+    Puttable.loc[Puttable["最後成交價"] == 0,"最後成交價"] = None
     Puttable = Puttable.dropna()
 
     Calltable["最後成交價"] = Calltable["最後成交價"].astype('float')
     Puttable["最後成交價"] = Puttable["最後成交價"].astype('float')
+
     
     return Calltable,Puttable
 
@@ -533,31 +525,23 @@ def get_margin(querydate):
 
 def callputtable_month(querydate):
 
-    # 建立查詢表單數據
-    data = {
-        'queryType': '2',
-        'marketCode': '0', # 0: 一般交易時段; 1: "盤後交易時段"
-        'dateaddcnt' : '1',
-        'commodity_id': 'TXO',
-        'commodity_id2': '',
-        'queryDate' : querydate,
-        'MarketCode' : '1',
-        'commodity_idt': 'TXO',
-        'commodity_id2t' : '',
-        'commodity_id2t2' : ''
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
+
+    parameter = {
+        "dataset": "TaiwanOptionDaily",
+        "data_id":"TXO",
+        "start_date": querydate.replace('/','-'),
+        "token": token, # 參考登入，獲取金鑰
     }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    data = pd.DataFrame(data['data'])
+    data = data[data["trading_session"] == 'position']
+    data.date = pd.to_datetime(data.date)
+    data.columns = ["日期","契約","到期月份(週別)","履約價","買賣權","開盤價","最高價","最低價","最後成交價","成交量","A","b","C"]
 
-    # 向網站發送POST請求
-    response = requests.post('https://www.taifex.com.tw/cht/3/optDailyMarketReport', data=data)
-
-    # 解析HTML標記
-    soup = BeautifulSoup(response.text, "lxml")
-
-    # 找到表格元素
-    table = soup.find("table", {"class": "table_f"})
-
-    # 將表格數據轉換成Pandas數據框
-    df = pd.read_html(str(table))[0]
+    df = data
     
     #處理欄位空格
     newcol = [stri.replace(' ','') for stri in df.columns]
@@ -571,23 +555,23 @@ def callputtable_month(querydate):
     #newcol = [stri.replace(' ','') for stri in datedf.columns]
     #datedf.columns = newcol
 
-    weekfilter = df[~(df[df.columns[1]].str.contains("W"))][df.columns[1]].min()
+    weekfilter = df[~(df[df.columns[2]].str.contains("W"))][df.columns[2]].min()
     #print(weekfilter)
-    
+
     df = df[df["到期月份(週別)"] == weekfilter]
-    
-    
+
+
     #將 Call 跟 Put 分成兩個 table，並只取 "履約價","最後成交價" 這兩個欄位
-    Calltable = df[df["買賣權"] == 'Call'][["履約價","最後成交價"]]
-    Puttable = df[df["買賣權"] == 'Put'][["履約價","最後成交價"]]
-    
+    Calltable = df[df["買賣權"] == 'call'][["履約價","最後成交價"]]
+    Puttable = df[df["買賣權"] == 'put'][["履約價","最後成交價"]]
+
     #轉換型態及資料處理
     Calltable["履約價"] = Calltable["履約價"].astype('int')
     Puttable["履約價"] = Puttable["履約價"].astype('int')
 
-    Calltable.loc[Calltable["最後成交價"] == '-',"最後成交價"] = None
+    Calltable.loc[Calltable["最後成交價"] == 0,"最後成交價"] = None
     Calltable = Calltable.dropna()
-    Puttable.loc[Puttable["最後成交價"] == '-',"最後成交價"] = None
+    Puttable.loc[Puttable["最後成交價"] == 0,"最後成交價"] = None
     Puttable = Puttable.dropna()
 
     Calltable["最後成交價"] = Calltable["最後成交價"].astype('float')
