@@ -194,6 +194,7 @@ def callputtable(querydate):
     data = pd.DataFrame(data['data'])
     data = data[data["trading_session"] == 'position']
     data.date = pd.to_datetime(data.date)
+    data = data[data.date == querydate.replace('/','-')]
     data.columns = ["日期","契約","到期月份(週別)","履約價","買賣權","開盤價","最高價","最低價","最後成交價","成交量","A","b","C"]
 
     df = data
@@ -539,6 +540,7 @@ def callputtable_month(querydate):
     data = pd.DataFrame(data['data'])
     data = data[data["trading_session"] == 'position']
     data.date = pd.to_datetime(data.date)
+    data = data[data.date == querydate.replace('/','-')]
     data.columns = ["日期","契約","到期月份(週別)","履約價","買賣權","開盤價","最高價","最低價","最後成交價","成交量","A","b","C"]
 
     df = data
