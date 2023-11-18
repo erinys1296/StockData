@@ -51,6 +51,8 @@ datedf.to_sql('end_date', connection, if_exists='append', index=False)
 ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
 putcallsum = putcallsum[putcallsum["價平和"]>0.1]
+putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
+
 bank8 = pd.read_sql("select distinct * from bank", connection)
 #test = crawler.catch_cost('20230601')
 # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
@@ -163,22 +165,31 @@ ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False)
 
 maxtime = datetime.strptime(putcallsum["日期"].max(), '%Y/%m/%d')
 
-#價平和
+#價平和 ＆ 價外買賣權價差
 for i in range((datetime.today() - maxtime).days+7):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
     #CT,PT = crawler.callputtable(querydate)
     #print(querydate)
     try:
         CT,PT = crawler.callputtable(querydate)
-    except:
-        continue
-    CT.columns = ["履約價","CT成交價"]
-    PT.columns = ["履約價","PT成交價"]
-    sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
-    sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
-    result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
-    putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
+        CT.columns = ["履約價","CT成交價"]
+        PT.columns = ["履約價","PT成交價"]
+        sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
+        sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
 
+        cn = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]['履約價'].values[0]+200
+        pn = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]['履約價'].values[0]-200
+        
+    except:
+        if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
+            print(querydate,'error')
+        continue
+    result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
+    result2 = CT[CT["履約價"] == cn]["CT成交價"].values[0] - PT[PT["履約價"] == pn]["PT成交價"].values[0]
+    putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
+    putcallgap = pd.concat([putcallgap,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+
+putcallgap.to_sql('putcallgap', connection, if_exists='replace', index=False) 
 putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
 print(putcallsum.tail(20))
 #connection.executemany('replace INTO putcallsum VALUES (?, ?)', np.array(putcallsum))
