@@ -599,9 +599,8 @@ with tab1:
     charti = charti +1
     ## 價外買賣權價差
 
-    PCsum_colors = [increasing_color if kbars['價外買賣權價差'][i] > kbars['價外買賣權價差'][i-1] else decreasing_color for i in range(len(kbars['價外買賣權價差']))]
-    PCsum_colors[0] = decreasing_color
-    fig.add_trace(go.Bar(x=kbars.index, y=kbars['價外買賣權價差'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=charti, col=1)
+    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']>0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['價外買賣權價差']>0)&(~kbars.index.isin(notshowdate))]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
+    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']<=0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['價外買賣權價差']<=0)&(~kbars.index.isin(notshowdate))]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
     #fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
     fig.update_yaxes(title_text="價外買賣權價差", row=charti, col=1)
         
