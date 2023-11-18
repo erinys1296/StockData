@@ -51,7 +51,7 @@ datedf.to_sql('end_date', connection, if_exists='append', index=False)
 ordervolumn = pd.read_sql("select distinct * from ordervolumn where 九點累積委託賣出數量 not null", connection)
 putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcallsum group by 日期", connection)
 putcallsum = putcallsum[putcallsum["價平和"]>0.1]
-putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
+putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap group by 日期", connection)
 
 bank8 = pd.read_sql("select distinct * from bank", connection)
 #test = crawler.catch_cost('20230601')
