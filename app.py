@@ -100,10 +100,12 @@ putcallsum = pd.read_sql("select 日期, max(價平和) as 價平和 from putcal
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月價平和 from putcallsum_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 
+putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 月價外買賣權價差 from putcallgap_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
+
 
 print(putcallsum_month.tail())
 kbars = kbars.join(ordervolumn).join(putcallsum).join(putcallsum_month)
-kbars = kbars.join(putcallgap)
+kbars = kbars.join(putcallgap).join(putcallgap_month)
 
 # 計算布林帶指標
 kbars['20MA'] = kbars['收盤指數'].rolling(20).mean()
@@ -599,8 +601,8 @@ with tab1:
     charti = charti +1
     ## 價外買賣權價差
 
-    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']>0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['價外買賣權價差']>0)&(~kbars.index.isin(notshowdate))]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
-    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']<=0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['價外買賣權價差']<=0)&(~kbars.index.isin(notshowdate))]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
+    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']>0)].index, y=(kbars[(kbars['價外買賣權價差']>0)]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
+    fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']<=0)].index, y=(kbars[(kbars['價外買賣權價差']<=0)]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
     #fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
     fig.update_yaxes(title_text="價外買賣權價差", row=charti, col=1)
         
@@ -611,6 +613,14 @@ with tab1:
     fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
     fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
     fig.update_yaxes(title_text="月價平和日差", row=charti, col=1)
+
+    charti = charti +1
+    ## 月價外買賣權價差
+
+    fig.add_trace(go.Bar(x=kbars[(kbars['月價外買賣權價差']>0)].index, y=(kbars[(kbars['月價外買賣權價差']>0)]['月價外買賣權價差']), name='月價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
+    fig.add_trace(go.Bar(x=kbars[(kbars['月價外買賣權價差']<=0)].index, y=(kbars[(kbars['月價外買賣權價差']<=0)]['月價外買賣權價差']), name='月價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
+    #fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
+    fig.update_yaxes(title_text="月價外買賣權價差", row=charti, col=1)
     
     
     charti = charti +1
