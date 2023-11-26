@@ -571,11 +571,11 @@ fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
 #                        line=dict(color='orange'),
 #                        name='MA60'),row=1, col=1)
 
-fig3_1.add_trace(go.Scatter(x=np.array(list(Final60Tdata['IC'].index)[2:]+IChour).astype('str'),
-                        y=Final60Tdata['IC'].values,
-                        mode='lines',
-                        line=dict(color='orange'),
-                        name='IC操盤線'),row=1, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=np.array(list(Final60Tdata['IC'].index)[2:]+IChour).astype('str'),
+#                        y=Final60Tdata['IC'].values,
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='IC操盤線'),row=1, col=1, secondary_y= True)
 
 
 
@@ -907,11 +907,11 @@ fig3_1.add_trace(go.Scatter(x=df_300.index,
 #                        line=dict(color='orange'),
 #                        name='MA60'),row=1, col=1)
 
-fig3_1.add_trace(go.Scatter(x=list(df_300['IC'].index)[2:]+IChour2,
-                        y=df_300['IC'].values,
-                        mode='lines',
-                        line=dict(color='orange'),
-                        name='IC操盤線'),row=2, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=list(df_300['IC'].index)[2:]+IChour2,
+#                        y=df_300['IC'].values,
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='IC操盤線'),row=2, col=1, secondary_y= True)
 
 
 
