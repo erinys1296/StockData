@@ -463,7 +463,7 @@ for i in range(2):
     
     
     #putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
-putcallgap_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
+putcallgap_month.to_sql('putcallgap_month', connection, if_exists='replace', index=False) 
 print(putcallgap_month.tail())
 
 putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
