@@ -432,7 +432,7 @@ except:
     print("final error2")
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
-putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 月價外買賣權價差 from putcallgap_month group by 日期", connection)
+putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap_month group by 日期", connection)
 for i in range(2):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
 
@@ -453,6 +453,7 @@ for i in range(2):
         
         result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
         putcallsum_month = pd.concat([putcallsum_month,pd.DataFrame([[querydate,result]],columns = ["日期","月選擇權價平和"])])
+        putcallgap_month = pd.concat([putcallgap_month,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
         print(querydate,result,result2)
 
     except:
@@ -462,7 +463,8 @@ for i in range(2):
     
     
     #putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
-putcallgap_month = pd.concat([putcallgap_month,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+putcallgap_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
+print(putcallgap_month.tail())
 
 putcallsum_month.to_sql('putcallsum_month', connection, if_exists='replace', index=False) 
 print(putcallsum_month.tail())
