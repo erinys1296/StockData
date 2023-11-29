@@ -185,7 +185,7 @@ for i in range((datetime.today() - maxtime).days+7):
             print(querydate,'error')
         continue
     result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
-    result2 = CT[CT["履約價"] == cn]["CT成交價"].values[0] - PT[PT["履約價"] == pn]["PT成交價"].values[0]
+    result2 = round(CT[CT["履約價"] == cn]["CT成交價"].values[0] / PT[PT["履約價"] == pn]["PT成交價"].values[0],3) - 1
     putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
     putcallgap = pd.concat([putcallgap,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
 
