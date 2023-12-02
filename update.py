@@ -176,6 +176,9 @@ for i in range((datetime.today() - maxtime).days+7):
         PT.columns = ["履約價","PT成交價"]
         sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
         sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
+        sumdf["CTPT和"] = sumdf["CT成交價"] + sumdf["PT成交價"]
+        sumdf = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]
+        sumdf = sumdf[sumdf["CTPT和"] == sumdf["CTPT和"].min()]
 
         cn = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]['履約價'].values[0]+200
         pn = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]['履約價'].values[0]-200
@@ -442,6 +445,9 @@ for i in range(2):
         PT.columns = ["履約價","PT成交價"]
         sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
         sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
+        sumdf["CTPT和"] = sumdf["CT成交價"] + sumdf["PT成交價"]
+        sumdf = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]
+        sumdf = sumdf[sumdf["CTPT和"] == sumdf["CTPT和"].min()]
 
         result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CT成交價","PT成交價"]].values.sum()
         sumdf = sumdf.reset_index()
