@@ -772,7 +772,7 @@ with tab1:
     fig.update_xaxes(
         rangebreaks=[
             dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
+            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2024-01-01'])
         ]
     )
 
