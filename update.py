@@ -436,7 +436,7 @@ except:
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
 putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap_month group by 日期", connection)
-for i in range(3):
+for i in range(4,6):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
 
     try:
@@ -471,9 +471,28 @@ for i in range(3):
         print(querydate,result2)
 
     except:
-        if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
-            print(querydate,'error')
-        continue
+        try:
+            cn = cn - 50
+            result2 = round(CT[CT["履約價"] == cn]["CT成交價"].values[0] / PT[PT["履約價"] == pn]["PT成交價"].values[0],3) - 1
+            putcallgap_month = pd.concat([putcallgap_month,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+            print(querydate,result2)
+        except:
+            try:
+                pn = pn + 50
+                cn = cn + 50
+                result2 = round(CT[CT["履約價"] == cn]["CT成交價"].values[0] / PT[PT["履約價"] == pn]["PT成交價"].values[0],3) - 1
+                putcallgap_month = pd.concat([putcallgap_month,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+                print(querydate,result2)
+            except:
+                try:
+                    cn = cn - 50
+                    result2 = round(CT[CT["履約價"] == cn]["CT成交價"].values[0] / PT[PT["履約價"] == pn]["PT成交價"].values[0],3) - 1
+                    putcallgap_month = pd.concat([putcallgap_month,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+                    print(querydate,result2)
+                except:
+                    if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
+                        print(querydate,'error')
+                    continue
     
     
     #putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
