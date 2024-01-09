@@ -436,7 +436,7 @@ except:
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
 putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap_month group by 日期", connection)
-for i in range(4,6):
+for i in range(2):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
 
     try:
