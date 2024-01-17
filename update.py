@@ -189,19 +189,21 @@ for i in range((datetime.today() - maxtime).days+7):
         continue
     try:
        result = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()][["CTPT和"]].values.mean()
+       putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
     except:
-       if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
+        if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
             print(querydate,'error')
-        continue
+        
     try:
        result2 = round(CT[CT["履約價"] == cn]["CT成交價"].values[0] / PT[PT["履約價"] == pn]["PT成交價"].values[0],3) - 1
+       putcallgap = pd.concat([putcallgap,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
     except:
-       if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
+        if (datetime.today()- timedelta(days=i)).weekday() not in [5,6]:
             print(querydate,'error')
-        continue
+        
     
-    putcallsum = pd.concat([putcallsum,pd.DataFrame([[querydate,result]],columns = ["日期","價平和"])])
-    putcallgap = pd.concat([putcallgap,pd.DataFrame([[querydate,result2]],columns = ["日期","價外買賣權價差"])])
+    
+    
 
 putcallgap.to_sql('putcallgap', connection, if_exists='replace', index=False) 
 putcallsum.to_sql('putcallsum', connection, if_exists='replace', index=False) 
