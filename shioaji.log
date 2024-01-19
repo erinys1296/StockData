@@ -9,3 +9,4 @@
 [E 2024-01-19 20:17:05,781 /opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
 [E 2024-01-19 21:14:02,327 /opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
 [E 2024-01-19 22:15:09,996 /opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
+[E 2024-01-19 23:14:23,888 /opt/hostedtoolcache/Python/3.10.13/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
