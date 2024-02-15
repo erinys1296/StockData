@@ -1637,7 +1637,7 @@ with tab3:
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 6, 0, 0)
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
-    Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2, 15, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
+    Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
     Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
@@ -1986,7 +1986,7 @@ with tab3:
     df_300.loc[df_300.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
     df_300.loc[df_300.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 6, 0, 0)
     df_300.loc[df_300.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
-    df_300.loc[df_300.dateonly ==datetime(2024, 2, 15, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
+    df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
     df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
     df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
     df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
@@ -2334,7 +2334,7 @@ with tab3:
                     col = 1
     )
     fig3_1.update_yaxes(
-        range=[Final60Tdata['外資下極限'].min() - 30, Final60Tdata['自營商上極限'].max() + 30],showgrid=False,
+        range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50],showgrid=False,
         secondary_y=True,
                     row = 1, 
                     col = 1
