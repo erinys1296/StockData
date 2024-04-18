@@ -287,19 +287,19 @@ def catch_limit(querydate):
     
     Calltable,Puttable = callputtable(querydate)
     
-    newcol = list(df.loc[2,:].dropna().unique()[:4])
-    for col1 in df.loc[0,:].dropna().unique():
-        for col2 in df.loc[1,:].dropna().unique():
-            for col3 in df.loc[2,:].dropna().unique()[4:]:
-                newcol.append('{}_{}_{}'.format(col1,col2,col3))
+    newcol = []
+    for i in range(4):
+        newcol.append(df.columns[i][2])
+
+    for i in range(4,16):
+        newcol.append('{}_{}_{}'.format(df.columns[i][0],df.columns[i][1],df.columns[i][2]))
+    
 
     #處理空格問題
     newcol = [stri.replace(' ','') for stri in newcol]
-    
-    #將欄位名稱設定為新的欄位後，將前三欄的內容刪除
     df.columns = newcol
-    for i in range(3):
-        df = df.drop(df.index[0])
+    
+
         
     dfnew = df[(df["商品名稱"] == "臺指選擇權")&((df["身份別"] == "自營商")|(df["身份別"] == "外資"))][newcol[:4]+["未平倉餘額_賣方_口數","未平倉餘額_賣方_契約金額"]]
     
