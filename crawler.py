@@ -145,16 +145,13 @@ def catch_cost(date):
 
 
     
-    newcol = list(df.loc[2,:].dropna().unique()[:3])
-    for col1 in df.loc[0,:].dropna().unique():
-        for col2 in df.loc[1,:].dropna().unique():
-            for col3 in df.loc[2,:].dropna().unique()[3:]: #只要後兩個
-                newcol.append('{}_{}_{}'.format(col1,col2,col3))
-    
-    newcol = [stri.replace(' ','') for stri in newcol]
-    df.columns = newcol
+    newcol = []
     for i in range(3):
-        df = df.drop(df.index[0])
+        newcol.append(df.columns[i][2])
+
+    for i in range(3,15):
+        newcol.append('{}_{}_{}'.format(df.columns[i][0],df.columns[i][1],df.columns[i][2]))
+    df.columns = newcol
         
     Longdata = df[(df["商品名稱"]=="臺股期貨") & (df["身份別"]=="外資")][["交易口數與契約金額_多方_口數","交易口數與契約金額_多方_契約金額"]].values[0]
     
@@ -211,7 +208,7 @@ def callputtable(querydate):
     soup = BeautifulSoup(response.text, "lxml")
 
     # 找到表格元素
-    table = soup.find("table", {"class": "table_c"}) 
+    table = soup.find("table", {"class": "table_f"}) 
 
     # 將表格數據轉換成Pandas數據框
     datedf = pd.read_html(str(table))[0]
@@ -383,7 +380,7 @@ def query_put_call(start_date,end_date):
     table = soup.table
     df = pd.read_html(str(table))
     
-    pc_ratio = df[3]
+    pc_ratio = df[0]
     for row in range(pc_ratio.shape[0]):
         date2 = pc_ratio.iloc[row,0].split('/')
         pc_ratio.iloc[row, 0] = datetime(int(date2[0]), int(date2[1]), int(date2[2]))
