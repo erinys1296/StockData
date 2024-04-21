@@ -396,20 +396,18 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=checki),'%Y/%m/%d'),
             "commodityId": "TXF",
 
         }
         res = requests.post(url, data=data)
-        check = 1
+        #check = 1
         checki +=1
     
         
     except:
         print("error")
         continue
-
-
 
 try:
     tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
@@ -427,12 +425,12 @@ while check == 0 and checki<5:
         url = "https://www.taifex.com.tw/cht/3/callsAndPutsDateDown"
         data = {
             "queryStartDate": datetime.strftime(datetime.today()- timedelta(days=90),'%Y/%m/%d'),
-            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=0),'%Y/%m/%d'),
+            "queryEndDate": datetime.strftime(datetime.today()- timedelta(days=checki),'%Y/%m/%d'),
             "commodityId": "TXO",
 
         }
         res = requests.post(url, data=data)
-        check = 1
+        
         checki +=1
     except:
         continue

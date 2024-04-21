@@ -443,11 +443,10 @@ def get_MTX_Ratio(date):
     # 將表格資料轉換為 pandas 的 dataframe 格式
     df=pd.read_html(str(table))[0]    
     
+
+    #print((df.loc[6].values[11] - df.loc[6].values[9])/a)
     
-    b = int(df[9].values[-1])
-    c = int(df[11].values[-1])
-    
-    return ((a-b)-(a-c))/a
+    return (df.loc[6].values[11] - df.loc[6].values[9])/a
 
 
 def get_margin(querydate):
