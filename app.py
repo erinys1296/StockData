@@ -306,6 +306,7 @@ with tab1:
     #option_2d = st.sidebar.checkbox('價平和', value = True)
     #option_2e = st.sidebar.checkbox('月價平和日差', value = True)
     #option_2f = st.sidebar.checkbox('月結趨勢', value = True)
+    #kbars
     options_vice = [ True ]*4
 
     optvn = 0
