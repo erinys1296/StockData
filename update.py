@@ -250,7 +250,7 @@ except:
 #connection.executemany('replace INTO end_date VALUES (?, ?, ?, ?, ?)', np.array(datedf))
 #CPratio = pd.read_sql("select distinct * from putcallratio", connection, parse_dates=['日期'])
 result=pd.DataFrame()
-for i in range(3):
+for i in range(7):
     
     try:
         start_date = datetime.strftime(datetime.today()- timedelta(days=(i+1)*30),'%Y/%m/%d')
@@ -392,6 +392,7 @@ dfbuysell.to_sql('dfbuysell', connection, if_exists='replace', index=False)
 check = 0
 checki = 0
 while check == 0 and checki<5:
+    checki +=1
     try:
         url = "https://www.taifex.com.tw/cht/3/futContractsDateDown"
         data = {
@@ -406,7 +407,7 @@ while check == 0 and checki<5:
         futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
         futdf.to_sql('futdf', connection, if_exists='replace', index=False)
         check = 1
-        checki +=1
+        
     
         
     except:
@@ -425,6 +426,7 @@ except:
 check = 0
 checki = 0
 while check == 0 and checki<5:
+    checki +=1
     try:
         url = "https://www.taifex.com.tw/cht/3/callsAndPutsDateDown"
         data = {
@@ -435,7 +437,6 @@ while check == 0 and checki<5:
         }
         res = requests.post(url, data=data)
         
-        checki +=1
         tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
         tempdf.columns = tempdf.loc[0,:]
         tempdf = tempdf.drop([0]).apply(pd.to_numeric, errors='ignore')
@@ -459,7 +460,7 @@ except:
 
 putcallsum_month = pd.read_sql("select 日期, max(月選擇權價平和) as 月選擇權價平和 from putcallsum_month group by 日期", connection)
 putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買賣權價差 from putcallgap_month group by 日期", connection)
-for i in range(5):
+for i in range(7):
     querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y/%m/%d')
 
     try:

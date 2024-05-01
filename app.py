@@ -306,7 +306,7 @@ with tab1:
     #option_2d = st.sidebar.checkbox('價平和', value = True)
     #option_2e = st.sidebar.checkbox('月價平和日差', value = True)
     #option_2f = st.sidebar.checkbox('月結趨勢', value = True)
-    #kbars
+    kbars
     options_vice = [ True ]*4
 
     optvn = 0
@@ -1642,6 +1642,7 @@ with tab3:
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
     Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 4, 5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
+    Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 5, 1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
     Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
     Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
@@ -1993,6 +1994,7 @@ with tab3:
     df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
     df_300.loc[df_300.dateonly ==datetime(2024, 2, 28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
     df_300.loc[df_300.dateonly ==datetime(2024, 4, 5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
+    df_300.loc[df_300.dateonly ==datetime(2024, 5, 1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
     df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
     df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
     df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
