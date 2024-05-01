@@ -57,7 +57,7 @@ token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMT
 parameter = {
 "dataset": "TaiwanStockPrice",
 "data_id": "TAIEX",
-"start_date": "2021-04-02",
+"start_date": "2022-04-02",
 "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
 "token": token, # 參考登入，獲取金鑰
 }
