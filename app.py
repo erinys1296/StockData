@@ -57,7 +57,7 @@ token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMT
 parameter = {
 "dataset": "TaiwanStockPrice",
 "data_id": "TAIEX",
-"start_date": "2020-04-02",
+"start_date": "2021-04-02",
 "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
 "token": token, # 參考登入，獲取金鑰
 }
@@ -306,7 +306,7 @@ with tab1:
     #option_2d = st.sidebar.checkbox('價平和', value = True)
     #option_2e = st.sidebar.checkbox('月價平和日差', value = True)
     #option_2f = st.sidebar.checkbox('月結趨勢', value = True)
-    kbars
+    #kbars
     options_vice = [ True ]*4
 
     optvn = 0
