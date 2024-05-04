@@ -57,7 +57,7 @@ token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMT
 parameter = {
 "dataset": "TaiwanStockPrice",
 "data_id": "TAIEX",
-"start_date": "2022-04-02",
+"start_date": "2023-03-02",
 "end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
 "token": token, # 參考登入，獲取金鑰
 }
@@ -113,6 +113,9 @@ kbars['20MA'] = kbars['收盤指數'].rolling(20).mean()
 kbars['std'] = kbars['收盤指數'].rolling(20).std()
 kbars['60MA'] = kbars['收盤指數'].rolling(60).mean()
 kbars['200MA'] = kbars['收盤指數'].rolling(200).mean()
+
+kbars = kbars[kbars.index > kbars.index[-100]]
+
 kbars['upper_band'] = kbars['20MA'] + 2 * kbars['std']
 kbars['lower_band'] = kbars['20MA'] - 2 * kbars['std']
 kbars['upper_band1'] = kbars['20MA'] + 1 * kbars['std']
