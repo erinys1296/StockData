@@ -699,14 +699,15 @@ df_300.loc[df_300.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(
 df_300.loc[df_300.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 6, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
-df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
-df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
-df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
 df_300.loc[df_300.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 2, 28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 4, 5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 5, 1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
+df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
+df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
+df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
+
 #df_300.loc[Final60Tdata["外資成本"]==None,['外資成本','外資上極限','外資下極限','自營商上極限','自營商下極限']] = [16347,16673,16227,16645,16155]
 df_300.index = df_300.date
 
