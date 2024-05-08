@@ -359,88 +359,10 @@ gray_color = 'rgb(188, 194, 192)'
 black_color = 'rgb(0, 0, 0)'
 
 
-### 成本價及上下極限 ###
-fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[1:]+[ICdate[0]],
-                y=kbars['外資成本'].shift(1).values,
-                mode='lines',
-                line=dict(color='yellow'),
-                name='外資成本'),row=1, col=1, secondary_y= True)
-
-
-#自營商外資上極限
-#fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['外資上極限'], kbars['自營商上極限'][::-1]]), 
-#                fill='toself',fillcolor= 'rgba(0,0,256,0.1)', line_width=0,name='上極限',row=1, col=1 )
 
 
 
-#自營商外資下極限
-#fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['外資下極限'], kbars['自營商下極限'][::-1]]), 
-#                fill='toself',fillcolor= 'rgba(256,0,0,0.1)', line_width=0,name='下極限',row=1, col=1)
 
-#上下極限
-#kbars[kbars['收盤指數']> kbars['upper_band1']]
-
-#np.concatenate([kbars[kbars['收盤指數'] > kbars['upper_band1']].index,kbars[kbars['收盤指數']> kbars['upper_band1']].index[::-1]])
-#buling_colors = ['rgba(0,256,0,0.1)' if kbars['收盤指數'][i] > kbars['upper_band1'][i] else 'rgba(0,256,256,0.1)' for i in range(len(kbars['lower_band']))]
-#fillcol(kbars['labelb'].iloc[0])
-#fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['lower_band'], kbars['upper_band'][::-1]]), 
-#               fill='toself',fillcolor= kbars['labelb'].iloc[0], line_width=0,name='布林上下極限',row=1, col=1)
-
-
-checkb = kbars["labelb"].values[0]
-bandstart = 1
-bandidx = 1
-checkidx = 0
-while bandidx < len(kbars["labelb"].values):
-    #checkidx = bandidx
-    bandstart = bandidx-1
-    checkidx = bandstart+1
-    if checkidx >=len(kbars["labelb"].values)-1:
-        break
-    while kbars["labelb"].values[checkidx] == kbars["labelb"].values[checkidx+1]:
-        checkidx +=1
-        if checkidx >=len(kbars["labelb"].values)-1:
-            break
-    bandend = checkidx+1
-    #print(bandstart,bandend)
-    if kbars["labelb"].values[bandstart+1] == 1:
-        fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),secondary_ys= [True,True])
-            
-        fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
-                                    line = dict(color='rgba(0,0,0,0)'),
-                                    fill='tonexty', 
-                                    fillcolor = 'rgba(256,256,0,0.2)',showlegend=False,hoverinfo='none'
-                                    ),secondary_ys= [True,True])
-    else:
-
-
-        fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['lower_band'].values[bandstart:bandend],
-                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'), secondary_ys= [True,True])
-            
-        fig.add_traces(go.Scatter(x=kbars.index[bandstart:bandend], y = kbars['upper_band'].values[bandstart:bandend],
-                                    line = dict(color='rgba(0,0,0,0)'),
-                                    fill='tonexty', 
-                                    fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False,hoverinfo='none'
-                                    ),secondary_ys= [True,True])
-    bandidx =checkidx +1
-    if bandidx >=len(kbars["labelb"].values):
-        break
-
-#fig.add_scatter(x=np.concatenate([kbars[kbars['收盤指數'] <= kbars['upper_band1']].index,kbars[kbars['收盤指數']<= kbars['upper_band1']].index[::-1]]), y=np.concatenate([kbars[kbars['收盤指數']<= kbars['upper_band1']]['lower_band'], kbars[kbars['收盤指數'] <= kbars['upper_band1']]['upper_band'][::-1]]), 
-#                fill='toself',fillcolor= 'rgba(0,256,256,0.1)', line_width=0,name='布林上下極限',row=1, col=1)
-
-#fig.add_trace(go.Scatter(x=kbars.index,
-#                 y=kbars['外資上極限'],
-#                 mode='lines',
-#                 line=dict(color='#9467bd'),
-#                 name='外資上極限'))
-
-#fig.add_trace(go.Scatter(x=kbars.index,
-#                 y=kbars['外資下極限'],
-#                 mode='lines',
-#                 line=dict(color='#17becf'),
-#                 name='外資下極限'))
 
 ### 成交量圖製作 ###
 volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
