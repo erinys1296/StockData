@@ -328,379 +328,803 @@ enddate = pd.read_sql("select * from end_date", connection, parse_dates=['最後
 
 
 st.title('選擇權')
-rowcount = optvn + 1 + 8 + 2
-rowh = [0.2] + [ 0.6/(rowcount - 3)] * (rowcount - 3)+[0.1,0.1]
-fig = make_subplots(
-    rows=rowcount, cols=1,
-    shared_xaxes=True, 
-    vertical_spacing=0.02,
-    row_heights= rowh[:rowcount],
+
+st.title('即時盤')
+
+cost_df = pd.read_sql("select distinct Date as [日期], Cost as [外資成本] from cost", connection, parse_dates=['日期']).dropna()
+cost_df["外資成本"] = cost_df["外資成本"].astype('int')
+limit_df = pd.read_sql("select distinct * from [limit]", connection, parse_dates=['日期'])
+
+inves_limit = limit_df[limit_df["身份別"] == "外資"][['日期','上極限', '下極限']]
+dealer_limit = limit_df[limit_df["身份別"] == "自營商"][['日期','上極限', '下極限']]
+
+inves_limit.columns = ['日期',"外資上極限","外資下極限"]
+dealer_limit.columns = ['日期',"自營商上極限","自營商下極限"]
+
+startFuture = datetime.strftime(datetime.today()- timedelta(days=20),'%Y-%m-%d')
+endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
+FutureData = pd.read_sql("select distinct * from futurehourly", connectionfuture, parse_dates=['ts'], index_col=['ts'])#get_future_raw_data(startFuture,endFuture)
+#FutureData
+df_ts = FutureData.reset_index()
+FutureData = FutureData.reset_index()
+FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8),'ts'] = FutureData.loc[(FutureData.ts.dt.hour<14)&(FutureData.ts.dt.hour>=8)].ts - timedelta(minutes=46)
+FutureData.index = FutureData.ts
+
+#FutureData.index = FutureData.ts
+FutureData.date = pd.to_datetime(FutureData.index)
+FutureData["hourdate"] = np.array(FutureData.date.date.astype(str)) +  np.array(FutureData.date.hour.astype(str))
+FutureData['date'] = np.array(pd.to_datetime(FutureData.index).values)
+#FutureData
+FutureData = FutureData.dropna(subset = ['Open'])
+FutureData.index = FutureData['date']
+#FutureData
+tempdf = FutureData[['hourdate','Volume']]
+tempdf = tempdf.reset_index()
+tempdf = tempdf[['hourdate','Volume']]
+#tempdf
+
+Final60Tdata = FutureData.groupby('hourdate').max()[["High"]].join(FutureData.groupby('hourdate').min()[["Low"]]).join(tempdf.groupby('hourdate').sum()[["Volume"]])
+#Final60Tdata
+#Final60Tdata.index = Final60Tdata['hourdate']
+tempopen = FutureData.loc[FutureData.groupby('hourdate').min()['date'].values]
+tempopen.index = tempopen.hourdate
+tempclose = FutureData.loc[FutureData.groupby('hourdate').max()['date'].values]
+tempclose.index = tempclose.hourdate
+#tempvolume = FutureData.loc[FutureData.groupby('hourdate').sum()['Volume'].values]
+#tempvolume.index = tempvolume.hourdate
+Final60Tdata = Final60Tdata.join(tempopen[["Open",'date']]).join(tempclose[["Close"]])
+Final60Tdata.index = Final60Tdata.date
+Final60Tdata.columns = ['max','min','Volume','open','date','close']
+
+
+Final60Tdata['dateonly'] = pd.to_datetime((Final60Tdata.date- timedelta(hours=15)).dt.date)
+Final60Tdata.loc[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((Final60Tdata[(Final60Tdata.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 6, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 4,5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 5,1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
+    
+#Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 7, 0, 0)
+Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
+Final60Tdata = pd.merge(Final60Tdata, inves_limit, on="日期", how='left')
+Final60Tdata = pd.merge(Final60Tdata, dealer_limit, on="日期", how='left')
+#Final60Tdata.loc[Final60Tdata["外資成本"]==None,['外資成本','外資上極限','外資下極限','自營商上極限','自營商下極限']] = [16347,16673,16227,16645,16155]
+Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] = Final60Tdata.loc[Final60Tdata.date.dt.minute == 1 ,'date'] - timedelta(minutes = 1)
+Final60Tdata.index = Final60Tdata.date
+Final60Tdata = Final60Tdata.sort_index()
+#Final60Tdata
+Final60Tdata[Final60Tdata.index == Final60Tdata.index[-1]][["日期","外資成本","外資上極限","外資下極限","自營商上極限","自營商下極限"]]
+
+
+
+
+
+# 計算布林帶指標
+# 計算布林帶指標
+Final60Tdata['20MA'] = Final60Tdata['close'].rolling(20).mean()
+#Final60Tdata['60MA'] = Final60Tdata['close'].rolling(60).mean()
+#Final60Tdata['200MA'] = Final60Tdata['close'].rolling(200).mean()
+Final60Tdata['std'] = Final60Tdata['close'].rolling(20).std()
+Final60Tdata['upper_band'] = Final60Tdata['20MA'] + 2 * Final60Tdata['std']
+Final60Tdata['lower_band'] = Final60Tdata['20MA'] - 2 * Final60Tdata['std']
+Final60Tdata['upper_band1'] = Final60Tdata['20MA'] + 1 * Final60Tdata['std']
+Final60Tdata['lower_band1'] = Final60Tdata['20MA'] - 1 * Final60Tdata['std']
+
+Final60Tdata['IC'] = Final60Tdata['close'] + 2 * Final60Tdata['close'].shift(1) - Final60Tdata['close'].shift(3) -Final60Tdata['close'].shift(4)
+
+
+
+# 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
+low_list = Final60Tdata['min'].rolling(9, min_periods=9).min()
+low_list.fillna(value=Final60Tdata['min'].expanding().min(), inplace=True)
+high_list = Final60Tdata['max'].rolling(9, min_periods=9).max()
+high_list.fillna(value=Final60Tdata['max'].expanding().max(), inplace=True)
+rsv = (Final60Tdata['close'] - low_list) / (high_list - low_list) * 100
+Final60Tdata['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
+Final60Tdata['D'] = Final60Tdata['K'].ewm(com=2).mean()
+
+enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
+Final60Tdata['end_low'] = 0
+Final60Tdata['end_high'] = 0
+
+#詢問
+ds = 2
+Final60Tdata['uline'] = Final60Tdata['max'].rolling(ds, min_periods=1).max()
+Final60Tdata['dline'] = Final60Tdata['min'].rolling(ds, min_periods=1).min()
+
+Final60Tdata["all_kk"] = 0
+barssince5 = 0
+barssince6 = 0
+Final60Tdata['labelb'] = 1
+Final60Tdata = Final60Tdata[~Final60Tdata.index.duplicated(keep='first')]
+
+for i in range(2,len(Final60Tdata.index)):
+    try:
+        #(Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i-1],"uline"])
+        condition51 = (Final60Tdata.loc[Final60Tdata.index[i-1],"max"] < Final60Tdata.loc[Final60Tdata.index[i-2],"min"] ) and (Final60Tdata.loc[Final60Tdata.index[i],"min"] > Final60Tdata.loc[Final60Tdata.index[i-1],"max"] )
+        #condition52 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] < Final60Tdata.loc[Final60Tdata.index[i-2],"min"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']>Final60Tdata.loc[Final60Tdata.index[i-1],"max"] )
+        condition53 = (Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i-1],"uline"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] <= Final60Tdata.loc[Final60Tdata.index[i-1],"uline"])
+
+        condition61 = (Final60Tdata.loc[Final60Tdata.index[i-1],"min"] > Final60Tdata.loc[Final60Tdata.index[i-2],"max"] ) and (Final60Tdata.loc[Final60Tdata.index[i],"max"] < Final60Tdata.loc[Final60Tdata.index[i-1],"min"] )
+        #condition62 = (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] > Final60Tdata.loc[Final60Tdata.index[i-2],"max"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'成交金額'] > Final60Tdata.loc[Final60Tdata.index[i-2],'成交金額']) and (Final60Tdata.loc[Final60Tdata.index[i],'close']<Final60Tdata.loc[Final60Tdata.index[i-1],"min"] )
+        condition63 = (Final60Tdata.loc[Final60Tdata.index[i],'close'] < Final60Tdata.loc[Final60Tdata.index[i-1],"dline"]) and (Final60Tdata.loc[Final60Tdata.index[i-1],'close'] >= Final60Tdata.loc[Final60Tdata.index[i-1],"dline"])
+    except:
+        condition51 = True
+        condition52 = True
+        condition53 = True
+        condition61 = True
+        condition63 = True
+    condition54 = condition51 or condition53 #or condition52
+    condition64 = condition61 or condition63 #or condition62 
+
+    #Final60Tdata['labelb'] = np.where((Final60Tdata['close']> Final60Tdata['upper_band1']) , 1, np.where((Final60Tdata['close']< Final60Tdata['lower_band1']),-1,1))
+
+    #print(i)
+    if Final60Tdata.loc[Final60Tdata.index[i],'close'] > Final60Tdata.loc[Final60Tdata.index[i],'upper_band1']:
+        Final60Tdata.loc[Final60Tdata.index[i],'labelb'] = 1
+    elif Final60Tdata.loc[Final60Tdata.index[i],'close'] < Final60Tdata.loc[Final60Tdata.index[i],'lower_band1']:
+        Final60Tdata.loc[Final60Tdata.index[i],'labelb'] = -1
+    else:
+        Final60Tdata.loc[Final60Tdata.index[i],'labelb'] = Final60Tdata.loc[Final60Tdata.index[i-1],'labelb']
+
+    if condition54 == True:
+        barssince5 = 1
+    else:
+        barssince5 += 1
+
+    if condition64 == True:
+        barssince6 = 1
+    else:
+        barssince6 += 1
+
+
+    if barssince5 < barssince6:
+        Final60Tdata.loc[Final60Tdata.index[i],"all_kk"] = 1
+    else:
+        Final60Tdata.loc[Final60Tdata.index[i],"all_kk"] = -1
+
+Final60Tdata = Final60Tdata[Final60Tdata.index>Final60Tdata.index[-130]]
+IChour = []
+finalhour = list(Final60Tdata['IC'].index)[-1]
+plusi = 1
+while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
+    plusi = plusi + 1
+IChour.append((finalhour + timedelta(hours = plusi)).strftime("%m-%d-%Y %H:%M"))
+IChour.append((finalhour + timedelta(hours = plusi+1)).strftime("%m-%d-%Y %H:%M"))
+
+#Final60Tdata.index = Final60Tdata.index.astype('str')
+Final60Tdata.index = Final60Tdata.index.strftime("%m-%d-%Y %H:%M")
+#Final60Tdata
+
+
+
+
+#Final60Tdata
+fig3_1 = make_subplots(
+    rows = 2, 
+    cols = 1, 
+    horizontal_spacing = 0.2,
+    vertical_spacing=0.2,subplot_titles = ["TAIEX FUTURE 60分","TAIEX FUTURE 300分"],
     shared_yaxes=False,
+    
     #subplot_titles=subtitle,
     #y_title = "test"# subtitle,
-    specs = [[{"secondary_y":True}]]*rowcount
+    specs = [[{"secondary_y":True}]]*2
 )
 
-increasing_color = 'rgb(255, 0, 0)'
-decreasing_color = 'rgb(0, 0, 245)'
-
-red_color = 'rgba(255, 0, 0, 0.1)'
-green_color = 'rgba(30, 144, 255,0.1)'
-
-no_color = 'rgba(256, 256, 256,0)'
-
-blue_color = 'rgb(30, 144, 255)'
-red_color_full = 'rgb(255, 0, 0)'
-
-orange_color = 'rgb(245, 152, 59)'
-green_color_full = 'rgb(52, 186, 7)'
-
-gray_color = 'rgb(188, 194, 192)'
-black_color = 'rgb(0, 0, 0)'
-
-
-
-
-
-
-
 ### 成交量圖製作 ###
-volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
-volume_colors[0] = green_color
+volume_colors1 = [red_color if Final60Tdata['close'][i] > Final60Tdata['close'][i-1] else green_color for i in range(len(Final60Tdata['close']))]
+volume_colors1[0] = green_color
 
-#fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='Volume', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
-fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1)
+#fig.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['成交金額'], name='成交數量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+fig3_1.add_trace(go.Bar(x=Final60Tdata.index, y=Final60Tdata['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=1, col=1)
+#Final60Tdata.index = Final60Tdata.index - timedelta(hours = 6)
+
+checkb = Final60Tdata["labelb"].values[0]
+bandstart = 1
+bandidx = 1
+checkidx = 0
+while bandidx < len(Final60Tdata["labelb"].values):
+    #checkidx = bandidx
+    bandstart = bandidx-1
+    checkidx = bandstart+1
+    if checkidx >=len(Final60Tdata["labelb"].values)-1:
+        break
+    while Final60Tdata["labelb"].values[checkidx] == Final60Tdata["labelb"].values[checkidx+1]:
+        checkidx +=1
+        if checkidx >=len(Final60Tdata["labelb"].values)-1:
+            break
+    bandend = checkidx+1
+    #print(bandstart,bandend)
+    if Final60Tdata["labelb"].values[bandstart+1] == 1:
+        fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1], secondary_ys= [True])
+            
+        fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),
+                                    fill='tonexty', 
+                                    fillcolor = 'rgba(256,256,0,0.2)',showlegend=False,hoverinfo='none'
+                                    ),rows=[1], cols=[1], secondary_ys= [True])
+    else:
 
 
-fig.add_trace(go.Scatter(x=kbars.index,
-                        y=kbars['20MA'],
+        fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['lower_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='none'),rows=[1], cols=[1], secondary_ys= [True])
+            
+        fig3_1.add_traces(go.Scatter(x=Final60Tdata.index[bandstart:bandend], y = Final60Tdata['upper_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),
+                                    fill='tonexty', 
+                                    fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False,hoverinfo='none'
+                                    ),rows=[1], cols=[1], secondary_ys= [True])
+    bandidx =checkidx +1
+    if bandidx >=len(Final60Tdata["labelb"].values):
+        break
+
+
+
+
+fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+                        y=Final60Tdata['外資成本'],
+                        mode='lines',
+                        #line=dict(color='green'),
+                        name='外資成本'),row=1, col=1, secondary_y= True)
+
+#fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+#                        y=Final60Tdata['外資下極限'],
+#                        mode='lines',
+#                        #line=dict(color='green'),
+#                        name='外資下極限'),row=1, col=1)
+
+
+
+fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資上極限'].values,
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資上極限'),rows=[1], cols=[1], secondary_ys= [True])
+            
+fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商上極限'].values,
+                            line = dict(color='rgba(0,0,0,0)'),
+                            fill='tonexty', 
+                            fillcolor = 'rgba(0,0,256,0.2)',showlegend=False,name='自營商上極限'
+                            ),rows=[1], cols=[1], secondary_ys= [True])
+fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['外資下極限'].values,
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False,name='外資下極限'),rows=[1], cols=[1], secondary_ys= [True])
+            
+fig3_1.add_traces(go.Scatter(x=Final60Tdata.index, y = Final60Tdata['自營商下極限'].values,
+                            line = dict(color='rgba(0,0,0,0)'),
+                            fill='tonexty', 
+                            fillcolor = 'rgba(256,0,0,0.2)',showlegend=False,name='自營商下極限'
+                            ),rows=[1], cols=[1], secondary_ys= [True])
+
+
+
+fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+                        y=Final60Tdata['20MA'],
                         mode='lines',
                         line=dict(color='green'),
-                        name='20MA'),row=1, col=1, secondary_y= True)
+                        name='MA20'),row=1, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+#                        y=Final60Tdata['200MA'],
+#                        mode='lines',
+#                        line=dict(color='blue'),
+#                        name='MA200'),row=1, col=1)
+#fig3_1.add_trace(go.Scatter(x=Final60Tdata.index,
+#                        y=Final60Tdata['60MA'],
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='MA60'),row=1, col=1)
 
-fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[2:]+ICdate,
-                        y=kbars['IC'].values,
-                        mode='lines',
-                        line=dict(color='orange'),
-                        name='IC操盤線'),row=1, col=1, secondary_y= True)
-
-fig.add_trace(go.Scatter(x=kbars.index,
-                        y=kbars['200MA'],
-                        mode='lines',
-                        line=dict(color='blue'),
-                        name='MA200'),row=1, col=1, secondary_y= True)
-fig.add_trace(go.Scatter(x=kbars.index,
-                        y=kbars['60MA'],
-                        mode='lines',
-                        line=dict(color='orange'),
-                        name='MA60'),row=1, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=np.array(list(Final60Tdata['IC'].index)[2:]+IChour).astype('str'),
+#                        y=Final60Tdata['IC'].values,
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='IC操盤線'),row=1, col=1, secondary_y= True)
 
 
-fig.add_trace(go.Scatter(x=[kbars.index[0],kbars.index[0]],y=[15500,17500], line_width=0.1, line_color="green",name='月結算日',showlegend=False),row=1, col=1)
-#if option_month == True:
-for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
-    if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
-        fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
-
-#enddate['最後結算日'].values
-#enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
-#list(enddate['最後結算日'].values)[:3]
-#if option_week == True:
-for i in enddate['最後結算日']:
-    if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-        fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
-    #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
 
 
 ### K線圖製作 ###
-fig.add_trace(
+fig3_1.add_trace(
     go.Candlestick(
-        x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
-        open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
-        high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
-        low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
-        close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
+        x=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] >Final60Tdata['open'] )].index,
+        open=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['open'],
+        high=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['max'],
+        low=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['min'],
+        close=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['close'],
         increasing_line_color=decreasing_color,
-        increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=no_color, #fill_increasing_color(Final60Tdata.index>Final60Tdata.index[50])
         decreasing_line_color=decreasing_color,
         decreasing_fillcolor=no_color,#decreasing_color,
         line=dict(width=2),
         name='OHLC',showlegend=False
     )#,
-    
+
     ,row=1, col=1, secondary_y= True
 )
 
 
-fig.add_trace(
+fig3_1.add_trace(
     go.Candlestick(
-        x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )].index,
-        open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['開盤指數'],
-        high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最高指數'],
-        low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['最低指數'],
-        close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] >kbars['開盤指數'] )]['收盤指數'],
+        x=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] >Final60Tdata['open'] )].index,
+        open=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['open'],
+        high=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['max'],
+        low=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['min'],
+        close=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] >Final60Tdata['open'] )]['close'],
         increasing_line_color=increasing_color,
-        increasing_fillcolor=no_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=no_color, #fill_increasing_color(Final60Tdata.index>Final60Tdata.index[50])
         decreasing_line_color=increasing_color,
         decreasing_fillcolor=no_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC',showlegend=False
     )#,
-    
+
     ,row=1, col=1, secondary_y= True
 )
 
 ### K線圖製作 ###
-fig.add_trace(
+fig3_1.add_trace(
     go.Candlestick(
-        x=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
-        open=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
-        high=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
-        low=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
-        close=kbars[(kbars['all_kk'] == -1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
+        x=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] <Final60Tdata['open'] )].index,
+        open=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['open'],
+        high=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['max'],
+        low=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['min'],
+        close=Final60Tdata[(Final60Tdata['all_kk'] == -1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['close'],
         increasing_line_color=decreasing_color,
-        increasing_fillcolor=decreasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=decreasing_color, #fill_increasing_color(Final60Tdata.index>Final60Tdata.index[50])
         decreasing_line_color=decreasing_color,
         decreasing_fillcolor=decreasing_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC',showlegend=False
     )#,
-    
+
     ,row=1, col=1, secondary_y= True
 )
 
 
-fig.add_trace(
+fig3_1.add_trace(
     go.Candlestick(
-        x=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )].index,
-        open=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['開盤指數'],
-        high=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最高指數'],
-        low=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['最低指數'],
-        close=kbars[(kbars['all_kk'] == 1)&(kbars['收盤指數'] <kbars['開盤指數'] )]['收盤指數'],
+        x=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] <Final60Tdata['open'] )].index,
+        open=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['open'],
+        high=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['max'],
+        low=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['min'],
+        close=Final60Tdata[(Final60Tdata['all_kk'] == 1)&(Final60Tdata['close'] <Final60Tdata['open'] )]['close'],
         increasing_line_color=increasing_color,
-        increasing_fillcolor=increasing_color, #fill_increasing_color(kbars.index>kbars.index[50])
+        increasing_fillcolor=increasing_color, #fill_increasing_color(Final60Tdata.index>FinalＷeekdata.index[50])
         decreasing_line_color=increasing_color,
         decreasing_fillcolor=increasing_color,#decreasing_color,
         line=dict(width=1),
         name='OHLC',showlegend=False
     )#,
-    
+
     ,row=1, col=1, secondary_y= True
 )
 
 
-
-
-### KD線 ###
-#if optvrank[0] != 0:
-#    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['K'], name='K', line=dict(width=1, color='rgb(41, 98, 255)'),showlegend=False), row=optvrank[0], col=1)
-#    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['D'], name='D', line=dict(width=1, color='rgb(255, 109, 0)'),showlegend=False), row=optvrank[0], col=1)
-
-## 委賣數量 ##
-if optvrank[0] != 0:
-    days20 = kbars[(kbars.index> (kbars.index[-1] + timedelta(days = -20)))]
-    max_days20 = days20["九點累積委託賣出數量"].values.max()
-    
-    min_days20 = days20["九點累積委託賣出數量"].values.min()
-    #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
-    fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='成交數量',showlegend=False), row=optvrank[0], col=1)
-    fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = blue_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
-    fig.add_scatter(x=np.array(min_days20_x), y=np.array(min_days20_list),marker=dict(color = orange_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
-    fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
-
-charti = 3
-## 價平和
-
-PCsum_colors = [increasing_color if kbars['價平和'][i] > kbars['價平和'][i-1] else decreasing_color for i in range(len(kbars['價平和']))]
-PCsum_colors[0] = decreasing_color
-fig.add_trace(go.Bar(x=kbars.index, y=kbars['價平和'], name='PCsum', marker=dict(color=PCsum_colors),showlegend=False), row=charti, col=1)
-#fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
-for i in range(1,int(max(kbars['價平和'].values)//50)+1):
-    fig.add_trace(go.Scatter(x=kbars.index,y=[i*50]*len(kbars.index),showlegend=False,hoverinfo='none', line_width=0.5,line_dash="dash", line_color="black"), row=charti, col=1)
-fig.update_yaxes(title_text="價平和", row=charti, col=1)
-
-charti = charti +1
-## 價外買賣權價差
-
-fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']>0)].index, y=(kbars[(kbars['價外買賣權價差']>0)]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
-fig.add_trace(go.Bar(x=kbars[(kbars['價外買賣權價差']<=0)].index, y=(kbars[(kbars['價外買賣權價差']<=0)]['價外買賣權價差']), name='價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
-#fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
-fig.update_yaxes(title_text="價外買賣權價差", row=charti, col=1)
-    
-
-charti = charti +1
-
-
-fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']>0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
-fig.add_trace(go.Bar(x=kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))].index, y=(kbars[(kbars['月價平和日差']<=0)&(~kbars.index.isin(notshowdate))]['月價平和日差']), name='月價平和日差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
-fig.update_yaxes(title_text="月價平和日差", row=charti, col=1)
-
-charti = charti +1
-## 月價外買賣權價差
-
-fig.add_trace(go.Bar(x=kbars[(kbars['月價外買賣權價差']>0)].index, y=(kbars[(kbars['月價外買賣權價差']>0)]['月價外買賣權價差']), name='月價外買賣權價差',marker=dict(color = red_color_full),showlegend=False), row=charti, col=1)
-fig.add_trace(go.Bar(x=kbars[(kbars['月價外買賣權價差']<=0)].index, y=(kbars[(kbars['月價外買賣權價差']<=0)]['月價外買賣權價差']), name='月價外買賣權價差',marker=dict(color = blue_color),showlegend=False), row=charti, col=1)
-#fig.add_hline(y = 50, line_width=0.2,line_dash="dash", line_color="blue", row=charti, col=1)
-fig.update_yaxes(title_text="月價外買賣權價差", row=charti, col=1)
-
-
-charti = charti +1
-## 月結趨勢
-
-fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_high'], name='MAX_END',marker=dict(color = black_color),showlegend=False), row=charti, col=1)
-fig.add_trace(go.Bar(x=kbars.index, y=kbars['end_low'], name='MIN_END',marker=dict(color = gray_color),showlegend=False), row=charti, col=1)
-fig.update_yaxes(title_text="月結趨勢", row=charti, col=1, tickfont=dict(size=8))
-
-
-##外資買賣超
-fig.add_trace(go.Bar(x=dfbuysell[dfbuysell['ForeBuySell']>0].index, y=(dfbuysell[dfbuysell['ForeBuySell']>0]["ForeBuySell"]).round(2), name='外資買賣超',marker=dict(color = red_color_full),showlegend=False), row=charti+1, col=1)
-fig.add_trace(go.Bar(x=dfbuysell[dfbuysell['ForeBuySell']<=0].index, y=(dfbuysell[dfbuysell['ForeBuySell']<=0]["ForeBuySell"]).round(2), name='外資買賣超',marker=dict(color = blue_color),showlegend=False), row=charti+1, col=1)
-#fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=charti+2, col=1)
-fig.update_yaxes(title_text="外資買賣超(億元)", row=charti+1, col=1)
+start_times = [timedelta(hours=1), timedelta(hours=8, minutes=45),
+            timedelta(hours=15), timedelta(hours=20)]
+data_300 = []
 
 
 
-## 外資臺股期貨未平倉淨口數
-#fut_colors = [red_color_full if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else blue_color for i in range(len(kbars['收盤指數']))]
-#fut_colors[0] = blue_color
-fut_colors = [increasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else decreasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
-fut_colors[0] = decreasing_color
-#fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
-fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=charti+2, col=1)
-#fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=charti+2, col=1)
-fig.update_yaxes(title_text="外資未平倉淨口數", row=charti+2, col=1)
+current_date = datetime.combine(df_ts.iloc[0]['ts'].date(), time(0, 0, 0))
+
+while current_date.date() <= df_ts['ts'].iloc[-1].date():
+    for start_time in start_times:
+        start = current_date + start_time
+        end = start + timedelta(hours=5)
+
+        period = df_ts[(df_ts['ts'] > start) & (df_ts['ts'] < end)].dropna(subset = ['Open'])
+
+        if period.shape[0]:
+            data_300.append([start, period.iloc[0]['Open'], period.iloc[-1]['Close'], period['High'].max(),
+                            period['Low'].min(),period['Volume'].sum()])
+        else:
+            data_300.append([start, None, None, None, None,None])
+
+    current_date += timedelta(days=1)
+
+df_300 = pd.DataFrame(data_300, columns=['ts', 'open','close','max','min','Volume'])
+df_300['date'] = df_300['ts']
+
+df_300 = df_300.dropna(subset = ['open'])
+
+df_300.set_index('ts', inplace=True)
+df_300['dateonly'] = pd.to_datetime((df_300.index- timedelta(hours=15)).date)
+df_300.loc[(df_300.date - timedelta(hours=13)).dt.weekday ==6,'dateonly'] = pd.to_datetime((df_300[(df_300.date - timedelta(hours=13)).dt.weekday ==6].date- timedelta(hours=63)).dt.date)
+df_300.loc[df_300.dateonly ==datetime(2023, 9, 29, 0, 0),'dateonly'] = datetime(2023, 9, 28, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 6, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 1, 1, 0, 0),'dateonly'] = datetime(2023, 12, 29, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(2024, 2, 5, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 2, 28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 4, 5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 5, 1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
+df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
+df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
+df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
+
+#df_300.loc[Final60Tdata["外資成本"]==None,['外資成本','外資上極限','外資下極限','自營商上極限','自營商下極限']] = [16347,16673,16227,16645,16155]
+df_300.index = df_300.date
+
+df_300 = df_300.sort_index()
+
+# 計算布林帶指標
+df_300['20MA'] = df_300['close'].rolling(20).mean()
+#df_300['60MA'] = df_300['close'].rolling(60).mean()
+#df_300['200MA'] = df_300['close'].rolling(200).mean()
+df_300['std'] = df_300['close'].rolling(20).std()
+df_300['upper_band'] = df_300['20MA'] + 2 * df_300['std']
+df_300['lower_band'] = df_300['20MA'] - 2 * df_300['std']
+df_300['upper_band1'] = df_300['20MA'] + 1 * df_300['std']
+df_300['lower_band1'] = df_300['20MA'] - 1 * df_300['std']
 
 
 
 
-#put call ratio
-#fig.add_trace(go.Scatter(x=kbars.index,y=kbars['收盤指數'],
-#                mode='lines',
-#                line=dict(color='black'),
-#                name='收盤指數',showlegend=False),row=charti+1, col=1)
-#fig.add_trace(go.Bar(x=CPratio.index, y=CPratio['買賣權未平倉量比率%']-100, name='PC_Ratio',showlegend=False), row=charti+4, col=1)
-#fig.update_yaxes(title_text="PutCallRatio", row=charti+4, col=1)
 
 
-#選擇權外資OI
-fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買買賣賣"]), name='買買權+賣賣權',marker=dict(color = red_color_full),showlegend=False), row=charti+3, col=1)
-fig.add_trace(go.Bar(x=TXOOIdf.index, y=(TXOOIdf["買賣賣買"]), name='買賣權+賣買權',marker=dict(color = blue_color),showlegend=False), row=charti+3, col=1)
-#fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=charti+2, col=1)3
-fig.update_yaxes(title_text="選擇權外資OI", row=charti+3, col=1)
+# 在k线基础上计算KDF，并将结果存储在df上面(k,d,j)
+low_list = df_300['min'].rolling(9, min_periods=9).min()
+low_list.fillna(value=df_300['min'].expanding().min(), inplace=True)
+high_list = df_300['max'].rolling(9, min_periods=9).max()
+high_list.fillna(value=df_300['max'].expanding().max(), inplace=True)
+rsv = (df_300['close'] - low_list) / (high_list - low_list) * 100
+df_300['K'] = pd.DataFrame(rsv).ewm(com=2).mean()
+df_300['D'] = df_300['K'].ewm(com=2).mean()
 
-#心態
-fin = []
-find = []
-for idx in range(1,len(dfbuysell.index)) :
+enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
+df_300['end_low'] = 0
+df_300['end_high'] = 0
+
+#詢問
+ds = 2
+df_300['uline'] = df_300['max'].rolling(ds, min_periods=1).max()
+df_300['dline'] = df_300['min'].rolling(ds, min_periods=1).min()
+
+df_300["all_kk"] = 0
+barssince5 = 0
+barssince6 = 0
+df_300['labelb'] = 1
+df_300 = df_300[~df_300.index.duplicated(keep='first')]
+
+#df_300 = df_300.dropna(subset = ['open','close','max','min'])
+
+df_300['IC'] = df_300['close'] + 2 * df_300['close'].shift(1) - df_300['close'].shift(3) -df_300['close'].shift(4)
+#df_300 = df_300[df_300.index>df_300.index[-80]]
+
+for i in range(2,len(df_300.index)):
     try:
-        datei = dfbuysell.index[idx]
-        one = dfbuysell.loc[datei,'ForeBuySell']
+        #(df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i-1],"uline"])
+        condition51 = (df_300.loc[df_300.index[i-1],"max"] < df_300.loc[df_300.index[i-2],"min"] ) and (df_300.loc[df_300.index[i],"min"] > df_300.loc[df_300.index[i-1],"max"] )
+        #condition52 = (df_300.loc[df_300.index[i-1],'close'] < df_300.loc[df_300.index[i-2],"min"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']>df_300.loc[df_300.index[i-1],"max"] )
+        condition53 = (df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i-1],"uline"]) and (df_300.loc[df_300.index[i-1],'close'] <= df_300.loc[df_300.index[i-1],"uline"])
 
-        
-        two = (int(futdf.loc[datei,'多空未平倉口數淨額']) - int(futdf.loc[dfbuysell.index[idx-1],'多空未平倉口數淨額']))*kbars.loc[datei,'收盤指數']*200
-        three = TXOOIdf.loc[datei,'買買賣賣'] - TXOOIdf.loc[datei,'買賣賣買']
-        find.append(datei)
-        fin.append(one+two/100000000+three/100000000)
-        #print(datei,one,two/100000000,three/100000000)
+        condition61 = (df_300.loc[df_300.index[i-1],"min"] > df_300.loc[df_300.index[i-2],"max"] ) and (df_300.loc[df_300.index[i],"max"] < df_300.loc[df_300.index[i-1],"min"] )
+        #condition62 = (df_300.loc[df_300.index[i-1],'close'] > df_300.loc[df_300.index[i-2],"max"]) and (df_300.loc[df_300.index[i-1],'成交金額'] > df_300.loc[df_300.index[i-2],'成交金額']) and (df_300.loc[df_300.index[i],'close']<df_300.loc[df_300.index[i-1],"min"] )
+        condition63 = (df_300.loc[df_300.index[i],'close'] < df_300.loc[df_300.index[i-1],"dline"]) and (df_300.loc[df_300.index[i-1],'close'] >= df_300.loc[df_300.index[i-1],"dline"])
     except:
-        continue
-fin = np.array(fin)
-find = np.array(find)
-fig.add_trace(go.Bar(x=find[fin>0], y=fin[fin>0], name='外資期現選心態',marker=dict(color = red_color_full),showlegend=False), row=charti+4, col=1)
-fig.add_trace(go.Bar(x=find[fin<=0], y=fin[fin<=0], name='外資期現選心態',marker=dict(color = blue_color),showlegend=False), row=charti+4, col=1)
-fig.update_yaxes(title_text="外資期現選心態", row=charti+4, col=1)
+        condition51 = True
+        condition52 = True
+        condition53 = True
+        condition61 = True
+        condition63 = True
+    condition54 = condition51 or condition53 #or condition52
+    condition64 = condition61 or condition63 #or condition62 
+
+    #df_300['labelb'] = np.where((df_300['close']> df_300['upper_band1']) , 1, np.where((df_300['close']< df_300['lower_band1']),-1,1))
+
+    #print(i)
+    if df_300.loc[df_300.index[i],'close'] > df_300.loc[df_300.index[i],'upper_band1']:
+        df_300.loc[df_300.index[i],'labelb'] = 1
+    elif df_300.loc[df_300.index[i],'close'] < df_300.loc[df_300.index[i],'lower_band1']:
+        df_300.loc[df_300.index[i],'labelb'] = -1
+    else:
+        df_300.loc[df_300.index[i],'labelb'] = df_300.loc[df_300.index[i-1],'labelb']
+
+    if condition54 == True:
+        barssince5 = 1
+    else:
+        barssince5 += 1
+
+    if condition64 == True:
+        barssince6 = 1
+    else:
+        barssince6 += 1
 
 
-## 小台散戶多空比
-
-fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']>0].index, y=(dfMTX[dfMTX['MTXRatio']>0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = orange_color),showlegend=False), row=charti+8, col=1)
-fig.add_trace(go.Bar(x=dfMTX[dfMTX['MTXRatio']<=0].index, y=(dfMTX[dfMTX['MTXRatio']<=0]['MTXRatio']*100).round(2), name='小台散戶多空比',marker=dict(color = green_color_full),showlegend=False), row=charti+8, col=1)
-#fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=charti+2, col=1)
-fig.update_yaxes(title_text="小台散戶多空比", row=charti+8, col=1)
+    if barssince5 < barssince6:
+        df_300.loc[df_300.index[i],"all_kk"] = 1
+    else:
+        df_300.loc[df_300.index[i],"all_kk"] = -1
 
 
-
-#八大行庫買賣超
-fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]>0].index, y=(bank8[bank8["八大行庫買賣超金額"]>0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = orange_color),showlegend=False), row=charti+6, col=1)
-fig.add_trace(go.Bar(x=bank8[bank8["八大行庫買賣超金額"]<=0].index, y=(bank8[bank8["八大行庫買賣超金額"]<=0]["八大行庫買賣超金額"]/100000).round(2), name='八大行庫買賣超',marker=dict(color = green_color_full),showlegend=False), row=charti+6, col=1)
-#fig.add_trace(go.Bar(x=bank8.index, y=bank8["八大行庫買賣超金額"]/10000, name='eightbank',showlegend=False), row=charti+2, col=1)
-fig.update_yaxes(title_text="八大行庫", row=charti+6, col=1)
-
-
-
-fig.add_trace(go.Scatter(x=dfMargin.index, y=dfMargin['MarginRate'],marker=dict(color = gray_color),line_width=3, name='MarginRate',showlegend=False), row=charti+7, col=1)
-fig.update_yaxes(title_text="大盤融資資維持率", row=charti+7, col=1)    
-
-
-
-#美元匯率
-url = "https://api.finmindtrade.com/api/v4/data?"
-parameter = {
-"dataset": "TaiwanExchangeRate",
-"data_id":'USD',
-"start_date": '2023-01-02',
-"end_date": datetime.strftime(datetime.today(),'%Y-%m-%d'),
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
-}
-data = requests.get(url, params=parameter)
-data = data.json()
-TaiwanExchangeRate = pd.DataFrame(data['data'])
-TaiwanExchangeRate.date = pd.to_datetime(TaiwanExchangeRate.date)
-TaiwanExchangeRate = TaiwanExchangeRate[~(TaiwanExchangeRate['spot_buy']==-1)]
-
-fig.add_trace(go.Scatter(x=TaiwanExchangeRate[(TaiwanExchangeRate.date>kbars.index[0])&(TaiwanExchangeRate.date!=datetime.strptime('2023-08-03', '%Y-%m-%d'))].date, y=TaiwanExchangeRate[(TaiwanExchangeRate.date>kbars.index[0])&(TaiwanExchangeRate.date!=datetime.strptime('2023-08-03', '%Y-%m-%d'))]['spot_buy'],marker=dict(color = gray_color), name='ExchangeRate',line_width=3,showlegend=False), row=charti+5, col=1)
-fig.update_yaxes(title_text="美元匯率", row=charti+5, col=1)  
-
-token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
-url = "https://api.finmindtrade.com/api/v4/data?"
+df_300 = df_300[df_300.index>df_300.index[-80]]
 
 
 
 
 
 
+IChour2 = []
+finalhour = list(df_300['IC'].index)[-1]
+plusi = 1
+while (finalhour + timedelta(hours = plusi)).hour in [6,7,13,14] or  (finalhour + timedelta(hours = plusi)-timedelta(hours = 5)).weekday in [5,6]:
+    plusi = plusi + 1
+IChour2.append((finalhour + timedelta(hours = plusi)).strftime("%m-%d-%Y %H:%M"))
+IChour2.append((finalhour + timedelta(hours = plusi+5)).strftime("%m-%d-%Y %H:%M"))
+
+df_300.index = df_300.index.strftime(("%m-%d-%Y %H:%M"))
+#df_300
+
+checkb = df_300["labelb"].values[0]
+bandstart = 1
+bandidx = 1
+checkidx = 0
+while bandidx < len(df_300["labelb"].values):
+    #checkidx = bandidx
+    bandstart = bandidx-1
+    checkidx = bandstart+1
+    if checkidx >=len(df_300["labelb"].values)-1:
+        break
+    while df_300["labelb"].values[checkidx] == df_300["labelb"].values[checkidx+1]:
+        checkidx +=1
+        if checkidx >=len(df_300["labelb"].values)-1:
+            break
+    bandend = checkidx+1
+    #print(bandstart,bandend)
+    if df_300["labelb"].values[bandstart+1] == 1:
+        fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
+            
+        fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),
+                                    fill='tonexty', 
+                                    fillcolor = 'rgba(256,256,0,0.2)',showlegend=False
+                                    ),rows=[2], cols=[1], secondary_ys= [True])
+    else:
+
+
+        fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['lower_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
+            
+        fig3_1.add_traces(go.Scatter(x=df_300.index[bandstart:bandend], y = df_300['upper_band'].values[bandstart:bandend],
+                                    line = dict(color='rgba(0,0,0,0)'),
+                                    fill='tonexty', 
+                                    fillcolor = 'rgba(137, 207, 240,0.2)',showlegend=False
+                                    ),rows=[2], cols=[1], secondary_ys= [True])
+    bandidx =checkidx +1
+    if bandidx >=len(df_300["labelb"].values):
+        break
+### 成交量圖製作 ###
+volume_colors1 = [red_color if df_300['close'][i] > df_300['close'][i-1] else green_color for i in range(len(df_300['close']))]
+volume_colors1[0] = green_color
+
+#fig.add_trace(go.Bar(x=df_300.index, y=df_300['成交金額'], name='成交量', marker=dict(color=volume_colors),showlegend=False), row=optvrank[0], col=1)
+fig3_1.add_trace(go.Bar(x=df_300.index, y=df_300['Volume'], name='成交量', marker=dict(color=volume_colors1)), row=2, col=1)
+
+#df_300.index = df_300.index - timedelta(hours = 6)
+
+fig3_1.add_trace(go.Scatter(x=df_300.index,
+                        y=df_300['外資成本'],
+                        mode='lines',
+                        #line=dict(color='green'),
+                        name='外資成本'),row=2, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=df_300.index,
+#                        y=df_300['外資上極限'],
+#                        mode='lines',
+#                        #line=dict(color='green'),
+#                        name='外資上極限'),row=2, col=1)
+#fig3_1.add_trace(go.Scatter(x=df_300.index,
+#                        y=df_300['外資下極限'],
+#                        mode='lines',
+#                        #line=dict(color='green'),
+#                        name='外資下極限'),row=2, col=1)
+
+fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資上極限'].values,
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
+            
+fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商上極限'].values,
+                            line = dict(color='rgba(0,0,0,0)'),
+                            fill='tonexty', 
+                            fillcolor = 'rgba(0,0,256,0.2)',showlegend=False
+                            ),rows=[2], cols=[1], secondary_ys= [True])
+fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['外資下極限'].values,
+                                    line = dict(color='rgba(0,0,0,0)'),showlegend=False),rows=[2], cols=[1], secondary_ys= [True])
+            
+fig3_1.add_traces(go.Scatter(x=df_300.index, y = df_300['自營商下極限'].values,
+                            line = dict(color='rgba(0,0,0,0)'),
+                            fill='tonexty', 
+                            fillcolor = 'rgba(256,0,0,0.2)',showlegend=False
+                            ),rows=[2], cols=[1], secondary_ys= [True])
 
 
 
+fig3_1.add_trace(go.Scatter(x=df_300.index,
+                        y=df_300['20MA'],
+                        mode='lines',
+                        line=dict(color='green'),
+                        name='MA20'),row=2, col=1, secondary_y= True)
+#fig3_1.add_trace(go.Scatter(x=df_300.index,
+#                        y=df_300['200MA'],
+#                        mode='lines',
+#                        line=dict(color='blue'),
+#                        name='MA200'),row=1, col=1)
+#fig3_1.add_trace(go.Scatter(x=df_300.index,
+#                        y=df_300['60MA'],
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='MA60'),row=1, col=1)
 
-    
-### 圖表設定 ###
-fig.update(layout_xaxis_rangeslider_visible=False)
-fig.update_annotations(font_size=12)
+#fig3_1.add_trace(go.Scatter(x=list(df_300['IC'].index)[2:]+IChour2,
+#                        y=df_300['IC'].values,
+#                        mode='lines',
+#                        line=dict(color='orange'),
+#                        name='IC操盤線'),row=2, col=1, secondary_y= True)
 
-fig.update_layout(
-    title=u'大盤指數技術分析圖',
-    #title_x=0.5,
-    #title_y=0.93,
-    hovermode='x unified',
-    height=350 + 150* rowcount,
-    width = 1200,
-    hoverlabel_namelength=-1,
-    hoverlabel_align = "left",
-    xaxis2=dict(showgrid=False),
-    yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
-    yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
-    #yaxis = dict(range=[kbars['min'].min() - 2000, kbars['最高指數'].max() + 500]),
-    dragmode = 'drawline',
-    hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
-    legend_traceorder="reversed",
-    
+
+
+### K線圖製作 ###
+fig3_1.add_trace(
+    go.Candlestick(
+        x=df_300[(df_300['all_kk'] == -1)&(df_300['close'] >df_300['open'] )].index,
+        open=df_300[(df_300['all_kk'] == -1)&(df_300['close'] >df_300['open'] )]['open'],
+        high=df_300[(df_300['all_kk'] == -1)&(df_300['close'] >df_300['open'] )]['max'],
+        low=df_300[(df_300['all_kk'] == -1)&(df_300['close'] >df_300['open'] )]['min'],
+        close=df_300[(df_300['all_kk'] == -1)&(df_300['close'] >df_300['open'] )]['close'],
+        increasing_line_color=decreasing_color,
+        increasing_fillcolor=no_color, #fill_increasing_color(df_300.index>df_300.index[50])
+        decreasing_line_color=decreasing_color,
+        decreasing_fillcolor=no_color,#decreasing_color,
+        line=dict(width=2),
+        name='OHLC',showlegend=False
+    )#,
+
+    ,row=2, col=1, secondary_y= True
 )
 
-fig.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
 
-# 隱藏周末與市場休市日期 ### 導入台灣的休市資料
-fig.update_xaxes(
+fig3_1.add_trace(
+    go.Candlestick(
+        x=df_300[(df_300['all_kk'] == 1)&(df_300['close'] >df_300['open'] )].index,
+        open=df_300[(df_300['all_kk'] == 1)&(df_300['close'] >df_300['open'] )]['open'],
+        high=df_300[(df_300['all_kk'] == 1)&(df_300['close'] >df_300['open'] )]['max'],
+        low=df_300[(df_300['all_kk'] == 1)&(df_300['close'] >df_300['open'] )]['min'],
+        close=df_300[(df_300['all_kk'] == 1)&(df_300['close'] >df_300['open'] )]['close'],
+        increasing_line_color=increasing_color,
+        increasing_fillcolor=no_color, #fill_increasing_color(df_300.index>df_300.index[50])
+        decreasing_line_color=increasing_color,
+        decreasing_fillcolor=no_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC',showlegend=False
+    )#,
+
+    ,row=2, col=1, secondary_y= True
+)
+
+### K線圖製作 ###
+fig3_1.add_trace(
+    go.Candlestick(
+        x=df_300[(df_300['all_kk'] == -1)&(df_300['close'] <df_300['open'] )].index,
+        open=df_300[(df_300['all_kk'] == -1)&(df_300['close'] <df_300['open'] )]['open'],
+        high=df_300[(df_300['all_kk'] == -1)&(df_300['close'] <df_300['open'] )]['max'],
+        low=df_300[(df_300['all_kk'] == -1)&(df_300['close'] <df_300['open'] )]['min'],
+        close=df_300[(df_300['all_kk'] == -1)&(df_300['close'] <df_300['open'] )]['close'],
+        increasing_line_color=decreasing_color,
+        increasing_fillcolor=decreasing_color, #fill_increasing_color(df_300.index>df_300.index[50])
+        decreasing_line_color=decreasing_color,
+        decreasing_fillcolor=decreasing_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC',showlegend=False
+    )#,
+
+    ,row=2, col=1, secondary_y= True
+)
+
+
+fig3_1.add_trace(
+    go.Candlestick(
+        x=df_300[(df_300['all_kk'] == 1)&(df_300['close'] <df_300['open'] )].index,
+        open=df_300[(df_300['all_kk'] == 1)&(df_300['close'] <df_300['open'] )]['open'],
+        high=df_300[(df_300['all_kk'] == 1)&(df_300['close'] <df_300['open'] )]['max'],
+        low=df_300[(df_300['all_kk'] == 1)&(df_300['close'] <df_300['open'] )]['min'],
+        close=df_300[(df_300['all_kk'] == 1)&(df_300['close'] <df_300['open'] )]['close'],
+        increasing_line_color=increasing_color,
+        increasing_fillcolor=increasing_color, #fill_increasing_color(Final60Tdata.index>FinalＷeekdata.index[50])
+        decreasing_line_color=increasing_color,
+        decreasing_fillcolor=increasing_color,#decreasing_color,
+        line=dict(width=1),
+        name='OHLC',showlegend=False
+    )#,
+
+    ,row=2, col=1, secondary_y= True
+)
+
+#T60noshow = []
+#curdatetime = Final60Tdata.index[0]
+#while curdatetime < datetime.today():
+#    if curdatetime not in Final60Tdata.index:
+#        T60noshow.append(datetime.strftime(curdatetime,'%Y-%m-%d %H:%M:%S'))
+#    curdatetime = curdatetime + timedelta(hours = 1)
+
+#T60noshow
+
+
+
+
+fig3_1.update_xaxes(
+    rangeslider= {'visible':False},
     rangebreaks=[
-        dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-        dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2024-01-01'])
-    ]
+        dict(bounds=[6, 8], pattern="hour"),
+        #dict(bounds=[6,24],pattern = "sat"),
+        dict(bounds=[13, 15], pattern="hour"),
+        #dict(bounds=[6,24], pattern="hour"),#,bounds=['sat','sun']),# hide weekends, eg. hide sat to before mon
+        dict(bounds=['sun','mon']),
+        #dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2023-08-03'])
+        #dict(dvalues=T60noshow[10:], pattern="hour")
+    ],
+                row = 1, 
+                col = 1
 )
 
 
-#fig.update_traces(hoverlabel=dict(align='left'))
+fig3_1.update_xaxes(
+    rangeslider= {'visible':False},
+    rangebreaks=[
+        #dict(bounds=[6, 8], pattern="hour"),
 
-st.plotly_chart(fig)
+        dict(bounds=['sat', 'mon']),# hide weekends, eg. hide sat to before mon
+        #dict(values=T300noshow)
+    ],
+                row = 2, 
+                col = 1
+)
+
+fig3_1.update_yaxes(
+    range=[0, Final60Tdata['Volume'].max()+100],showgrid=False,
+    secondary_y=False,
+                row = 1, 
+                col = 1
+)
+fig3_1.update_yaxes(
+    range=[Final60Tdata['外資下極限'].min() - 30, Final60Tdata['自營商上極限'].max() + 30],showgrid=False,
+    secondary_y=True,
+                row = 1, 
+                col = 1
+)
+fig3_1.update_yaxes(
+    range=[df_300['min'].min() - 200, df_300['max'].max() + 200],showgrid=False,
+        secondary_y=True,
+                row = 2, 
+                col = 1
+)
+fig3_1.update_yaxes(
+    range=[0, df_300['Volume'].max()+100],showgrid=False,
+    secondary_y=False,
+                row = 2, 
+                col = 1,showticklabels=False
+)
 
 
+
+
+# 設定圖的標題跟長寬
+fig3_1.update_annotations(font_size=12)
+fig3_1.update_layout(title_text = "", hovermode='x unified',
+                yaxis = dict(showgrid=False,showticklabels=False),#,tickformat = ",.0f",range=[Final60Tdata['min'].min() - 50, Final60Tdata['max'].max() + 50]),
+                yaxis2 = dict(showgrid=False),#showticklabels=False,range=[0, Final60Tdata['Volume'].max()+100]),
+                #yaxis = dict(showgrid=False,showticklabels=False),
+
+                width = 1200, 
+                height = 1200,
+                hoverlabel_namelength=-1,
+                
+                hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
+                legend_traceorder="reversed",
+                )
+#fig3_1.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
+
+
+st.plotly_chart(fig3_1)
