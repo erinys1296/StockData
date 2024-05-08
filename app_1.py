@@ -104,7 +104,7 @@ putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買
 putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 月價外買賣權價差 from putcallgap_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 
 
-print(putcallsum_month.tail())
+#print(putcallsum_month.tail())
 kbars = kbars.join(ordervolumn).join(putcallsum).join(putcallsum_month)
 kbars = kbars.join(putcallgap).join(putcallgap_month)
 
