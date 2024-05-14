@@ -390,7 +390,7 @@ with tab1:
     #fillcol(kbars['labelb'].iloc[0])
     #fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['lower_band'], kbars['upper_band'][::-1]]), 
     #               fill='toself',fillcolor= kbars['labelb'].iloc[0], line_width=0,name='布林上下極限',row=1, col=1)
-    st.title('選擇權1')
+    #st.title('選擇權1')
 
     checkb = kbars["labelb"].values[0]
     bandstart = 1
@@ -449,7 +449,7 @@ with tab1:
 
 
     ### 成交量圖製作 ###
-    st.title('選擇權2')
+    #st.title('選擇權2')
     volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
     volume_colors[0] = green_color
 
