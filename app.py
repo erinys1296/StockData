@@ -480,21 +480,6 @@ with tab1:
                             line=dict(color='orange'),
                             name='MA60'),row=1, col=1, secondary_y= True)
 
-    
-    fig.add_trace(go.Scatter(x=[kbars.index[0],kbars.index[0]],y=[15500,17500], line_width=0.1, line_color="green",name='月結算日',showlegend=False),row=1, col=1)
-    #if option_month == True:
-    for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
-        if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
-            fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
-
-    #enddate['最後結算日'].values
-    #enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
-    #list(enddate['最後結算日'].values)[:3]
-    #if option_week == True:
-    for i in enddate['最後結算日']:
-        if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
-            fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
-        #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
 
 
