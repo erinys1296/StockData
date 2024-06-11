@@ -348,6 +348,7 @@ Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,14, 0, 0),'dateonly'] 
 Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 2,28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
 Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 4,5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
 Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 5,1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
+Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2024, 6,11, 0, 0),'dateonly'] = datetime(2024, 6, 7, 0, 0)
     
 #Final60Tdata.loc[Final60Tdata.dateonly ==datetime(2023, 10, 10, 0, 0),'dateonly'] = datetime(2023, 10, 7, 0, 0)
 Final60Tdata = pd.merge(Final60Tdata, cost_df, left_on="dateonly", right_on="日期", how='left')
@@ -704,6 +705,7 @@ df_300.loc[df_300.dateonly ==datetime(2024, 2, 14, 0, 0),'dateonly'] = datetime(
 df_300.loc[df_300.dateonly ==datetime(2024, 2, 28, 0, 0),'dateonly'] = datetime(2024, 2, 27, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 4, 5, 0, 0),'dateonly'] = datetime(2024, 4, 3, 0, 0)
 df_300.loc[df_300.dateonly ==datetime(2024, 5, 1, 0, 0),'dateonly'] = datetime(2024, 4, 30, 0, 0)
+df_300.loc[df_300.dateonly ==datetime(2024, 6, 11, 0, 0),'dateonly'] = datetime(2024, 6, 7, 0, 0)
 df_300 = pd.merge(df_300, cost_df, left_on="dateonly", right_on="日期",how='left')
 df_300 = pd.merge(df_300, inves_limit, on="日期",how='left')
 df_300 = pd.merge(df_300, dealer_limit, on="日期",how='left')
