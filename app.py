@@ -20,7 +20,7 @@ from PlotFunction import *
 import warnings
 from os import getcwd
 
-import update
+#import update
 from tkinter import messagebox
 
 def fxn():
@@ -31,13 +31,13 @@ with warnings.catch_warnings():
     fxn()
 
 
-if datetime.now().hour == 15 or datetime.now().hour == 19:
-    if datetime.now().weekday()<4:
-        update.run_all()
-    else:
-        pass
-else:
-    pass
+#if datetime.now().hour == 15 or datetime.now().hour == 19:
+#    if datetime.now().weekday()<4:
+#        update.run_all()
+#    else:
+#        pass
+#else:
+#    pass
 ##msgresult = messagebox.askyesno('askyesno', 'askyesno')
 
 connection = sqlite3.connect('主圖資料.sqlite3')
