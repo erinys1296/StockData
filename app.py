@@ -18,6 +18,10 @@ from PlotFunction import *
 
 
 import warnings
+from os import getcwd
+
+import update
+from tkinter import messagebox
 
 def fxn():
     warnings.warn("deprecated", DeprecationWarning)
@@ -27,8 +31,14 @@ with warnings.catch_warnings():
     fxn()
 
 
-
-
+if datetime.now().hour == 15 or datetime.now().hour == 19:
+    if datetime.now().weekday()<4:
+        update.run_all()
+    else:
+        pass
+else:
+    pass
+##msgresult = messagebox.askyesno('askyesno', 'askyesno')
 
 connection = sqlite3.connect('主圖資料.sqlite3')
 connectionfuture = sqlite3.connect('FutureData.sqlite3')
@@ -104,7 +114,7 @@ putcallgap = pd.read_sql("select 日期, max(價外買賣權價差) as 價外買
 putcallgap_month = pd.read_sql("select 日期, max(價外買賣權價差) as 月價外買賣權價差 from putcallgap_month group by 日期", connection, parse_dates=['日期'], index_col=['日期'])
 
 
-#print(putcallsum_month.tail())
+print(putcallsum_month.tail())
 kbars = kbars.join(ordervolumn).join(putcallsum).join(putcallsum_month)
 kbars = kbars.join(putcallgap).join(putcallgap_month)
 
@@ -293,7 +303,7 @@ dfbuysell = dfbuysell[dfbuysell.index>kbars.index[0]]
 dfMargin = pd.read_sql("select distinct * from dfMargin order by Date", connection, parse_dates=['Date'], index_col=['Date'])
 dfMargin = dfMargin[dfMargin.index>kbars.index[0]]
 st.set_page_config(layout="wide")
-tab1, tab2 = st.tabs(["主圖", "支撐壓力"])#, tab3, tab4,"即時盤","個股資訊"
+tab1, tab2 = st.tabs(["主圖", "支撐壓力"])
 
 with tab1:
 
@@ -365,11 +375,11 @@ with tab1:
 
 
     ### 成本價及上下極限 ###
-    fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[1:]+[ICdate[0]],
-                    y=kbars['外資成本'].shift(1).values,
-                    mode='lines',
-                    line=dict(color='yellow'),
-                    name='外資成本'),row=1, col=1, secondary_y= True)
+    #fig.add_trace(go.Scatter(x=list(kbars['IC'].index)[1:]+[ICdate[0]],
+    #                y=kbars['外資成本'].shift(1).values,
+    #                mode='lines',
+    #                line=dict(color='yellow'),
+    #                name='外資成本'),row=1, col=1, secondary_y= True)
 
 
     #自營商外資上極限
@@ -390,7 +400,7 @@ with tab1:
     #fillcol(kbars['labelb'].iloc[0])
     #fig.add_scatter(x=np.concatenate([kbars.index,kbars.index[::-1]]), y=np.concatenate([kbars['lower_band'], kbars['upper_band'][::-1]]), 
     #               fill='toself',fillcolor= kbars['labelb'].iloc[0], line_width=0,name='布林上下極限',row=1, col=1)
-    #st.title('選擇權1')
+
 
     checkb = kbars["labelb"].values[0]
     bandstart = 1
@@ -447,9 +457,7 @@ with tab1:
     #                 line=dict(color='#17becf'),
     #                 name='外資下極限'))
 
-
     ### 成交量圖製作 ###
-    #st.title('選擇權2')
     volume_colors = [red_color if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else green_color for i in range(len(kbars['收盤指數']))]
     volume_colors[0] = green_color
 
@@ -480,7 +488,23 @@ with tab1:
                             line=dict(color='orange'),
                             name='MA60'),row=1, col=1, secondary_y= True)
 
+   
+         
+    # fig.add_trace(go.Scatter(x=[kbars.index[0],kbars.index[0]],y=[15500,17500], line_width=0.1, line_color="green",name='月結算日',showlegend=False),row=1, col=1)
+    # #if option_month == True:
+    # for i in enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']:
+    #     if i > kbars.index[0] :#and i!=enddate[~enddate["契約月份"].str.contains("W")]['最後結算日'].values[6]:
+    #         fig.add_vline(x=i, line_width=1, line_color="green",name='月結算日',row=1, col=1)
 
+    # #enddate['最後結算日'].values
+    # #enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()
+    # #list(enddate['最後結算日'].values)[:3]
+    # #if option_week == True:
+    # for i in enddate['最後結算日']:
+    #     if i > kbars.index[0] :# and i!=enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max()[6] and i not in enddate.groupby(enddate['最後結算日'].dt.month)['最後結算日'].max():
+    #         fig.add_vline(x=i, line_width=1,line_dash="dash", line_color="blue",name='週結算日')#, line_dash="dash"
+    #     #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
+    
 
 
     ### K線圖製作 ###
@@ -725,8 +749,16 @@ with tab1:
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
     url = "https://api.finmindtrade.com/api/v4/data?"
 
+    
 
     
+
+    
+
+    
+
+
+        
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
     fig.update_annotations(font_size=12)
@@ -753,10 +785,16 @@ with tab1:
     fig.update_traces(xaxis='x1',hoverlabel=dict(align='left'))
 
     # 隱藏周末與市場休市日期 ### 導入台灣的休市資料
+
+    noshowdate = []
+    for delta_day in range((datetime.now() - datetime.strptime(kbars.index.strftime('%Y-%m-%d')[0], '%Y-%m-%d')).days):
+        if (datetime.now() - timedelta(days=delta_day)).strftime('%Y-%m-%d') not in kbars.index.strftime('%Y-%m-%d').values:
+            noshowdate.append((datetime.now() - timedelta(days=delta_day)).strftime('%Y-%m-%d'))
+        
     fig.update_xaxes(
         rangebreaks=[
             dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
-            dict(values=[str(holiday) for holiday in holidf[~(holidf["說明"].str.contains('開始交易') | holidf["說明"].str.contains('最後交易'))]["日期"].values]+['2024-01-01'])
+            dict(values= noshowdate)
         ]
     )
 
