@@ -21,14 +21,14 @@ import warnings
 from os import getcwd
 
 #import update
-from tkinter import messagebox
+#from tkinter import messagebox
 
-def fxn():
-    warnings.warn("deprecated", DeprecationWarning)
+#def fxn():
+#    warnings.warn("deprecated", DeprecationWarning)
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    fxn()
+#with warnings.catch_warnings():
+#    warnings.simplefilter("ignore")
+#    fxn()
 
 
 #if datetime.now().hour == 15 or datetime.now().hour == 19:
