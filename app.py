@@ -306,6 +306,7 @@ st.set_page_config(layout="wide")
 tab1, tab2 = st.tabs(["主圖", "支撐壓力"])
 
 with tab1:
+    #kbars
 
     #st.sidebar.write('結算日顯示')
     #option_month = st.sidebar.checkbox('月結算日', value = True)
@@ -774,7 +775,7 @@ with tab1:
         hoverlabel_align = "left",
         xaxis2=dict(showgrid=False),
         yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
-        yaxis = dict(showgrid=False,showticklabels=False,range=[0, 90*10**10]),
+        yaxis = dict(showgrid=False,showticklabels=False,range=[0, kbars['成交金額'].max()*3]),
         #yaxis = dict(range=[kbars['min'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
         hoverlabel=dict(align='left',bgcolor='rgba(255,255,255,0.5)',font=dict(color='black')),
@@ -793,10 +794,11 @@ with tab1:
         
     fig.update_xaxes(
         rangebreaks=[
-            dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
+            #dict(bounds=['sat', 'mon']), # hide weekends, eg. hide sat to before mon
             dict(values= noshowdate)
         ]
     )
+    #noshowdate
 
 
     #fig.update_traces(hoverlabel=dict(align='left'))
