@@ -408,13 +408,15 @@ def run_all():
             futdf = tempdf[tempdf["身份別"] == "外資及陸資"][["日期","多空未平倉口數淨額"]]
             futdf.to_sql('futdf', connection, if_exists='replace', index=False)
             check = 1
+            checki +=1
             
         
             
         except:
             print("多空未平倉口數淨額 error")
+            checki +=1
             continue
-        checki +=1
+        #checki +=1
 
     try:
         tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
@@ -447,10 +449,12 @@ def run_all():
             TXOOIdf["買賣賣買"] = tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "CALL")]["賣方未平倉契約金額(千元)"].values + tempdf[(tempdf["身份別"] == "外資及陸資")&(tempdf["買賣權別"] == "PUT")]["買方未平倉契約金額(千元)"].values
             TXOOIdf.to_sql('TXOOIdf', connection, if_exists='replace', index=False)
             check = 1
+            checki +=1
         except:
+            checki +=1
             continue
 
-        checki +=1
+        #checki +=1
     try:
         tempdf = pd.DataFrame(csv.reader(res.text.splitlines()[:]))
         tempdf.columns = tempdf.loc[0,:]
