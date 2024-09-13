@@ -13,18 +13,19 @@ from time import sleep
 import sqlite3
 
 import shioaji as sj
+import APIKEY
 
 connection = sqlite3.connect('FutureData.sqlite3')
 
-api_key="Aojj3LVfz1FMAFAGKkgkNQyyZRUBQrwcdNkuMMMC5GZo"
-secret_key="75QdpLYJ5Bb2sy3pJPvSuwtyUeSN8z3kP5vfQisiUAx"
-# 建立Shioaji物件
-api = sj.Shioaji(simulation=True) # 模擬模式
-api.login(
-    api_key=api_key,     # 請修改此處
-    secret_key=secret_key   # 請修改此處
-)
+SIM_MODE = True
 
+api = sj.Shioaji(simulation=SIM_MODE)  #建立shioaji api物件，simulation=True代表使用模擬環境 
+
+#登入
+api.login(
+    api_key= APIKEY.get_Key(SIM_MODE),     # 從APIKEY讀取
+    secret_key= APIKEY.get_Secret(SIM_MODE)   # 從APIKEY讀取
+)
 
 def resample_df(original_df, frequency):
     df_resample = original_df.resample(frequency)
