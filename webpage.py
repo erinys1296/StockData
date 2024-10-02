@@ -11,7 +11,7 @@ import update_gap
 
 
 
-update_gap.run_all()
+#update_gap.run_all()
 
 
 #建立資料庫連結
