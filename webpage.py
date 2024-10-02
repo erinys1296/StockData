@@ -7,7 +7,7 @@ import numpy as np
 #資料庫處理
 import sqlite3
 
-import update_gap
+#import update_gap
 
 
 
