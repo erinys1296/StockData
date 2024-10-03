@@ -7,11 +7,11 @@ import numpy as np
 #資料庫處理
 import sqlite3
 
-#import update_gap
+import update_gap
 
 
 
-#update_gap.run_all()
+update_gap.run_all()
 
 
 #建立資料庫連結
