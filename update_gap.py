@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
+from bs4 import BeautifulSoup
 
 #資料庫處理
 import sqlite3
@@ -50,6 +51,167 @@ def cal_daygap(select_date,previous_date,df_options_futures_bs):
     # 顯示計算後的結果
     return results_df
 
+def option_limit(selected_date):
+    
+        
+        
+    url = "https://api.finmindtrade.com/api/v4/data"
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
+
+    parameter = {
+        "dataset": "TaiwanOptionInstitutionalInvestors",
+        "data_id": "TXO",
+        "start_date": selected_date,
+        "end_date": selected_date,
+        "token": token, # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    data = resp.json()
+    df = pd.DataFrame(data["data"])
+    
+    
+    selected_df_options = df[((df["institutional_investors"] == "自營商")|(df["institutional_investors"] == "外資"))][list(df.columns)[:4]+["short_open_interest_balance_volume","short_open_interest_balance_amount"]]
+    selected_df_options=selected_df_options[selected_df_options.date==selected_date]
+    selected_df_options["SC成本"] = (round(selected_df_options["short_open_interest_balance_amount"]*1000/50/selected_df_options["short_open_interest_balance_volume"],0)).astype('int')
+    Calltable,Puttable = callputtable(selected_date)
+
+    
+    selected_df_options["position"] = 0
+    for i in selected_df_options.index:
+        if selected_df_options.loc[i,"call_put"] == "買權":
+            selected_df_options.loc[i,"position"] = Calltable[(Calltable["最後成交價"]<selected_df_options.loc[i,"SC成本"])&(Calltable["最後成交價"]!=0)]["履約價"].min()
+        else: #賣權
+            selected_df_options.loc[i,"position"] = Puttable[(Puttable["最後成交價"]<selected_df_options.loc[i,"SC成本"])&(Puttable["最後成交價"]!=0)]["履約價"].max()
+
+    #print(selected_df_options)
+    #轉換talbe並計算上下極限
+    #上下極限計算
+    dfarr = []
+    for i in selected_df_options["institutional_investors"].unique():  #自營商 and 外資
+        #賣買權 賣賣權 單價
+        Callcost = selected_df_options[(selected_df_options["institutional_investors"] == i)&(selected_df_options["call_put"] == '買權')]["SC成本"].values[0]
+        Putcost = selected_df_options[(selected_df_options["institutional_investors"] == i)&(selected_df_options["call_put"] == '賣權')]["SC成本"].values[0]
+
+        Callposition = selected_df_options[(selected_df_options["institutional_investors"] == i)&(selected_df_options["call_put"] == '買權')]["position"].values[0]
+        Putposition = selected_df_options[(selected_df_options["institutional_investors"] == i)&(selected_df_options["call_put"] == '賣權')]["position"].values[0]
+        maxlimit = Callposition + Callcost + Putcost
+        minlimit = Putposition - Callcost - Putcost
+        dfarr.append(["臺指選擇權",selected_date,i,maxlimit,minlimit])
+        
+        
+    return pd.DataFrame(dfarr,columns = ["商品名稱","日期","身份別","上極限","下極限"])
+
+def callputtable(querydate):
+
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA"
+    url = "https://api.finmindtrade.com/api/v4/data?"
+
+    parameter = {
+        "dataset": "TaiwanOptionDaily",
+        "data_id":"TXO",
+        "start_date": querydate.replace('/','-'),
+        "end_date": querydate.replace('/','-'),
+        "token": token, # 參考登入，獲取金鑰
+    }
+    data = requests.get(url, params=parameter)
+    data = data.json()
+    data = pd.DataFrame(data['data'])
+    data = data[data["trading_session"] == 'position']
+    data.date = pd.to_datetime(data.date)
+    data = data[data.date == querydate.replace('/','-')]
+    data.columns = ["日期","契約","到期月份(週別)","履約價","買賣權","開盤價","最高價","最低價","最後成交價","成交量","A","b","C"]
+
+    df = data
+    #處理欄位空格
+    newcol = [stri.replace(' ','') for stri in df.columns]
+    df.columns = newcol
+
+    #抓取契約結算日
+
+    # 將結算日的爬蟲寫到 function外 (因為不會隨著時間改變而改變，減少爬蟲次數)
+    response = requests.get('https://www.taifex.com.tw/cht/5/optIndxFSP')
+
+    # 解析HTML標記
+    soup = BeautifulSoup(response.text, "lxml")
+
+    # 找到表格元素
+    table = soup.find("table", {"class": "table_f"}) 
+
+    # 將表格數據轉換成Pandas數據框
+    datedf = pd.read_html(str(table))[0]
+
+    #處理欄位空格
+    newcol = [stri.replace(' ','') for stri in datedf.columns]
+    datedf.columns = newcol
+
+    try:
+        enddate = datedf[datedf[datedf.columns[0]]>querydate.replace('-','/')][datedf.columns[0]].min()
+        weekfilter = datedf[datedf[datedf.columns[0]] == enddate]["契約月份"].values[0]
+        df = df[df["到期月份(週別)"] == weekfilter]
+
+    except:
+        if querydate.replace('-','/') in datedf[datedf.columns[0]].values:
+            weekfilter = df["到期月份(週別)"].unique()[1]
+        else:
+            weekfilter = df["到期月份(週別)"].unique()[0]
+        df = df[df["到期月份(週別)"] == weekfilter]
+
+
+    #將 Call 跟 Put 分成兩個 table，並只取 "履約價","最後成交價" 這兩個欄位
+    Calltable = df[df["買賣權"] == 'call'][["履約價","最後成交價"]]
+    Puttable = df[df["買賣權"] == 'put'][["履約價","最後成交價"]]
+
+    #轉換型態及資料處理
+    Calltable["履約價"] = Calltable["履約價"].astype('int')
+    Puttable["履約價"] = Puttable["履約價"].astype('int')
+
+    Calltable.loc[Calltable["最後成交價"] == 0,"最後成交價"] = None
+    Calltable = Calltable.dropna()
+    Puttable.loc[Puttable["最後成交價"] == 0,"最後成交價"] = None
+    Puttable = Puttable.dropna()
+
+    Calltable["最後成交價"] = Calltable["最後成交價"].astype('float')
+    Puttable["最後成交價"] = Puttable["最後成交價"].astype('float')
+
+    
+    return Calltable,Puttable
+
+def catch_cost(querydate):
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRlIjoiMjAyMy0wNy0zMCAyMzowMTo0MSIsInVzZXJfaWQiOiJqZXlhbmdqYXUiLCJpcCI6IjExNC4zNC4xMjEuMTA0In0.WDAZzKGv4Du5JilaAR7o7M1whpnGaR-vMDuSeTBXhhA", # 參考登入，獲取金鑰
+
+    url = "https://api.finmindtrade.com/api/v4/data"
+    parameter = {
+        "dataset": "TaiwanFuturesInstitutionalInvestors",
+        "data_id": "TX",# "TXO"
+        "start_date": querydate,
+        "end_date": querydate,
+        "token": "", # 參考登入，獲取金鑰
+    }
+    resp = requests.get(url, params=parameter)
+    data = resp.json()
+    selected_df_futures = pd.DataFrame(data["data"])
+    selected_df_futures = selected_df_futures[selected_df_futures.date == querydate]
+    
+    filter_conditions = selected_df_futures['institutional_investors'] == '外資'
+    filtered_data = selected_df_futures[filter_conditions]
+
+    # 计算多方和空方的契约口数和契约金额
+    多方契約口數 = filtered_data['long_deal_volume'].sum()
+    多方契約金額 = filtered_data['long_deal_amount'].sum()
+    空方契約口數 = filtered_data['short_deal_volume'].sum()
+    空方契約金額 = filtered_data['short_deal_amount'].sum()
+
+    # 计算多方和空方的平均交易价格
+    多方平均交易價格 = (多方契約金額 * 1000 / 多方契約口數) / 200 if 多方契約口數 > 0 else 0
+    空方平均交易價格 = (空方契約金額 * 1000 / 空方契約口數) / 200 if 空方契約口數 > 0 else 0
+
+    # 确定外资成本价格
+    if 多方契約口數 > 空方契約口數:
+        外資成本價 = 多方平均交易價格
+    else:
+        外資成本價 = 空方平均交易價格
+
+    return 外資成本價
 
 
 def run_all():
@@ -65,7 +227,7 @@ def run_all():
     df_options_futures_bs = pd.read_sql("select distinct * from options_futures_bs", connection)
     df_options_futures_daygap = pd.read_sql("select distinct * from df_options_futures_daygap", connection)
 
-
+    putcallsum_sep = pd.read_sql("select distinct * from putcallsum_sep", connection)
 
     
     #更新 df_options_futures_bs
@@ -232,3 +394,62 @@ def run_all():
 
     #存入資料庫
     df_options_futures_daygap.to_sql('df_options_futures_daygap', connection, if_exists='replace', index=False) 
+
+    #更新 df_options_futures_bs
+    maxdate = datetime.strptime(putcallsum_sep["日期"].max(), '%Y-%m-%d')
+    #print(cost_df)
+    for delta_day in range((datetime.today() - maxdate).days):
+    #for delta_day in range(46,365):
+        querydate = (datetime.now() - timedelta(days=delta_day)).strftime('%Y/%m/%d')
+
+        try:
+            
+            CT,PT = callputtable(querydate)
+            CT.columns = ["履約價","CT成交價"]
+            PT.columns = ["履約價","PT成交價"]
+            sumdf = CT.join(PT.set_index("履約價"),on=["履約價"],lsuffix='_left', rsuffix='_right')
+            sumdf["CTPT差"] = np.abs(sumdf["CT成交價"] - sumdf["PT成交價"])
+            sumdf["CTPT和"] = sumdf["CT成交價"] + sumdf["PT成交價"]
+            sumdf = sumdf[sumdf["CTPT差"] == sumdf["CTPT差"].min()]
+            sumdf = sumdf[sumdf["CTPT和"] == sumdf["CTPT和"].min()]
+            putcallsum_sep = pd.concat([putcallsum_sep,pd.DataFrame([[querydate.replace('/','-')] + list(sumdf.values[0])[:3]],columns = ["日期","履約價","價平和買權成交價","價平和賣權成交價"])])
+            # 存到資料庫
+            # putcallsum_sep.to_sql('putcallsum_sep', connection, if_exists='replace', index=False) 
+        except:
+            print(delta_day,querydate,'error')
+            continue
+            
+    # 存到資料庫
+    putcallsum_sep.to_sql('putcallsum_sep', connection, if_exists='replace', index=False) 
+
+
+    df_cost = pd.read_sql("select distinct * from df_cost", connection)
+    #抓取最新資料的日期
+    maxdate = datetime.strptime(df_cost["日期"].max(), '%Y-%m-%d')
+    for i in range((datetime.now() - maxdate).days): #只需抓取特定天數
+        try:
+            selected_date = datetime.strftime(datetime.now() - timedelta(days=i) , '%Y-%m-%d')
+            cost = catch_cost(selected_date)
+            if cost>0:
+                temp_df = pd.DataFrame([[selected_date,cost]],columns = ["日期","外資成本"])
+                df_cost = pd.concat([df_cost,temp_df], ignore_index=True)
+            df_cost.to_sql('df_cost', connection, if_exists='replace', index=False)
+        except:
+            pass
+    df_cost.sort_values(by='日期', ascending=False, inplace=True)
+    df_cost.to_sql('df_cost', connection, if_exists='replace', index=False)
+
+
+    df_option_limit = pd.read_sql("select distinct * from df_option_limit", connection)
+    #抓取最新資料的日期
+    maxdate = datetime.strptime(df_option_limit["日期"].max(), '%Y-%m-%d')
+    for i in range(320,365*2):#(datetime.now() - maxdate).days
+        try:
+            selected_date = datetime.strftime(datetime.now() - timedelta(days=i) , '%Y-%m-%d')
+            temp_df = option_limit(selected_date)
+            df_option_limit = pd.concat([df_option_limit,temp_df], ignore_index=True)
+            df_option_limit.to_sql('df_option_limit', connection, if_exists='replace', index=False)
+            print(i,selected_date,"done")
+        except:
+            #print(i,selected_date,"error")
+            pass
