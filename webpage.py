@@ -62,7 +62,7 @@ with tab1:
     for i in range(7):
         gap_day_df = df_options_futures_daygap[df_options_futures_daygap["日期"] ==datetime.strftime(selected_date - timedelta(days=6-i), '%Y-%m-%d') ]
         callputtemp = putcallsum_sep[putcallsum_sep["日期"] ==datetime.strftime(selected_date - timedelta(days=6-i), '%Y-%m-%d')]
-        
+        print(gap_day_df)
         if len(gap_day_df) !=0:
             call_num = int(callputtemp["價平和買權成交價"])
             put_num = int(callputtemp["價平和賣權成交價"])
