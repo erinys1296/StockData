@@ -43,6 +43,7 @@ jobs:
     - name: Run Update Python
       run: |
         python update.py
+        python update_gap.py
         
     - name: commit files
       run: |
