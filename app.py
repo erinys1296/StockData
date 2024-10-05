@@ -148,13 +148,39 @@ kbars['D'] = kbars['K'].ewm(com=2).mean()
 enddatemonth = enddate[~enddate["契約月份"].str.contains("W")]['最後結算日']
 kbars['end_low'] = 0
 kbars['end_high'] = 0
+#print(enddatemonth)
 #kbars
+baseline_high = 0
+baseline_low = 0
+previous_high = 0
+previous_low = 0
 for datei in kbars.index:
     
-    month_low = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]["最低指數"].min()
-    month_high = kbars[(kbars.index >= enddatemonth[enddatemonth<datei].max())&(kbars.index<=datei)]['最高指數'].max()
-    kbars.loc[datei,'end_low'] =  kbars.loc[datei,'最高指數'] - month_low
-    kbars.loc[datei,'end_high'] = kbars.loc[datei,'最低指數'] - month_high
+
+    if datei ==enddatemonth[enddatemonth<=datei].max():
+        kbars.loc[datei,'end_low'] =  0
+        kbars.loc[datei,'end_high'] = 0
+        baseline_high = kbars[(kbars.index==datei)]["收盤指數"].values[0]
+        baseline_low = kbars[(kbars.index==datei)]["收盤指數"].values[0]
+        previous_high = 0
+        previous_low = 0
+        current_high = 0
+        current_low = 0
+    else:
+        current_low = kbars[(kbars.index==datei)]["最低指數"].min() - baseline_high
+        current_high = kbars[(kbars.index==datei)]['最高指數'].max() - baseline_low
+        baseline_high = max(baseline_high,kbars[(kbars.index==datei)]["最高指數"].values[0])
+        baseline_low = min(baseline_low,kbars[(kbars.index==datei)]["最低指數"].values[0])
+
+    print(datei,kbars[(kbars.index==datei)]["最低指數"].min(),kbars[(kbars.index==datei)]['最高指數'].max(),current_low,current_high,previous_high,previous_low)
+
+    kbars.loc[datei,'end_high'] =  max(current_high,previous_high)
+    kbars.loc[datei,'end_low'] = min(current_low,previous_low)
+
+    
+    previous_high = max(current_high,previous_high)
+    previous_low = min(current_low,previous_low)
+
     
 kbars["MAX_MA"] = kbars["最高指數"] - kbars["20MA"]
 kbars["MIN_MA"] = kbars["最低指數"] - kbars["20MA"]
@@ -659,7 +685,7 @@ with tab1:
     ## 外資臺股期貨未平倉淨口數
     #fut_colors = [red_color_full if kbars['收盤指數'][i] > kbars['收盤指數'][i-1] else blue_color for i in range(len(kbars['收盤指數']))]
     #fut_colors[0] = blue_color
-    fut_colors = [increasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else decreasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
+    fut_colors = [decreasing_color if futdf['多空未平倉口數淨額'][i] > futdf['多空未平倉口數淨額'][i-1] else increasing_color for i in range(len(futdf['多空未平倉口數淨額']))]
     fut_colors[0] = decreasing_color
     #fig.add_trace(go.Bar(x=kbars.index, y=kbars['成交金額'], name='成交金額', marker=dict(color=volume_colors)), row=1, col=1, secondary_y= True)
     fig.add_trace(go.Bar(x=futdf.index, y=futdf['多空未平倉口數淨額'], name='fut', marker=dict(color=fut_colors),showlegend=False), row=charti+2, col=1)
@@ -758,8 +784,14 @@ with tab1:
 
     
 
+    ymin = kbars.min()[['開盤指數', '最高指數', '最低指數', '收盤指數',
+        '20MA',  '60MA', '200MA', 'upper_band',
+       'lower_band', 'upper_band1', 'lower_band1', 'IC']].min()
 
-        
+    ymax = kbars.max()[['開盤指數', '最高指數', '最低指數', '收盤指數',
+            '20MA',  '60MA', '200MA', 'upper_band',
+        'lower_band', 'upper_band1', 'lower_band1', 'IC']].max()
+            
     ### 圖表設定 ###
     fig.update(layout_xaxis_rangeslider_visible=False)
     fig.update_annotations(font_size=12)
@@ -774,7 +806,7 @@ with tab1:
         hoverlabel_namelength=-1,
         hoverlabel_align = "left",
         xaxis2=dict(showgrid=False),
-        yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[kbars['最低指數'].min() - 200, kbars['最高指數'].max() + 200]),
+        yaxis2=dict(showgrid=False,tickformat = ",.0f",range=[ymin - 200, ymax + 200]),
         yaxis = dict(showgrid=False,showticklabels=False,range=[0, kbars['成交金額'].max()*3]),
         #yaxis = dict(range=[kbars['min'].min() - 2000, kbars['最高指數'].max() + 500]),
         dragmode = 'drawline',
