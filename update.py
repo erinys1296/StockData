@@ -18,6 +18,10 @@ from time import sleep
 import sqlite3
 import csv
 
+import update_gap
+
+update_gap.run_all()
+
 def run_all():
 
     connection = sqlite3.connect('主圖資料.sqlite3')
