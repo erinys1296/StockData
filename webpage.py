@@ -120,9 +120,12 @@ with tab1:
                         gap_day_df.loc[idx,"成交位置"] = "不分"
                         
                     #gap_day_df.loc[idx,"成交位置"]
-                foreign_df = foreign_df.append(gap_day_df[gap_day_df["身份"]=="外資"])
-                dealer_df = dealer_df.append(gap_day_df[gap_day_df["身份"]=="自營商"])
-                retail_df = retail_df.append(gap_day_df[gap_day_df["身份"]=="散戶"])
+                foreign_df = pd.concat([foreign_df,gap_day_df[gap_day_df["身份"]=="外資"]])
+                dealer_df = pd.concat([dealer_df,gap_day_df[gap_day_df["身份"]=="自營商"]])
+                retail_df = pd.concat([retail_df,gap_day_df[gap_day_df["身份"]=="散戶"]])
+                #foreign_df = foreign_df.append(gap_day_df[gap_day_df["身份"]=="外資"])
+                #dealer_df = dealer_df.append(gap_day_df[gap_day_df["身份"]=="自營商"])
+                #retail_df = retail_df.append(gap_day_df[gap_day_df["身份"]=="散戶"])
 
                 #st.text(datetime.strftime(selected_date - timedelta(days=6-i), '%Y-%m-%d') + " 價平和買權成交價: "+str(call_num)+"，價平和賣權成交價: "+str(put_num))
         st.dataframe(foreign_df.sort_values(by="日期",ascending=False))
