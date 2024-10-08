@@ -443,7 +443,7 @@ def run_all():
     df_option_limit = pd.read_sql("select distinct * from df_option_limit", connection)
     #抓取最新資料的日期
     maxdate = datetime.strptime(df_option_limit["日期"].max(), '%Y-%m-%d')
-    for i in range(320,365*2):#(datetime.now() - maxdate).days
+    for i in range((datetime.now() - maxdate).days):#(datetime.now() - maxdate).days
         try:
             selected_date = datetime.strftime(datetime.now() - timedelta(days=i) , '%Y-%m-%d')
             temp_df = option_limit(selected_date)
@@ -453,3 +453,7 @@ def run_all():
         except:
             #print(i,selected_date,"error")
             pass
+
+
+if __name__=="__main__":
+    run_all()
