@@ -95,11 +95,15 @@ with tab1:
         dealer_df = pd.DataFrame()
         retail_df = pd.DataFrame()
 
-        for i in range(num_days):
-            gap_day_df = df_options_futures_daygap[df_options_futures_daygap["日期"] ==datetime.strftime(selected_date - timedelta(days=num_days-1-i), '%Y-%m-%d') ]
-            callputtemp = putcallsum_sep[putcallsum_sep["日期"] ==datetime.strftime(selected_date - timedelta(days=num_days-1-i), '%Y-%m-%d')]
-            
+        #for i in range(num_days):
+        num_i = 0
+        day_i = 0
+        while num_i < num_days:
+            gap_day_df = df_options_futures_daygap[df_options_futures_daygap["日期"] ==datetime.strftime(selected_date - timedelta(days=day_i), '%Y-%m-%d') ]
+            callputtemp = putcallsum_sep[putcallsum_sep["日期"] ==datetime.strftime(selected_date - timedelta(days=day_i), '%Y-%m-%d')]
+            day_i += 1
             if len(gap_day_df) !=0:
+                num_i += 1
                 call_num = int(callputtemp["價平和買權成交價"])
                 put_num = int(callputtemp["價平和賣權成交價"])
                 gap_day_df["成交位置"]=""
@@ -136,7 +140,7 @@ with tab1:
     with col4:
         st.write("參考數據")
         callputtemp = putcallsum_sep[(putcallsum_sep["日期"] <=datetime.strftime(selected_date, '%Y-%m-%d'))]
-        callputtemp = callputtemp[callputtemp["日期"] >=datetime.strftime(selected_date - timedelta(days=num_days), '%Y-%m-%d')]
+        callputtemp = callputtemp[callputtemp["日期"] >=datetime.strftime(selected_date - timedelta(days=day_i-1), '%Y-%m-%d')]
         callputtemp = callputtemp.sort_values(by="日期",ascending=False)
         callputtemp = callputtemp.reset_index(drop=True)
         callputtemp.columns = ["日期","價平和履約價","價平和買權成交價","價平和賣權成交價"]
@@ -150,7 +154,7 @@ with tab1:
 
         df_option_limit = pd.read_sql("select distinct * from df_option_limit", connection)
         limit_temp = df_option_limit[(df_option_limit["日期"] <=datetime.strftime(selected_date, '%Y-%m-%d'))]
-        limit_temp = limit_temp[limit_temp["日期"] >=datetime.strftime(selected_date - timedelta(days=num_days), '%Y-%m-%d')]
+        limit_temp = limit_temp[limit_temp["日期"] >=datetime.strftime(selected_date - timedelta(days=day_i-1), '%Y-%m-%d')]
         st.dataframe(limit_temp)
 
         #st.dataframe(taiex_fin)
