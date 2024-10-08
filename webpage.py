@@ -155,6 +155,8 @@ with tab1:
         df_option_limit = pd.read_sql("select distinct * from df_option_limit", connection)
         limit_temp = df_option_limit[(df_option_limit["日期"] <=datetime.strftime(selected_date, '%Y-%m-%d'))]
         limit_temp = limit_temp[limit_temp["日期"] >=datetime.strftime(selected_date - timedelta(days=day_i-1), '%Y-%m-%d')]
+        limit_temp = limit_temp.sort_values(by="日期",ascending=False)
+        limit_temp = limit_temp.reset_index(drop=True)
         st.dataframe(limit_temp)
 
         #st.dataframe(taiex_fin)
