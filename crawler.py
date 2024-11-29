@@ -147,11 +147,12 @@ def catch_cost(date):
     
     newcol = []
     for i in range(3):
-        newcol.append(df.columns[i][2])
+        newcol.append(df.columns[i][2].replace(' ', ''))
 
     for i in range(3,15):
-        newcol.append('{}_{}_{}'.format(df.columns[i][0],df.columns[i][1],df.columns[i][2]))
+        newcol.append('{}_{}_{}'.format(df.columns[i][0].replace(' ', ''),df.columns[i][1].replace(' ', ''),df.columns[i][2].replace(' ', '')))
     df.columns = newcol
+    
         
     Longdata = df[(df["商品名稱"]=="臺股期貨") & (df["身份別"]=="外資")][["交易口數與契約金額_多方_口數","交易口數與契約金額_多方_契約金額"]].values[0]
     
@@ -184,6 +185,7 @@ def callputtable(querydate):
         "dataset": "TaiwanOptionDaily",
         "data_id":"TXO",
         "start_date": querydate.replace('/','-'),
+        "end_date": querydate.replace('/','-'),
         "token": token, # 參考登入，獲取金鑰
     }
     data = requests.get(url, params=parameter)
@@ -529,6 +531,7 @@ def callputtable_month(querydate):
         "dataset": "TaiwanOptionDaily",
         "data_id":"TXO",
         "start_date": querydate.replace('/','-'),
+        "end_date": querydate.replace('/','-'),
         "token": token, # 參考登入，獲取金鑰
     }
     data = requests.get(url, params=parameter)
