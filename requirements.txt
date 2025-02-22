@@ -7,3 +7,5 @@ datetime
 bs4
 requests
 shioaji
+google-cloud-aiplatform
+google-cloud-logging
