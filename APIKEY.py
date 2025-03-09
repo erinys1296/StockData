@@ -1,6 +1,6 @@
 #無正式環境API
-sim_api_key= "DTUFNoBDeCJuk5b2Vu6bUwtgpJKk8wYMHVH92eEz942x"     
-sim_secret_key= "BcLZsDjCyrV2RZjZcNpWF1nMvgEYVPRW7dXva5pjgqqQ" 
+sim_api_key= "Dr9os79UkacqMRzDPbenbp1Au6AVLHfwgzxhvesxfpkk"     
+sim_secret_key= "DvuFwczTroTYtH1JYHeZ5sNwFQ9b3mXbHvqK5PMEtFWs" 
 
 
 #正式環境API

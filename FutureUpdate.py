@@ -56,6 +56,8 @@ FutureData = pd.read_sql("select distinct * from futurehourly", connection, pars
 startFuture = datetime.strftime(FutureData.index.max(),'%Y-%m-%d')
 endFuture = datetime.strftime(datetime.today(),'%Y-%m-%d')
 
+FutureData = FutureData[FutureData.index > datetime.now() - timedelta(days=60)]
+
 FutureDataNew = get_future_raw_data(startFuture,endFuture)
 FutureDataNew = FutureDataNew.reset_index()
 FutureData = FutureData.reset_index()
