@@ -144,3 +144,4 @@
 [E 2024-12-12 16:09:16,628 /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
 [E 2024-12-12 17:07:18,950 /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
 [E 2024-12-12 18:10:29,767 /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException <HTTPError 403: 'Forbidden'>
+[E 2025-06-12 18:11:30,891 /opt/hostedtoolcache/Python/3.10.17/x64/lib/python3.10/site-packages/shioaji/shioaji.py:231:_setup_solace] RequestException TimeoutError('The read operation timed out')
