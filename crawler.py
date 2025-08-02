@@ -367,8 +367,6 @@ def catch_volumn(date):
     # 嘗試多次請求
     for attempt, headers in enumerate(headers_configs, 1):
         try:
-            print(f"嘗試第 {attempt} 次請求 ({date})")
-            
             # 使用 session 來維持連接
             session = requests.Session()
             session.headers.update(headers)
@@ -376,7 +374,7 @@ def catch_volumn(date):
             # 先訪問首頁建立 session
             try:
                 session.get("https://www.twse.com.tw/zh/page/trading/exchange/FMTQIK.html", timeout=30)
-                time.sleep(2)  # 等待一下
+                time.sleep(2)
             except:
                 pass
             
@@ -386,55 +384,40 @@ def catch_volumn(date):
                 timeout=30
             )
             
-            # 詳細的調試資訊
-            print(f"狀態碼 ({date}): {response.status_code}")
-            print(f"Content-Type ({date}): {response.headers.get('content-type', 'N/A')}")
-            print(f"Content-Length ({date}): {response.headers.get('content-length', 'N/A')}")
-            print(f"回應內容前 300 字元 ({date}): {response.text[:300]}")
-            
             response.raise_for_status()
             
             # 檢查是否為 JSON 回應
             content_type = response.headers.get('content-type', '')
             if 'application/json' not in content_type:
-                print(f"非 JSON 回應 ({date}), Content-Type: {content_type}")
                 continue
             
             # 檢查回應內容
             if not response.text.strip():
-                print(f"空回應 ({date})")
                 continue
                 
             # 解析 JSON
             try:
                 response_data = response.json()
-            except ValueError as e:
-                print(f"JSON 解析失敗 ({date}): {e}")
-                print(f"完整回應內容: {response.text}")
+            except ValueError:
                 continue
             
             # 檢查數據結構
             if not isinstance(response_data, dict):
-                print(f"回應不是字典格式 ({date}): {type(response_data)}")
                 continue
                 
             if 'stat' in response_data and response_data['stat'] != 'OK':
-                print(f"API 返回錯誤狀態 ({date}): {response_data}")
                 continue
                 
             if 'data' not in response_data or 'fields' not in response_data:
-                print(f"缺少必要欄位 ({date}): {list(response_data.keys())}")
                 continue
             
             # 建立 DataFrame
             df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
             
             if df.empty:
-                print(f"數據為空 ({date})")
                 continue
                 
             if '累積委託賣出數量' not in df.columns:
-                print(f"缺少目標欄位 ({date}), 可用欄位: {df.columns.tolist()}")
                 continue
             
             # 成功獲取數據
@@ -443,18 +426,20 @@ def catch_volumn(date):
             return result
             
         except requests.exceptions.Timeout:
-            print(f"第 {attempt} 次請求超時 ({date})")
-        except requests.exceptions.RequestException as e:
-            print(f"第 {attempt} 次網路錯誤 ({date}): {e}")
-        except Exception as e:
-            print(f"第 {attempt} 次其他錯誤 ({date}): {e}")
+            if attempt == len(headers_configs):
+                print(f"請求超時 ({date})")
+        except requests.exceptions.RequestException:
+            if attempt == len(headers_configs):
+                print(f"網路請求錯誤 ({date})")
+        except Exception:
+            if attempt == len(headers_configs):
+                print(f"其他錯誤 ({date})")
         
         # 在重試之間等待
         if attempt < len(headers_configs):
-            print(f"等待 5 秒後重試 ({date})")
-            time.sleep(5)
+            time.sleep(3)
     
-    print(f"所有嘗試都失敗 ({date})")
+    print(f"無法獲取數據 ({date})")
     return None
 
 
