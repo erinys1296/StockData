@@ -157,13 +157,28 @@ def run_all():
             querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y%m%d')
             
             ordervolumn = pd.concat([ordervolumn,pd.DataFrame([[querydate,crawler.catch_volumn(querydate)]],columns = ["日期","九點累積委託賣出數量"])])
-        except:
+            print(querydate,"volumn query success")
+        except requests.exceptions.RequestException as e:
+            print(f"{querydate} 網路請求錯誤: {e}")
             sleep(5)
             try:
                 querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y%m%d')
                 ordervolumn = pd.concat([ordervolumn,pd.DataFrame([[querydate,crawler.catch_volumn(querydate)]],columns = ["日期","九點累積委託賣出數量"])])
-            except:
-                print(querydate,"query error")
+                print(querydate,"volumn query success (重試)")
+            except Exception as e:
+                print(f"{querydate} volumn query error: {e}")
+        except ValueError as e:
+            print(f"{querydate} 數據處理錯誤: {e}")
+        except Exception as e:
+            print(f"{querydate} 其他錯誤: {e}")
+            sleep(5)
+            try:
+                querydate = datetime.strftime(datetime.today()- timedelta(days=i),'%Y%m%d')
+                ordervolumn = pd.concat([ordervolumn,pd.DataFrame([[querydate,crawler.catch_volumn(querydate)]],columns = ["日期","九點累積委託賣出數量"])])
+                print(querydate,"volumn query success (重試)")
+            except Exception as e:
+                print(f"{querydate} volumn query error (重試失敗): {e}")
+
 
     ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False) 
     #connection.executemany('replace INTO ordervolumn VALUES (?, ?)', np.array(ordervolumn))
