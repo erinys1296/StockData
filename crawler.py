@@ -359,8 +359,19 @@ def catch_volumn(date):
         response = requests.get(url.format(date, int(datetime.now().timestamp())), headers=headers)
         response_data = response.json()
         df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
-    except:
-        return
+    except requests.exceptions.RequestException as e:
+        print(f"網路請求錯誤 ({date}): {e}")
+        return None
+    except ValueError as e:
+        print(f"JSON解析錯誤 ({date}): {e}")
+        return None
+    except KeyError as e:
+        print(f"數據鍵值錯誤 ({date}): {e}")
+        return None
+    except Exception as e:
+        print(f"其他錯誤 ({date}): {e}")
+        return None
+    
     return int(df["累積委託賣出數量"].values[0].replace(',' , ''))
 
 
