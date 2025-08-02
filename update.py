@@ -178,8 +178,8 @@ def run_all():
                 print(querydate,"volumn query success (重試)")
             except Exception as e:
                 print(f"{querydate} volumn query error (重試失敗): {e}")
-
-
+    
+    print(ordervolumn.tail(5))
     ordervolumn.to_sql('ordervolumn', connection, if_exists='replace', index=False) 
     #connection.executemany('replace INTO ordervolumn VALUES (?, ?)', np.array(ordervolumn))
 
