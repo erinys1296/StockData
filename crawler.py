@@ -337,43 +337,125 @@ def catch_limit(querydate):
 
 
 def catch_volumn(date):
-
     url = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_5MINS?response=json&date={}&_={}"
-    headers = {
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "en,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7",
-        "Connection": "keep-alive",
-        "Host": "www.twse.com.tw",
-        "Referer": "https://www.twse.com.tw/zh/page/trading/exchange/FMTQIK.html",
-        "sec-ch-ua": '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",  # 改為 Linux User-Agent
-        "X-Requested-With": "XMLHttpRequest"
-    }
-    try:
-        response = requests.get(url.format(date, int(datetime.now().timestamp())), headers=headers)
-        response_data = response.json()
-        df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
-    except requests.exceptions.RequestException as e:
-        print(f"網路請求錯誤 ({date}): {e}")
-        return None
-    except ValueError as e:
-        print(f"JSON解析錯誤 ({date}): {e}")
-        return None
-    except KeyError as e:
-        print(f"數據鍵值錯誤 ({date}): {e}")
-        return None
-    except Exception as e:
-        print(f"其他錯誤 ({date}): {e}")
-        return None
     
-    return int(df["累積委託賣出數量"].values[0].replace(',' , ''))
-
+    # 嘗試多種不同的 headers 配置
+    headers_configs = [
+        {
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Host": "www.twse.com.tw",
+            "Pragma": "no-cache",
+            "Referer": "https://www.twse.com.tw/zh/page/trading/exchange/FMTQIK.html",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        {
+            "Accept": "*/*",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "Referer": "https://www.twse.com.tw/"
+        },
+        {
+            "User-Agent": "curl/7.68.0",
+            "Accept": "*/*"
+        }
+    ]
+    
+    # 嘗試多次請求
+    for attempt, headers in enumerate(headers_configs, 1):
+        try:
+            print(f"嘗試第 {attempt} 次請求 ({date})")
+            
+            # 使用 session 來維持連接
+            session = requests.Session()
+            session.headers.update(headers)
+            
+            # 先訪問首頁建立 session
+            try:
+                session.get("https://www.twse.com.tw/zh/page/trading/exchange/FMTQIK.html", timeout=30)
+                time.sleep(2)  # 等待一下
+            except:
+                pass
+            
+            # 發送 API 請求
+            response = session.get(
+                url.format(date, int(datetime.now().timestamp())), 
+                timeout=30
+            )
+            
+            # 詳細的調試資訊
+            print(f"狀態碼 ({date}): {response.status_code}")
+            print(f"Content-Type ({date}): {response.headers.get('content-type', 'N/A')}")
+            print(f"Content-Length ({date}): {response.headers.get('content-length', 'N/A')}")
+            print(f"回應內容前 300 字元 ({date}): {response.text[:300]}")
+            
+            response.raise_for_status()
+            
+            # 檢查是否為 JSON 回應
+            content_type = response.headers.get('content-type', '')
+            if 'application/json' not in content_type:
+                print(f"非 JSON 回應 ({date}), Content-Type: {content_type}")
+                continue
+            
+            # 檢查回應內容
+            if not response.text.strip():
+                print(f"空回應 ({date})")
+                continue
+                
+            # 解析 JSON
+            try:
+                response_data = response.json()
+            except ValueError as e:
+                print(f"JSON 解析失敗 ({date}): {e}")
+                print(f"完整回應內容: {response.text}")
+                continue
+            
+            # 檢查數據結構
+            if not isinstance(response_data, dict):
+                print(f"回應不是字典格式 ({date}): {type(response_data)}")
+                continue
+                
+            if 'stat' in response_data and response_data['stat'] != 'OK':
+                print(f"API 返回錯誤狀態 ({date}): {response_data}")
+                continue
+                
+            if 'data' not in response_data or 'fields' not in response_data:
+                print(f"缺少必要欄位 ({date}): {list(response_data.keys())}")
+                continue
+            
+            # 建立 DataFrame
+            df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
+            
+            if df.empty:
+                print(f"數據為空 ({date})")
+                continue
+                
+            if '累積委託賣出數量' not in df.columns:
+                print(f"缺少目標欄位 ({date}), 可用欄位: {df.columns.tolist()}")
+                continue
+            
+            # 成功獲取數據
+            result = int(df["累積委託賣出數量"].values[0].replace(',', ''))
+            print(f"成功獲取數據 ({date}): {result}")
+            return result
+            
+        except requests.exceptions.Timeout:
+            print(f"第 {attempt} 次請求超時 ({date})")
+        except requests.exceptions.RequestException as e:
+            print(f"第 {attempt} 次網路錯誤 ({date}): {e}")
+        except Exception as e:
+            print(f"第 {attempt} 次其他錯誤 ({date}): {e}")
+        
+        # 在重試之間等待
+        if attempt < len(headers_configs):
+            print(f"等待 5 秒後重試 ({date})")
+            time.sleep(5)
+    
+    print(f"所有嘗試都失敗 ({date})")
+    return None
 
 
 def query_put_call(start_date,end_date):
