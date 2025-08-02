@@ -337,64 +337,33 @@ def catch_limit(querydate):
 
 
 def catch_volumn(date):
+
     url = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_5MINS?response=json&date={}&_={}"
     headers = {
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+        "Accept-Language": "en,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7",
         "Connection": "keep-alive",
         "Host": "www.twse.com.tw",
         "Referer": "https://www.twse.com.tw/zh/page/trading/exchange/FMTQIK.html",
-        "sec-ch-ua": '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+        "sec-ch-ua": '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": '"Windows"',
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",  # 改為 Linux User-Agent
         "X-Requested-With": "XMLHttpRequest"
     }
-    
     try:
-        response = requests.get(url.format(date, int(datetime.now().timestamp())), headers=headers, timeout=30)
-        response.raise_for_status()
-        
-        # 檢查返回內容是否為 JSON
-        content_type = response.headers.get('content-type', '')
-        if 'application/json' not in content_type:
-            print(f"非 JSON 回應 ({date}): Content-Type = {content_type}")
-            print(f"回應內容前 200 字元: {response.text[:200]}")
-            return None
-            
+        response = requests.get(url.format(date, int(datetime.now().timestamp())), headers=headers)
         response_data = response.json()
-        
-        # 檢查 API 回應結構
-        if 'data' not in response_data or 'fields' not in response_data:
-            print(f"API 回應格式錯誤 ({date}): {response_data}")
-            return None
-            
         df = pd.DataFrame(response_data['data'], columns=response_data['fields'])
-        
-        if df.empty or '累積委託賣出數量' not in df.columns:
-            print(f"數據為空或缺少必要欄位 ({date})")
-            return None
-            
-        return int(df["累積委託賣出數量"].values[0].replace(',' , ''))
-        
-    except requests.exceptions.Timeout:
-        print(f"請求超時 ({date})")
-        return None
     except requests.exceptions.RequestException as e:
         print(f"網路請求錯誤 ({date}): {e}")
         return None
     except ValueError as e:
         print(f"JSON解析錯誤 ({date}): {e}")
-        # 輸出實際回應內容以便調試
-        try:
-            print(f"回應狀態碼: {response.status_code}")
-            print(f"回應內容: {response.text[:500]}")
-        except:
-            pass
         return None
     except KeyError as e:
         print(f"數據鍵值錯誤 ({date}): {e}")
@@ -402,6 +371,10 @@ def catch_volumn(date):
     except Exception as e:
         print(f"其他錯誤 ({date}): {e}")
         return None
+    
+    return int(df["累積委託賣出數量"].values[0].replace(',' , ''))
+
+
 
 def query_put_call(start_date,end_date):
     http = urllib3.PoolManager()
