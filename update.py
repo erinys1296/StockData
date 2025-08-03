@@ -19,8 +19,31 @@ import sqlite3
 import csv
 
 import update_gap
+import json
 
 update_gap.run_all()
+
+def save_limit_df_to_json(limit_df):
+    """將 limit_df 轉換為 JSON 並儲存到本地檔案"""
+    
+    # 將 DataFrame 轉換為 JSON 格式
+    limit_json = {
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "data_count": len(limit_df),
+        "data": limit_df.to_dict('records')  # 轉換為記錄列表格式
+    }
+    
+    # 儲存為本地 JSON 檔案
+    json_filename = "limit_data.json"
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(limit_json, f, ensure_ascii=False, indent=2)
+    
+    print(f"JSON 檔案已儲存: {json_filename}")
+    print(f"資料筆數: {len(limit_df)}")
+    print(f"最後更新時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    return json_filename
+
 
 def run_all():
 
@@ -117,6 +140,9 @@ def run_all():
     print(limit_df.tail(5))
     connection = sqlite3.connect('主圖資料.sqlite3')
     limit_df.to_sql('limit', connection, if_exists='replace', index=False) 
+
+    # 儲存為 JSON 檔案
+    save_limit_df_to_json(limit_df)
 
     #connection.executemany('replace INTO limit VALUES (?, ?, ?, ?, ?)', np.array(limit_df))
     """
