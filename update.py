@@ -44,6 +44,27 @@ def save_limit_df_to_json(limit_df):
     
     return json_filename
 
+def save_cost_df_to_json(cost_df):
+    """將 cost_df 轉換為 JSON 並儲存到本地檔案"""
+    
+    # 將 DataFrame 轉換為 JSON 格式
+    cost_json = {
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "data_count": len(cost_df),
+        "data": cost_df.to_dict('records')  # 轉換為記錄列表格式
+    }
+    
+    # 儲存為本地 JSON 檔案
+    json_filename = "cost_data.json"
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(cost_json, f, ensure_ascii=False, indent=2)
+    
+    print(f"Cost JSON 檔案已儲存: {json_filename}")
+    print(f"Cost 資料筆數: {len(cost_df)}")
+    print(f"Cost 最後更新時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    return json_filename
+
 
 def run_all():
 
@@ -122,6 +143,9 @@ def run_all():
     print(cost_df)
     cost_df.to_sql('cost', connection, if_exists='replace', index=False) 
     #connection.executemany('INSERT INTO cost VALUES (?, ?)', np.array(cost_df))
+
+    # 儲存為 JSON 檔案
+    save_cost_df_to_json(cost_df)
 
     maxtime = datetime.strptime(limit_df["日期"].max(), '%Y/%m/%d')
 
