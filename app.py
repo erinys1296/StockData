@@ -624,11 +624,13 @@ with tab1:
         max_days20 = days20["九點累積委託賣出數量"].values.max()
         
         min_days20 = days20["九點累積委託賣出數量"].values.min()
-        #volume_colors = [increasing_color if kbars['九點累積委託賣出數量	'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
+        
+        #volume_colors = [increasing_color if kbars['九點累積委託賣出數量'][i] > kbars['收盤指數'][i-1] else decreasing_color for i in range(len(kbars['收盤指數']))]
         fig.add_trace(go.Scatter(x=kbars.index, y=kbars['九點累積委託賣出數量'], name='成交數量',showlegend=False), row=optvrank[0], col=1)
         fig.add_scatter(x=np.array(max_days20_x), y=np.array(max_days20_list),marker=dict(color = blue_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
         fig.add_scatter(x=np.array(min_days20_x), y=np.array(min_days20_list),marker=dict(color = orange_color,size=5),showlegend=False,mode = 'markers', row=optvrank[0], col=1)
-        fig.update_yaxes(title_text="開盤賣張", row=optvrank[0], col=1)
+        
+        fig.update_yaxes(title_text="開盤賣張", tickvals=[1300000, 1800000], ticktext=['1.3M', '1.8M'], showgrid=True, gridcolor='lightgray', row=optvrank[0], col=1)
     
     charti = 3
     ## 價平和
@@ -1675,7 +1677,7 @@ with tab3:
     taiex_fin.date = pd.to_datetime(taiex_fin.date)
     taiex_fin.index = taiex_fin.date
     taiex_fin.columns = ['日期', 'stock_id', '成交股數', '成交金額', '開盤指數', '最高指數',
-        '最低指數', '收盤指數', '漲跌點數', '成交筆數']
+       '最低指數', '收盤指數', '漲跌點數', '成交筆數']
         
     # 获取当前日期
     today = datetime.now().date()
